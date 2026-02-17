@@ -336,7 +336,27 @@
                     <ul id="list-arts" class="detail-list"></ul>
                 </div>
             </div>
-            <h3>무기 비교 (Top 3)</h3>
+            <h3>무기 비교</h3>
+            <div class="comparison-settings"
+                style="margin-bottom: 20px; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 12px; border: 1px solid rgba(0, 217, 255, 0.2);">
+                <div
+                    style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 10px; display: flex; align-items: center; gap: 5px;">
+                    <span style="display:inline-block; width:4px; height:12px; background:var(--neon-blue);"></span>
+                    비교 대상 설정 (일괄 적용)
+                </div>
+                <div style="display: flex; flex-direction: low; gap: 12px;">
+                    <div class="control-row potency-row" style="margin-top:0">
+                        <label style="font-size: 0.75rem;">무기 잠재</label>
+                        <div class="potency-group" id="comp-wep-pot-group"></div>
+                        <input type="hidden" id="comp-wep-pot" value="0">
+                    </div>
+                    <div
+                        style="display: flex; flex-direction: column; align-items: center; justify-content: space-between;">
+                        <label style="font-size: 0.75rem;">무기 기질</label>
+                        <input type="checkbox" id="comp-wep-state" class="hidden-checkbox">
+                    </div>
+                </div>
+            </div>
             <div id="weapon-comparison" class="comparison-list"></div>
         </section>
     </div>

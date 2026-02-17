@@ -106,6 +106,10 @@ function initUI() {
             updateState();
         };
     }
+
+    // 비교 설정 초기화
+    setupPotencyButtons('comp-wep-pot', 'comp-wep-pot-group');
+    setupToggleButton('comp-wep-state', 'comp-wep-toggle', '기질');
 }
 
 function setupSubOperatorEvents(i) {
@@ -481,32 +485,98 @@ function renderLog(id, list) {
 function renderWeaponComparison(currentDmg) {
     const box = document.getElementById('weapon-comparison');
     if (!box) return;
-    box.innerHTML = '';
     if (!state.mainOp.id) return;
 
     const currentOp = DATA_OPERATORS.find(o => o.id === state.mainOp.id);
     if (!currentOp) return;
 
+    // FLIP Animation: First (기존 위치 기록)
+    const currentItems = Array.from(box.children);
+    const firstPositions = new Map();
+    currentItems.forEach(child => {
+        const name = child.querySelector('.comp-name')?.innerText;
+        if (name) firstPositions.set(name, child.getBoundingClientRect());
+    });
+
+    // 비교용 설정값 읽기
+    const compPot = Number(document.getElementById('comp-wep-pot')?.value) || 0;
+    const compState = document.getElementById('comp-wep-state')?.checked || false;
+
     const savedWepId = state.mainOp.wepId;
+    const savedWepPot = state.mainOp.wepPot;
+    const savedWepState = state.mainOp.wepState;
+
     const validWeapons = DATA_WEAPONS.filter(w => currentOp.usableWeapons.includes(w.type));
 
     const comparisons = validWeapons.map(w => {
         state.mainOp.wepId = w.id;
+        state.mainOp.wepPot = compPot;
+        state.mainOp.wepState = compState;
         const res = calculateDamage(state);
         if (!res) return null;
         const diff = res.finalDmg - currentDmg;
         const pct = currentDmg > 0 ? ((diff / currentDmg) * 100).toFixed(1) : 0;
-        return { name: w.name, pct: Number(pct) };
-    }).filter(x => x).sort((a, b) => b.pct - a.pct);
+        return { name: w.name, finalDmg: res.finalDmg, pct: Number(pct) };
+    }).filter(x => x).sort((a, b) => b.finalDmg - a.finalDmg);
 
+    // 원본 상태 복구
     state.mainOp.wepId = savedWepId;
+    state.mainOp.wepPot = savedWepPot;
+    state.mainOp.wepState = savedWepState;
+
+    // 새로운 HTML 생성
+    const maxDmg = comparisons.length > 0 ? comparisons[0].finalDmg : 0;
+    box.innerHTML = '';
 
     comparisons.forEach(item => {
         const div = document.createElement('div');
         const sign = item.pct > 0 ? '+' : '';
-        const cls = item.pct >= 0 ? 'positive' : 'negative';
+        const cls = item.pct >= 0 ? (item.pct === 0 ? 'current' : 'positive') : 'negative';
+        const barWidth = maxDmg > 0 ? (item.finalDmg / maxDmg * 100) : 0;
+
         div.className = `comp-item ${cls}`;
-        div.innerHTML = `<span>${item.name}</span> <span>${sign}${item.pct}%</span>`;
+        div.setAttribute('data-weapon-name', item.name);
+        div.innerHTML = `
+            <div class="comp-info">
+                <span class="comp-name">${item.name}</span>
+                <span class="comp-dmg">${Math.floor(item.finalDmg).toLocaleString()}</span>
+                <span class="comp-pct">${sign}${item.pct}%</span>
+            </div>
+            <div class="comp-bar-bg">
+                <div class="comp-bar" style="width: ${barWidth}%"></div>
+            </div>
+        `;
         box.appendChild(div);
+    });
+
+    // FLIP Animation: Last & Invert & Play
+    requestAnimationFrame(() => {
+        const newItems = Array.from(box.children);
+        newItems.forEach(child => {
+            const name = child.getAttribute('data-weapon-name');
+            const firstRect = firstPositions.get(name);
+            if (firstRect) {
+                const lastRect = child.getBoundingClientRect();
+                const deltaY = firstRect.top - lastRect.top;
+
+                if (deltaY !== 0) {
+                    // Invert: 새 위치에서 옛 위치로 강제 이동 (transition 없이)
+                    child.style.transition = 'none';
+                    child.style.transform = `translateY(${deltaY}px)`;
+
+                    // Play: 다음 프레임에서 transition과 함께 원위치(translateY(0))로 복구
+                    requestAnimationFrame(() => {
+                        child.style.transition = '';
+                        child.style.transform = '';
+                    });
+                }
+            } else {
+                // 새로 등장하는 아이템은 fade-in 효과
+                child.style.opacity = '0';
+                requestAnimationFrame(() => {
+                    child.style.opacity = '1';
+                });
+            }
+        });
     });
 }
