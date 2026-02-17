@@ -1,0 +1,717 @@
+// Weapon Traits 구조:
+// traits[0]: type:'스탯' (스탯 증가)
+//   - stat: '주스탯' | '부스탯' | '힘' | '민첩' | '지능' | '의지'
+//   - 예: { type: '스탯', stat: '주스탯', valBase: 30, valMax: 60 }
+//   - 예: { type: '스탯', stat: '부스탯', valBase: 25, valMax: 50 }
+//
+// traits[1+]: 버프 효과
+//   - type: '공격력 증가' (공격력 증가)
+//          | '물리 피해' (장착 오퍼가 주는 물리 피해 증가)
+//          | '아츠 피해' (장착 오퍼가 주는 아츠 피해 증가)
+//          | '열기 피해' (장착 오퍼가 주는 열기 피해 증가)
+//          | '전기 피해' (장착 오퍼가 주는 전기 피해 증가)
+//          | '냉기 피해' (장착 오퍼가 주는 냉기 피해 증가)
+//          | '자연 피해' (장착 오퍼가 주는 자연 피해 증가)
+//          | '불균형 피해' (불균형 상태의 적에게 주는 피해 증가)
+
+//          | '받는 물리 피해' (적이 받는 물리 피해 증가)
+//          | '받는 아츠 피해' (적이 받는 아츠 피해 증가)
+//          | '받는 열기 피해' (적이 받는 열기 피해 증가)
+//          | '받는 전기 피해' (적이 받는 전기 피해 증가)
+//          | '받는 냉기 피해' (적이 받는 냉기 피해 증가)
+//          | '받는 자연 피해' (적이 받는 자연 피해 증가)
+
+//          | '배틀 스킬 피해' (배틀 스킬 피해 증가)
+//          | '연계 스킬 피해' (연계 스킬 피해 증가)
+//          | '궁극기 피해' (궁극기 피해 증가)
+
+//          | '오리지늄 아츠 강도' (오리지늄 아츠 강도 증가)
+//          | '치명타 확률' (치명타 확률 증가)
+//          | '최대 체력' (최대 생명력 증가)
+//          | '궁극기 충전' (궁극기 충전 효율 증가)
+//          | '치유 효율' (치유 효율 증가)
+
+//          | '주는 피해' (장착 오퍼가 주는 모든 피해 증가 - 피해증가와 합연산)
+//          | '모든 능력치' (장착 오퍼의 모든 스탯 증가)
+//          | '모든 스킬 피해' (모든 스킬의 피해 증가 - 피해증가와 합연산)
+//
+// target (선택사항):
+//   - '팀': 팀 전체에 적용
+//   - '적': 적에 적용
+
+const DATA_WEAPONS = [
+  {
+    id: 'White Night Nova',
+    name: '백야의 별',
+    type: 'sword',
+    baseAtk: 505,
+    rarity: 6,
+    traits: [
+      { type: '스탯', stat: '주스탯', valBase: 44, valMax: 132 },
+      { type: '오리지늄 아츠 강도', valBase: 26, valMax: 78 },
+      { type: '아츠 피해', valByLevel: [12, 14.4, 16.8, 19.2, 21.6, 24, 26.4, 28.8, 33.6] },
+      { type: '아츠 피해', valByLevel: [12, 14.4, 16.8, 19.2, 21.6, 24, 26.4, 28.8, 33.6] },
+      { type: '오리지늄 아츠 강도', valByLevel: [25, 30, 35, 40, 45, 50, 55, 60, 70] }
+    ]
+  },
+
+  {
+    id: 'Eminent Repute',
+    name: '위대한 이름',
+    type: 'sword',
+    baseAtk: 490,
+    rarity: 6,
+    traits: [
+      { type: '스탯', stat: '주스탯', valBase: 44, valMax: 132 },
+      { type: '물리 피해', valBase: 14.44, valMax: 43.33 },
+      { type: '공격력 증가', valByLevel: [10, 12, 14, 16, 18, 20, 22, 24, 28] },
+      { type: '공격력 증가', valByLevel: [15, 18, 21, 24, 27, 30, 33, 36, 42] },
+      { type: '공격력 증가', valByLevel: [7.5, 9, 10.5, 12, 13.5, 15, 16.5, 18, 21], target: '팀' }
+    ]
+  },
+
+  {
+    id: 'Thermite Cutter',
+    name: '테르밋 커터',
+    type: 'sword',
+    baseAtk: 490,
+    rarity: 5,
+    traits: [
+      { type: '스탯', stat: '의지', valBase: 52, valMax: 156 },
+      { type: '공격력 증가', valBase: 13, valMax: 39 },
+      { type: '공격력 증가', valByLevel: [10, 12, 14, 16, 18, 20, 22, 24, 28] },
+      { type: '공격력 증가', valByLevel: [5, 6, 7, 8, 9, 10, 11, 12, 14], target: '팀' }
+    ]
+  },
+
+  {
+    id: 'Rapid Ascent',
+    name: '부요',
+    type: 'sword',
+    baseAtk: 495,
+    rarity: 6,
+    traits: [
+      { type: '스탯', stat: '주스탯', valBase: 44, valMax: 132 },
+      { type: '치명타 확률', valBase: 6.5, valMax: 19.5 },
+      { type: '물리 피해', valByLevel: [15, 18, 21, 24, 27, 30, 33, 36, 42] },
+      { type: '불균형 피해', valByLevel: [50, 60, 70, 80, 90, 100, 110, 120, 140] }
+    ]
+  },
+
+  {
+    id: 'Never Rest',
+    name: '끝없는 방랑',
+    type: 'sword',
+    baseAtk: 500,
+    rarity: 6,
+    traits: [
+      { type: '스탯', stat: '의지', valBase: 52, valMax: 156 },
+      { type: '공격력 증가', valBase: 13, valMax: 39 },
+      { type: '물리 피해', valByLevel: [16, 19.2, 22.4, 25.6, 28.8, 32, 35.2, 38.4, 44.8] },
+      { type: '물리 피해', valByLevel: [5, 6, 7, 8, 9, 10, 11, 12, 14] },
+      { type: '물리 피해', valByLevel: [2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 7], target: '팀' }
+    ]
+  },
+
+  {
+    id: 'Grand Vision',
+    name: '장대한 염원',
+    type: 'sword',
+    baseAtk: 500,
+    rarity: 6,
+    traits: [
+      { type: '스탯', stat: '민첩', valBase: 52, valMax: 156 },
+      { type: '공격력 증가', valBase: 13, valMax: 39 },
+      { type: '오리지늄 아츠 강도', valByLevel: [30, 36, 42, 48, 54, 60, 66, 72, 84] },
+      { type: '물리 피해', valByLevel: [36, 43.2, 50.4, 57.6, 64.8, 72, 79.2, 86.4, 100.8] }
+    ]
+  },
+
+  {
+    id: 'Forgeborn Scathe',
+    name: '용조의 불꽃',
+    type: 'sword',
+    baseAtk: 510,
+    rarity: 6,
+    traits: [
+      { type: '스탯', stat: '지능', valBase: 52, valMax: 156 },
+      { type: '공격력 증가', valBase: 13, valMax: 39 },
+      { type: '열기 피해', valByLevel: [16, 19.2, 22.4, 25.6, 28.8, 32, 35.2, 38.4, 44.8] },
+      { type: '아츠 피해', valByLevel: [75, 90, 105, 120, 135, 150, 165, 180, 210] },
+    ]
+  },
+
+  {
+    id: 'Umbral Torch',
+    name: '암흑의 횃불',
+    type: 'sword',
+    baseAtk: 490,
+    rarity: 5,
+    traits: [
+      { type: '스탯', stat: '지능', valBase: 52, valMax: 156 },
+      { type: '열기 피해', valBase: 14.44, valMax: 43.33 },
+      { type: '공격력 증가', valByLevel: [7, 8.4, 9.8, 11.2, 12.6, 14, 15.4, 16.8, 19.6] },
+      { type: '열기 피해', valByLevel: [8, 9.6, 11.2, 12.8, 14.4, 16, 17.6, 19.2, 22.4] },
+      { type: '자연 피해', valByLevel: [8, 9.6, 11.2, 12.8, 14.4, 16, 17.6, 19.2, 22.4] }
+    ]
+  },
+
+  {
+    id: 'Sundering Steel',
+    name: '강철의 여운',
+    type: 'sword',
+    baseAtk: 411,
+    rarity: 5,
+    traits: [
+      { type: '스탯', stat: '민첩', valBase: 41, valMax: 124 },
+      { type: '물리 피해', valBase: 11.6, valMax: 34.7 },
+      { type: '공격력 증가', valByLevel: [5, 6, 7, 8, 9, 10, 11, 12, 14] },
+      { type: '공격력 증가', valByLevel: [7.5, 9, 10.5, 12, 13.5, 15, 16.5, 18, 21] }
+    ]
+  },
+
+  {
+    id: 'Aspirant',
+    name: '숭배의 시선',
+    type: 'sword',
+    baseAtk: 411,
+    rarity: 5,
+    traits: [
+      { type: '스탯', stat: '민첩', valBase: 41, valMax: 124 },
+      { type: '물리 피해', valBase: 11.6, valMax: 34.7 },
+      { type: '궁극기 피해', valByLevel: [16, 19.2, 22.4, 25.6, 28.8, 32, 35.2, 38.4, 44.8] },
+      { type: '물리 피해', valByLevel: [12, 14.4, 16.8, 19.2, 21.6, 24, 26.4, 28.8, 33.6] }
+    ]
+  },
+
+  {
+    id: 'OBJ Edge of Lightness',
+    name: 'O.B.J. 엣지 오브 라이트',
+    type: 'sword',
+    baseAtk: 411,
+    rarity: 5,
+    traits: [
+      { type: '스탯', stat: '민첩', valBase: 41, valMax: 124 },
+      { type: '물리 피해', valBase: 10.4, valMax: 31.2 },
+      { type: '스탯', stat: '부스탯', valByLevel: [5, 6, 7, 8, 9, 10, 11, 12, 14] },
+      { type: '열기 피해', valByLevel: [3, 3.6, 4.2, 4.8, 5.4, 6, 6.6, 7.2, 8.4], target: '팀' },
+      { type: '전기 피해', valByLevel: [3, 3.6, 4.2, 4.8, 5.4, 6, 6.6, 7.2, 8.4], target: '팀' }
+    ]
+  },
+
+  {
+    id: 'Twelve Questions',
+    name: '십이문',
+    type: 'sword',
+    baseAtk: 411,
+    rarity: 5,
+    traits: [
+      { type: '스탯', stat: '민첩', valBase: 41, valMax: 124 },
+      { type: '공격력 증가', valBase: 10.4, valMax: 31.2 },
+      { type: '스탯', stat: '부스탯', valByLevel: [5, 6, 7, 8, 9, 10, 11, 12, 14] },
+      { type: '공격력 증가', valByLevel: [7.5, 9, 10.5, 12, 13.5, 15, 16.5, 18, 21] }
+    ]
+  },
+
+  {
+    id: 'Finchaser 3.0',
+    name: '린수를 찾아서 3.0',
+    type: 'sword',
+    baseAtk: 411,
+    rarity: 5,
+    traits: [
+      { type: '스탯', stat: '힘', valBase: 41, valMax: 124 },
+      { type: '궁극기 충전', valBase: 12.3, valMax: 37.1 },
+      { type: '공격력 증가', valByLevel: [5, 6, 7, 8, 9, 10, 11, 12, 14] },
+      { type: '받는 냉기 피해', valByLevel: [8, 9.6, 11.2, 12.8, 14.4, 16, 17.6, 19.2, 22.4], target: '적' }
+    ]
+  },
+
+  {
+    id: 'Fortmaker',
+    name: '불사의 성주',
+    type: 'sword',
+    baseAtk: 411,
+    rarity: 5,
+    traits: [
+      { type: '스탯', stat: '지능', valBase: 41, valMax: 124 },
+      { type: '궁극기 충전', valBase: 12.3, valMax: 37.1 },
+      { type: '공격력 증가', valByLevel: [5, 6, 7, 8, 9, 10, 11, 12, 14] },
+      { type: '오리지늄 아츠 강도', valByLevel: [25, 30, 35, 40, 45, 50, 55, 60, 70] }
+    ]
+  },
+
+  //////////////
+
+  {
+    id: 'Sundered Prince',
+    name: '분쇄의 군주',
+    type: 'great_sword',
+    baseAtk: 490,
+    rarity: 6,
+    traits: [
+      { type: '스탯', stat: '힘', valBase: 52, valMax: 156 },
+      { type: '치명타 확률', valBase: 6.5, valMax: 19.5 },
+      { type: '공격력 증가', valByLevel: [10, 12, 14, 16, 18, 20, 22, 24, 28] }
+    ]
+  },
+
+  {
+    id: 'Former Finery',
+    name: '과거의 일품',
+    type: 'great_sword',
+    baseAtk: 495,
+    rarity: 6,
+    traits: [
+      { type: '스탯', stat: '의지', valBase: 20, valMax: 156 },
+      { type: '최대 체력', valBase: 26, valMax: 78 },
+      { type: '치유 효율', valByLevel: [10, 12, 14, 16, 18, 20, 22, 24, 28] },
+    ]
+  },
+
+  {
+    id: 'Exemplar',
+    name: '모범',
+    type: 'great_sword',
+    baseAtk: 500,
+    rarity: 6,
+    traits: [
+      { type: '스탯', stat: '주스탯', valBase: 44, valMax: 132 },
+      { type: '공격력 증가', valBase: 13, valMax: 39 },
+      { type: '물리 피해', valByLevel: [10, 12, 14, 16, 18, 20, 22, 24, 28] },
+      { type: '물리 피해', valByLevel: [10, 12, 14, 16, 18, 20, 22, 24, 28] }
+    ]
+  },
+
+  {
+    id: 'Khravengger',
+    name: '헤라펜거',
+    type: 'great_sword',
+    baseAtk: 505,
+    rarity: 6,
+    traits: [
+      { type: '스탯', stat: '힘', valBase: 52, valMax: 156 },
+      { type: '공격력 증가', valBase: 13, valMax: 39 },
+      { type: '모든 스킬 피해', valByLevel: [20, 24, 28, 32, 36, 40, 44, 48, 56] },
+      { type: '냉기 피해', valByLevel: [10, 12, 14, 16, 18, 20, 22, 24, 28] },
+      { type: '냉기 피해', valByLevel: [20, 24, 28, 32, 36, 40, 44, 48, 56] }
+    ]
+  },
+
+  {
+    id: 'Thunderberge',
+    name: '천둥의 흔적',
+    type: 'great_sword',
+    baseAtk: 495,
+    rarity: 6,
+    traits: [
+      { type: '스탯', stat: '힘', valBase: 52, valMax: 156 },
+      { type: '최대 체력', valBase: 26, valMax: 78 }
+    ]
+  },
+
+  {
+    id: 'OBJ Heavy Burden',
+    name: 'O.B.J. 헤비 버든',
+    type: 'great_sword',
+    baseAtk: 411,
+    rarity: 5,
+    traits: [
+      { type: '스탯', stat: '힘', valBase: 41, valMax: 124 },
+      { type: '최대 체력', valBase: 20.8, valMax: 62.4 },
+      { type: '스탯', stat: '부스탯', valByLevel: [5, 6, 7, 8, 9, 10, 11, 12, 14] }
+    ]
+  },
+
+  {
+    id: 'Finishing Call',
+    name: '최후의 메아리',
+    type: 'great_sword',
+    baseAtk: 411,
+    rarity: 5,
+    traits: [
+      { type: '스탯', stat: '힘', valBase: 41, valMax: 124 },
+      { type: '최대 체력', valBase: 20.8, valMax: 62 },
+      { type: '스탯', stat: '부스탯', valByLevel: [5, 6, 7, 8, 9, 10, 11, 12, 14] },
+      { type: '치유 효율', valByLevel: [20, 24, 28, 32, 36, 40, 44, 48, 56] }
+    ]
+  },
+
+  {
+    id: 'Ancient Canal',
+    name: '고대의 강줄기',
+    type: 'great_sword',
+    baseAtk: 411,
+    rarity: 5,
+    traits: [
+      { type: '스탯', stat: '힘', valBase: 41, valMax: 124 },
+      { type: '오리지늄 아츠 강도', valBase: 20, valMax: 62 },
+      { type: '오리지늄 아츠 강도', valByLevel: [10, 12, 14, 16, 18, 20, 22, 24, 28] },
+      { type: '물리 피해', valByLevel: [20, 24, 28, 32, 36, 40, 44, 48, 56] }
+    ]
+  },
+
+  {
+    id: 'Seeker of Dark Lung',
+    name: '검은 추적자',
+    type: 'great_sword',
+    baseAtk: 411,
+    rarity: 5,
+    traits: [
+      { type: '스탯', stat: '힘', valBase: 41, valMax: 124 },
+      { type: '궁극기 충전', valBase: 12.3, valMax: 37.1 },
+      { type: '스탯', stat: '주스탯', valByLevel: [5, 6, 7, 8, 9, 10, 11, 12, 14] },
+      { type: '공격력 증가', valByLevel: [6, 7.2, 8.4, 9.6, 10.8, 12, 13.2, 14.4, 16.8] }
+    ]
+  },
+
+  /////////////
+
+  {
+    id: 'JET',
+    name: 'J.E.T.',
+    type: 'polearm',
+    baseAtk: 500,
+    rarity: 6,
+    traits: [
+      { type: '스탯', stat: '주스탯', valBase: 44, valMax: 132 },
+      { type: '공격력 증가', valBase: 13, valMax: 39 },
+      { type: '아츠 피해', valByLevel: [12, 14, 17, 19, 22, 24, 26, 29, 34] },
+      { type: '아츠 피해', valByLevel: [12, 14, 17, 19, 22, 24, 26, 29, 34] },
+      { type: '아츠 피해', valByLevel: [12, 14, 17, 19, 22, 24, 26, 29, 34] }
+    ]
+  },
+
+  {
+    id: 'Valiant',
+    name: '용사',
+    type: 'polearm',
+    baseAtk: 495,
+    rarity: 6,
+    traits: [
+      { type: '스탯', stat: '민첩', valBase: 52, valMax: 156 },
+      { type: '물리 피해', valBase: 14.44, valMax: 43.33 },
+      { type: '공격력 증가', valByLevel: [10, 12, 14, 16, 18, 20, 22, 24, 28] }
+    ]
+  },
+
+  {
+    id: 'Mountain Bearer',
+    name: '산의 지배자',
+    type: 'polearm',
+    baseAtk: 500,
+    rarity: 6,
+    traits: [
+      { type: '스탯', stat: '민첩', valBase: 52, valMax: 156 },
+      { type: '물리 피해', valBase: 14.44, valMax: 43.33 },
+      { type: '주는 피해', valByLevel: [20, 24, 28, 32, 36, 40, 44, 48, 56] },
+      { type: '모든 능력치', valByLevel: [8, 9.6, 11.2, 12.8, 14.4, 16, 17.6, 19.2, 22.4] },
+      { type: '모든 능력치', valByLevel: [8, 9.6, 11.2, 12.8, 14.4, 16, 17.6, 19.2, 22.4] }
+    ]
+  },
+
+  {
+    id: 'Cohesive Traction',
+    name: '중심력',
+    type: 'polearm',
+    baseAtk: 411,
+    rarity: 6,
+    traits: [
+      { type: '스탯', stat: '의지', valBase: 41, valMax: 124 },
+      { type: '전기 피해', valBase: 11.6, valMax: 34.7 },
+      { type: '연계 스킬 피해', valByLevel: [10, 12, 14, 16, 18, 20, 22, 24, 28] },
+      { type: '전기 피해', valByLevel: [10, 12, 14, 16, 18, 20, 22, 24, 28] }
+    ]
+  },
+
+  {
+    id: 'OBJ Razorhorn',
+    name: 'O.B.J. 스파이크',
+    type: 'polearm',
+    baseAtk: 411,
+    rarity: 5,
+    traits: [
+      { type: '스탯', stat: '의지', valBase: 41, valMax: 124 },
+      { type: '물리 피해', valBase: 11.6, valMax: 34.7 },
+      { type: '주는 피해', valByLevel: [8, 9.6, 11.2, 12.8, 14.4, 16, 17.6, 19.2, 22.4] },
+      { type: '공격력 증가', valByLevel: [12, 14.4, 16.8, 19.2, 21.6, 24, 26.4, 28.8, 33.6] }
+    ]
+  },
+
+  {
+    id: 'Chimeric Justice',
+    name: '키메라의 정의',
+    type: 'polearm',
+    baseAtk: 411,
+    rarity: 5,
+    traits: [
+      { type: '스탯', stat: '힘', valBase: 41, valMax: 124 },
+      { type: '궁극기 충전', valBase: 12.3, valMax: 37.1 },
+      { type: '치명타 확률', valByLevel: [3, 3.6, 4.2, 4.8, 5.4, 6, 6.6, 7.2, 8.4] },
+      { type: '공격력 증가', valByLevel: [15, 18, 21, 24, 27, 30, 33, 36, 42] }
+    ]
+  },
+
+  ////////////
+
+  {
+    id: 'Clannibal',
+    name: '클래니벌',
+    type: 'handcannon',
+    baseAtk: 490,
+    rarity: 6,
+    traits: [
+      { type: '스탯', stat: '주스탯', valBase: 44, valMax: 132 },
+      { type: '아츠 피해', valBase: 14.44, valMax: 43.33 },
+      { type: '아츠 피해', valByLevel: [12, 14.4, 16.8, 19.2, 21.6, 24, 26.4, 28.8, 33.6] },
+      { type: '받는 아츠 피해', valByLevel: [10, 12, 14, 16, 18, 20, 22, 24, 28], target: '적' }
+    ]
+  },
+
+  {
+    id: 'Wedge',
+    name: '쐐기',
+    type: 'handcannon',
+    baseAtk: 500,
+    rarity: 6,
+    traits: [
+      { type: '스탯', stat: '주스탯', valBase: 44, valMax: 132 },
+      { type: '치명타 확률', valBase: 6.5, valMax: 19.5 },
+      { type: '아츠 피해', valByLevel: [12, 14.4, 16.8, 19.2, 21.6, 24, 26.4, 28.8, 33.6] },
+      { type: '아츠 피해', valByLevel: [8, 9.6, 11.2, 12.8, 14.4, 16, 17.6, 19.2, 22.4] },
+      { type: '아츠 피해', valByLevel: [16, 19.2, 22.4, 25.6, 28.8, 32, 35.2, 38.4, 44.8] }
+    ]
+  },
+
+  {
+    id: 'Artzy Tyrannical',
+    name: '예술의 폭군',
+    type: 'handcannon',
+    baseAtk: 505,
+    rarity: 6,
+    traits: [
+      { type: '스탯', stat: '지능', valBase: 52, valMax: 156 },
+      { type: '치명타 확률', valBase: 6.5, valMax: 19.5 },
+      { type: '냉기 피해', valByLevel: [16, 19.2, 22.4, 25.6, 28.8, 32, 35.2, 38.4, 44.8] },
+      { type: '냉기 피해', valByLevel: [36, 43.2, 50.4, 57.6, 64.8, 72, 79.2, 86.4, 100.8] }
+    ]
+  },
+
+  {
+    id: 'Navigator',
+    name: '항로의 개척자',
+    type: 'handcannon',
+    baseAtk: 490,
+    rarity: 6,
+    traits: [
+      { type: '스탯', stat: '지능', valBase: 52, valMax: 156 },
+      { type: '냉기 피해', valBase: 14.44, valMax: 43.33 },
+      { type: '치명타 확률', valByLevel: [3.5, 4.2, 4.9, 5.6, 6.3, 7, 7.7, 8.4, 9.8] },
+      { type: '받는 냉기 피해', valByLevel: [7, 8.4, 9.8, 11.2, 12.6, 14, 15.4, 16.8, 19.6], target: '적' },
+      { type: '받는 자연 피해', valByLevel: [7, 8.4, 9.8, 11.2, 12.6, 14, 15.4, 16.8, 19.6], target: '적' },
+      { type: '치명타 확률', valByLevel: [2, 2.4, 2.8, 3.2, 3.6, 4, 4.4, 4.8, 5.6] }
+    ]
+  },
+
+  {
+    id: 'Rational Farewell',
+    name: '이성적인 작별',
+    type: 'handcannon',
+    baseAtk: 411,
+    rarity: 5,
+    traits: [
+      { type: '스탯', stat: '힘', valBase: 41, valMax: 124 },
+      { type: '열기 피해', valBase: 11.6, valMax: 34.7 },
+      { type: '배틀 스킬 피해', valByLevel: [10, 12, 14, 16, 18, 20, 22, 24, 28] },
+      { type: '공격력 증가', valByLevel: [16, 19.2, 22.4, 25.6, 28.8, 32, 35.2, 38.4, 44.8] }
+    ]
+  },
+
+  {
+    id: 'OBJ Velocitous',
+    name: 'O.B.J. 벨로시투스',
+    type: 'handcannon',
+    baseAtk: 411,
+    rarity: 5,
+    traits: [
+      { type: '스탯', stat: '민첩', valBase: 41, valMax: 124 },
+      { type: '궁극기 충전', valBase: 12.3, valMax: 37.1 },
+      { type: '공격력 증가', valByLevel: [5, 6, 7, 8, 9, 10, 11, 12, 14] },
+      { type: '자연 피해', valByLevel: [20, 24, 28, 32, 36, 40, 44, 48, 56] }
+    ]
+  },
+
+  {
+    id: 'Opus: The Living',
+    name: '작품 중생',
+    type: 'handcannon',
+    baseAtk: 411,
+    rarity: 5,
+    traits: [
+      { type: '스탯', stat: '민첩', valBase: 41, valMax: 124 },
+      { type: '아츠 피해', valBase: 11.6, valMax: 34.7 },
+      { type: '치명타 확률', valByLevel: [3, 3.6, 4.2, 4.8, 5.4, 6, 6.6, 7.2, 8.4] },
+      { type: '공격력 증가', valByLevel: [15, 18, 21, 24, 27, 30, 33, 36, 42] }
+    ]
+  },
+
+  //////////////
+
+  {
+    id: 'Chivalric Virtues',
+    name: '기사도 정신',
+    type: 'arts_unit',
+    baseAtk: 485,
+    rarity: 6,
+    traits: [
+      { type: '스탯', stat: '의지', valBase: 52, valMax: 156 },
+      { type: '최대 체력', valBase: 26, valMax: 78 },
+      { type: '치유 효율', valByLevel: [10, 12, 14, 16, 18, 20, 22, 24, 28] },
+      { type: '공격력 증가', valByLevel: [9, 10.8, 12.6, 14.4, 16.2, 18, 19.8, 21.6, 25.2], target: '팀' }
+    ]
+  },
+
+  {
+    id: 'Oblivion',
+    name: '망각',
+    type: 'arts_unit',
+    baseAtk: 495,
+    rarity: 6,
+    traits: [
+      { type: '스탯', stat: '지능', valBase: 52, valMax: 156 },
+      { type: '아츠 피해', valBase: 14.44, valMax: 43.33 },
+      { type: '치명타 확률', valByLevel: [5, 6, 7, 8, 9, 10, 11, 12, 14] },
+      { type: '아츠 피해', valByLevel: [24, 28.8, 33.6, 38.4, 43.2, 48, 52.8, 57.6, 67.2] },
+      { type: '아츠 피해', valByLevel: [12, 14.4, 16.8, 19.2, 21.6, 24, 26.4, 28.8, 33.6] }
+    ]
+  },
+
+  {
+    id: 'Detonation Unit',
+    name: '폭발 유닛',
+    type: 'arts_unit',
+    baseAtk: 490,
+    rarity: 6,
+    traits: [
+      { type: '스탯', stat: '주스탯', valBase: 44, valMax: 132 },
+      { type: '오리지늄 아츠 강도', valBase: 26, valMax: 78 },
+      { type: '스탯', stat: '부스탯', valByLevel: [10, 12, 14, 16, 18, 20, 22, 24, 28] },
+      { type: '받는 아츠 피해', valByLevel: [9, 10.8, 12.6, 14.4, 16.2, 18, 19.8, 21.6, 25.2], target: '적' }
+    ]
+  },
+
+  {
+    id: 'Dreams of the Starry Beach',
+    name: '바다와 별의 꿈',
+    type: 'arts_unit',
+    baseAtk: 495,
+    rarity: 6,
+    traits: [
+      { type: '스탯', stat: '지능', valBase: 52, valMax: 156 },
+      { type: '치유 효율', valBase: 15.5, valMax: 46.4 },
+      { type: '스탯', stat: '부스탯', valByLevel: [16, 19.2, 22.4, 25.6, 28.8, 32, 35.2, 38.4, 44.8] },
+      { type: '받는 아츠 피해', valByLevel: [10, 12, 14, 16, 18, 20, 22, 24, 28], target: '적' }
+    ]
+  },
+
+  {
+    id: 'Delivery Guaranteed',
+    name: '사명의 길',
+    type: 'arts_unit',
+    baseAtk: 500,
+    rarity: 6,
+    traits: [
+      { type: '스탯', stat: '의지', valBase: 52, valMax: 156 },
+      { type: '궁극기 충전', valBase: 15, valMax: 46 },
+      { type: '자연 피해', valByLevel: [16, 19.2, 22.4, 25.6, 28.8, 32, 35.2, 38.4, 44.8] },
+      { type: '아츠 피해', valByLevel: [10, 12, 14, 16, 18, 20, 22, 24, 28], target: '팀' },
+      { type: '아츠 피해', valByLevel: [3.5, 4.2, 4.9, 5.6, 6.3, 7, 7.7, 8.4, 9.8], target: '팀' }
+    ]
+  },
+
+  {
+    id: 'Opus: Etch Figure',
+    name: '작품 침식 흔적',
+    type: 'arts_unit',
+    baseAtk: 485,
+    rarity: 6,
+    traits: [
+      { type: '스탯', stat: '의지', valBase: 52, valMax: 156 },
+      { type: '자연 피해', valBase: 14.44, valMax: 43.33 },
+      { type: '공격력 증가', valByLevel: [7, 8.4, 9.8, 11.2, 12.6, 14, 15.4, 16.8, 19.6] },
+      { type: '아츠 피해', valByLevel: [5, 6, 7, 8, 9, 10, 11, 12, 14], target: '팀' },
+      { type: '아츠 피해', valByLevel: [2, 2.4, 2.8, 3.2, 3.6, 4, 4.4, 4.8, 5.6], target: '팀' }
+    ]
+  },
+
+  {
+    id: 'OBJ Arts Identifier',
+    name: 'O.B.J. 아츠 아이덴티티',
+    type: 'arts_unit',
+    baseAtk: 411,
+    rarity: 5,
+    traits: [
+      { type: '스탯', stat: '지능', valBase: 41, valMax: 124 },
+      { type: '오리지늄 아츠 강도', valBase: 20, valMax: 62 },
+      { type: '최대 체력', valByLevel: [10, 12, 14, 16, 18, 20, 22, 24, 28] },
+      { type: '열기 피해', valByLevel: [8, 9.6, 11.2, 12.8, 14.4, 16, 17.6, 19.2, 22.4], target: '팀' },
+      { type: '전기 피해', valByLevel: [8, 9.6, 11.2, 12.8, 14.4, 16, 17.6, 19.2, 22.4], target: '팀' }
+    ]
+  },
+
+  {
+    id: 'Freedom to Proselytize',
+    name: '선교의 자유',
+    type: 'arts_unit',
+    baseAtk: 411,
+    rarity: 5,
+    traits: [
+      { type: '스탯', stat: '의지', valBase: 41, valMax: 124 },
+      { type: '치유 효율', valBase: 12.4, valMax: 37.1 },
+      { type: '스탯', stat: '주스탯', valByLevel: [5, 6, 7, 8, 9, 10, 11, 12, 14] }
+    ]
+  },
+
+  {
+    id: 'Wild Wanderer',
+    name: '황무지의 방랑자',
+    type: 'arts_unit',
+    baseAtk: 411,
+    rarity: 5,
+    traits: [
+      { type: '스탯', stat: '지능', valBase: 41, valMax: 124 },
+      { type: '전기 피해', valBase: 11.6, valMax: 34.7 },
+      { type: '오리지늄 아츠 강도', valByLevel: [10, 12, 14, 16, 18, 20, 22, 24, 28] },
+      { type: '전기 피해', valByLevel: [8, 9.6, 11.2, 12.8, 14.4, 16, 17.6, 19.2, 22.4], target: '팀' },
+      { type: '물리 피해', valByLevel: [8, 9.6, 11.2, 12.8, 14.4, 16, 17.6, 19.2, 22.4], target: '팀' }
+    ]
+  },
+
+  {
+    id: 'Monaihe',
+    name: '무가내하',
+    type: 'arts_unit',
+    baseAtk: 411,
+    rarity: 5,
+    traits: [
+      { type: '스탯', stat: '의지', valBase: 41, valMax: 124 },
+      { type: '궁극기 충전', valBase: 12.3, valMax: 37.1 },
+      { type: '스탯', stat: '주스탯', valByLevel: [5, 6, 7, 8, 9, 10, 11, 12, 14] },
+      { type: '오리지늄 아츠 강도', valByLevel: [25, 30, 35, 40, 45, 50, 55, 60, 70] }
+    ]
+  },
+
+  {
+    id: 'Stanza of Memorials',
+    name: '망자의 노래',
+    type: 'arts_unit',
+    baseAtk: 411,
+    rarity: 5,
+    traits: [
+      { type: '스탯', stat: '지능', valBase: 41, valMax: 124 },
+      { type: '공격력 증가', valBase: 10.4, valMax: 31.2 },
+      { type: '최대 체력', valByLevel: [10, 12, 14, 16, 18, 20, 22, 24, 28] },
+      { type: '공격력 증가', valByLevel: [8, 9.6, 11.2, 12.8, 14.4, 16, 17.6, 19.2, 22.4], target: '팀' }
+    ]
+  }
+];

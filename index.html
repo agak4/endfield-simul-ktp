@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>엔드필드 데미지 계산기</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="container">
+        <section class="panel left-panel">
+            <h2>메인 오퍼레이터</h2>
+            <div class="main-op-row">
+                <div class="main-op-left">
+                    <div id="main-op-image-container" class="op-image-container">
+                        <img id="main-op-image" src="" alt="오퍼레이터 이미지">
+                    </div>
+                </div>
+                <div class="main-op-right">
+                    <div class="control-row">
+                        <label>오퍼레이터</label>
+                        <!-- 기존 Select는 숨김 처리하고 JS로 제어 -->
+                        <select id="main-op-select" style="display:none"></select>
+                        <button id="main-op-select-btn" class="visual-select-btn btn-select">선택하세요</button>
+                    </div>
+                    <div class="control-row potency-row">
+                        <label>잠재효과</label>
+                        <div class="potency-group" id="main-op-pot-group">
+                            <!-- JS로 버튼 생성 -->
+                        </div>
+                        <input type="hidden" id="main-op-pot" value="0">
+                    </div>
+                </div>
+            </div>
+
+            <h3>무기 설정</h3>
+            <div class="wep-row">
+                <div class="wep-left">
+                    <div id="main-wep-image-container" class="op-image-container wep-image-container">
+                        <img id="main-wep-image" src="" alt="무기 이미지">
+                    </div>
+                </div>
+                <div class="wep-right">
+                    <div class="control-row">
+                        <label>무기 선택</label>
+                        <select id="main-wep-select"></select>
+                    </div>
+                    <div class="control-row potency-row">
+                        <label>잠재효과</label>
+                        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                            <div class="potency-group" id="main-wep-pot-group"></div>
+                            <input type="checkbox" id="main-wep-state" class="hidden-checkbox">
+                        </div>
+                        <input type="hidden" id="main-wep-pot" value="0">
+                    </div>
+                </div>
+            </div>
+
+            <h3>장비 (4파츠)</h3>
+            <div class="control-group" id="main-forge-wrapper">
+                <label style="display:none">전체 단조</label>
+                <input type="checkbox" id="main-gear-forge" class="hidden-checkbox">
+            </div>
+            <div id="main-gear-slots" class="gear-grid">
+                <!-- JS에서 슬롯별 단조 버튼 생성 시 wrapper ID 참조 -->
+                <div class="gear-slot" data-slot="glove">
+                    <div class="gear-image-container op-image-container">
+                        <img id="gear-glove-image" src="" alt="글러브">
+                    </div>
+                    <select id="gear-glove-select"></select>
+                    <input type="checkbox" id="gear-glove-forge" class="hidden-checkbox">
+                </div>
+                <div class="gear-slot" data-slot="comp1">
+                    <div class="gear-image-container op-image-container">
+                        <img id="gear-comp1-image" src="" alt="부품">
+                    </div>
+                    <select id="gear-comp1-select"></select>
+                    <input type="checkbox" id="gear-comp1-forge" class="hidden-checkbox">
+                </div>
+                <div class="gear-slot" data-slot="armor">
+                    <div class="gear-image-container op-image-container">
+                        <img id="gear-armor-image" src="" alt="방어구">
+                    </div>
+                    <select id="gear-armor-select"></select>
+                    <input type="checkbox" id="gear-armor-forge" class="hidden-checkbox">
+                </div>
+                <div class="gear-slot" data-slot="comp2">
+                    <div class="gear-image-container op-image-container">
+                        <img id="gear-comp2-image" src="" alt="부품">
+                    </div>
+                    <select id="gear-comp2-select"></select>
+                    <input type="checkbox" id="gear-comp2-forge" class="hidden-checkbox">
+                </div>
+            </div>
+        </section>
+
+        <section class="panel center-panel">
+            <h2>서브 오퍼레이터 (지원)</h2>
+            <div id="sub-ops-container">
+                <!-- Sub Op 1 -->
+                <div class="sub-op-card" id="sub-op-card-0">
+                    <div class="sub-op-header" onclick="toggleSubOp(0)">
+                        <span>서브 오퍼레이터 1</span>
+                        <span id="sub-0-summary"
+                            style="font-weight:normal; font-size:0.8rem; color:#aaa; margin-left:10px;"></span>
+                        <span class="toggle-icon">▼</span>
+                    </div>
+                    <div class="sub-op-content" id="sub-op-content-0">
+                        <div class="sub-char-row">
+                            <div class="sub-char-left">
+                                <div class="op-image-container">
+                                    <img id="sub-0-image" src="" alt="서브1">
+                                </div>
+                            </div>
+                            <div class="sub-char-right">
+                                <div class="control-row">
+                                    <label>오퍼레이터</label>
+                                    <select id="sub-0-op" style="display:none"></select>
+                                    <button id="sub-0-op-btn" class="visual-select-btn btn-select">선택하세요</button>
+                                </div>
+                                <div class="control-row potency-row">
+                                    <label>잠재효과</label>
+                                    <div class="potency-group" id="sub-0-pot-group"></div>
+                                    <input type="hidden" id="sub-0-pot" value="0">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="sub-wep-row">
+                            <div class="sub-wep-left">
+                                <div class="op-image-container">
+                                    <img id="sub-0-wep-image" src="" alt="무기">
+                                </div>
+                            </div>
+                            <div class="sub-wep-right">
+                                <div class="control-row">
+                                    <label>무기 선택</label>
+                                    <select id="sub-0-wep"></select>
+                                </div>
+                                <div class="control-row potency-row">
+                                    <label>잠재효과</label>
+                                    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                                        <div class="potency-group" id="sub-0-wep-pot-group"></div>
+                                        <input type="checkbox" id="sub-0-wep-state" class="hidden-checkbox">
+                                    </div>
+                                    <input type="hidden" id="sub-0-wep-pot" value="0">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="sub-set-row">
+                            <label>장비 세트</label>
+                            <select id="sub-0-set">
+                                <option value="">(세트 없음)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sub Op 2 -->
+                <div class="sub-op-card" id="sub-op-card-1">
+                    <div class="sub-op-header" onclick="toggleSubOp(1)">
+                        <span>서브 오퍼레이터 2</span>
+                        <span id="sub-1-summary"
+                            style="font-weight:normal; font-size:0.8rem; color:#aaa; margin-left:10px;"></span>
+                        <span class="toggle-icon">▼</span>
+                    </div>
+                    <div class="sub-op-content" id="sub-op-content-1">
+                        <div class="sub-char-row">
+                            <div class="sub-char-left">
+                                <div class="op-image-container">
+                                    <img id="sub-1-image" src="" alt="서브2">
+                                </div>
+                            </div>
+                            <div class="sub-char-right">
+                                <div class="control-row">
+                                    <label>오퍼레이터</label>
+                                    <select id="sub-1-op" style="display:none"></select>
+                                    <button id="sub-1-op-btn" class="visual-select-btn btn-select">선택하세요</button>
+                                </div>
+                                <div class="control-row potency-row">
+                                    <label>잠재효과</label>
+                                    <div class="potency-group" id="sub-1-pot-group"></div>
+                                    <input type="hidden" id="sub-1-pot" value="0">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="sub-wep-row">
+                            <div class="sub-wep-left">
+                                <div class="op-image-container">
+                                    <img id="sub-1-wep-image" src="" alt="무기">
+                                </div>
+                            </div>
+                            <div class="sub-wep-right">
+                                <div class="control-row">
+                                    <label>무기 선택</label>
+                                    <select id="sub-1-wep"></select>
+                                </div>
+                                <div class="control-row potency-row">
+                                    <label>잠재효과</label>
+                                    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                                        <div class="potency-group" id="sub-1-wep-pot-group"></div>
+                                        <input type="checkbox" id="sub-1-wep-state" class="hidden-checkbox">
+                                    </div>
+                                    <input type="hidden" id="sub-1-wep-pot" value="0">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="sub-set-row">
+                            <label>장비 세트</label>
+                            <select id="sub-1-set">
+                                <option value="">(세트 없음)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sub Op 3 -->
+                <div class="sub-op-card" id="sub-op-card-2">
+                    <div class="sub-op-header" onclick="toggleSubOp(2)">
+                        <span>서브 오퍼레이터 3</span>
+                        <span id="sub-2-summary"
+                            style="font-weight:normal; font-size:0.8rem; color:#aaa; margin-left:10px;"></span>
+                        <span class="toggle-icon">▼</span>
+                    </div>
+                    <div class="sub-op-content" id="sub-op-content-2">
+                        <div class="sub-char-row">
+                            <div class="sub-char-left">
+                                <div class="op-image-container">
+                                    <img id="sub-2-image" src="" alt="서브3">
+                                </div>
+                            </div>
+                            <div class="sub-char-right">
+                                <div class="control-row">
+                                    <label>오퍼레이터</label>
+                                    <select id="sub-2-op" style="display:none"></select>
+                                    <button id="sub-2-op-btn" class="visual-select-btn btn-select">선택하세요</button>
+                                </div>
+                                <div class="control-row potency-row">
+                                    <label>잠재효과</label>
+                                    <div class="potency-group" id="sub-2-pot-group"></div>
+                                    <input type="hidden" id="sub-2-pot" value="0">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="sub-wep-row">
+                            <div class="sub-wep-left">
+                                <div class="op-image-container">
+                                    <img id="sub-2-wep-image" src="" alt="무기">
+                                </div>
+                            </div>
+                            <div class="sub-wep-right">
+                                <div class="control-row">
+                                    <label>무기 선택</label>
+                                    <select id="sub-2-wep"></select>
+                                </div>
+                                <div class="control-row potency-row">
+                                    <label>잠재효과</label>
+                                    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                                        <div class="potency-group" id="sub-2-wep-pot-group"></div>
+                                        <input type="checkbox" id="sub-2-wep-state" class="hidden-checkbox">
+                                    </div>
+                                    <input type="hidden" id="sub-2-wep-pot" value="0">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="sub-set-row">
+                            <label>장비 세트</label>
+                            <select id="sub-2-set">
+                                <option value="">(세트 없음)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="panel right-panel">
+            <h2>전투 분석 대시보드</h2>
+            <div class="control-group">
+                <label>적 상태</label>
+                <input type="checkbox" id="enemy-unbalanced" class="hidden-checkbox">
+                <button id="enemy-unbalanced-toggle" class="toggle-btn" style="width:100%">불균형: OFF</button>
+                <!-- 버튼은 JS에서 이벤트 바인딩 -->
+            </div>
+            <div class="result-box total-dmg-box">
+                <h3>최종 데미지</h3>
+                <span id="final-damage">0</span>
+            </div>
+            <div class="dashboard-grid">
+                <div class="tile">
+                    <h4>공격력</h4>
+                    <span id="stat-atk">0</span>
+                    <ul id="list-atk" class="detail-list"></ul>
+                </div>
+                <div class="tile">
+                    <h4>치명타 기대값</h4>
+                    <span id="stat-crit">0</span>
+                    <div class="sub-stat" style="font-size:0.8rem; color:#aaa; margin-bottom:5px;">
+                        확률: <span id="val-crit-rate" style="color:#fff"></span>% / 피해: <span id="val-crit-dmg"
+                            style="color:#fff"></span>%
+                    </div>
+                    <ul id="list-crit" class="detail-list"></ul>
+                </div>
+                <div class="tile">
+                    <h4>주는 피해</h4>
+                    <span id="stat-dmg-inc">0%</span>
+                    <ul id="list-dmg-inc" class="detail-list"></ul>
+                </div>
+                <div class="tile">
+                    <h4>증폭 (속성)</h4>
+                    <span id="stat-amp">0%</span>
+                    <ul id="list-amp" class="detail-list"></ul>
+                </div>
+                <div class="tile">
+                    <h4>적이 받는 피해</h4>
+                    <span id="stat-taken">0%</span>
+                    <ul id="list-taken" class="detail-list"></ul>
+                </div>
+                <div class="tile">
+                    <h4>취약</h4>
+                    <span id="stat-vuln">0%</span>
+                    <ul id="list-vuln" class="detail-list"></ul>
+                </div>
+                <div class="tile">
+                    <h4>불균형</h4>
+                    <span id="stat-unbal">0%</span>
+                    <ul id="list-unbal" class="detail-list"></ul>
+                </div>
+                <div class="tile">
+                    <h4>연타</h4>
+                    <span id="stat-multihit">0</span>
+                    <ul id="list-multihit" class="detail-list"></ul>
+                </div>
+                <div class="tile">
+                    <h4>오리지늄 아츠</h4>
+                    <span id="stat-arts">0</span>
+                    <ul id="list-arts" class="detail-list"></ul>
+                </div>
+            </div>
+            <h3>무기 비교 (Top 3)</h3>
+            <div id="weapon-comparison" class="comparison-list"></div>
+        </section>
+    </div>
+
+    <!-- 오퍼레이터 선택 모달 -->
+    <div id="op-selector-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span style="font-size:1.2rem; font-weight:bold; color:var(--accent);">오퍼레이터 선택</span>
+                <button class="modal-close" id="modal-close-btn">&times;</button>
+            </div>
+            <div class="modal-grid" id="op-modal-grid">
+                <!-- JS로 동적 생성 -->
+            </div>
+        </div>
+    </div>
+
+    <script src="data_operators.js"></script>
+    <script src="data_weapons.js"></script>
+    <script src="data_gear.js"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>
