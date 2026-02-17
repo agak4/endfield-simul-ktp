@@ -1032,3 +1032,51 @@ input[type="range"]::-webkit-slider-thumb {
     font-weight: bold;
     color: var(--neon-cyan);
 }
+
+/* ============ 활성 세트 UI 스타일 ============ */
+.u-gap-15 {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.active-set-container {
+    min-height: 40px;
+}
+
+.active-set-badge {
+    flex: 1;
+    background: linear-gradient(135deg, rgba(0, 217, 255, 0.15), rgba(181, 55, 242, 0.15));
+    border: 1px solid var(--neon-blue);
+    padding: 12px;
+    border-radius: 12px;
+    box-shadow: 0 0 20px rgba(0, 217, 255, 0.2);
+}
+
+.active-set-badge .set-name {
+    display: block;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--neon-cyan);
+    text-shadow: 0 0 10px rgba(0, 255, 245, 0.5);
+    margin-bottom: 4px;
+}
+
+.active-set-badge .set-status {
+    font-size: 0.7rem;
+    color: var(--neon-purple);
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 8px;
+}
+
+.active-set-badge .set-desc {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    line-height: 1.4;
+    white-space: pre-line;
+    border-top: 1px solid rgba(0, 217, 255, 0.1);
+    padding-top: 8px;
+}

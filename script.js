@@ -11,12 +11,18 @@ let state = {
         { id: null, pot: 0, wepId: null, wepPot: 0, wepState: false, equipSet: null }
     ],
     enemyUnbalanced: false,
+    activeSetId: null // 메인 오퍼레이터 활성 세트 ID
 };
 
 const STAT_NAME_MAP = {
     str: '힘', agi: '민첩', int: '지능', wil: '의지',
     '힘': 'str', '민첩': 'agi', '지능': 'int', '의지': 'wil'
 };
+
+function getStatName(key) {
+    const map = { str: '힘', agi: '민첩', int: '지능', wil: '의지' };
+    return map[key] || key;
+}
 
 /**
  * UI로부터 현재 상태를 읽어와 업데이트하고 계산을 트리거합니다.
@@ -177,6 +183,35 @@ function collectAllEffects(state, opData, wepData, stats, allEffects) {
             }
         }
     });
+
+    // --- 세트 효과 (메인 + 서브) ---
+    const activeNonStackTypes = new Set();
+    const opsForSet = [
+        { opData: opData, setId: getActiveSetID(state.mainOp.gears), name: opData.name },
+        ...state.subOps.map((sub, idx) => {
+            const sData = DATA_OPERATORS.find(o => o.id === sub.id);
+            return { opData: sData, setId: sub.equipSet, name: sData ? sData.name : `서브${idx + 1}` };
+        })
+    ];
+
+    state.activeSetId = opsForSet[0].setId; // UI 연동용
+
+    opsForSet.forEach((entry, idx) => {
+        if (!entry.setId || !entry.opData) return;
+        const isSelf = (idx === 0);
+        const setEffects = getSetEffects(entry.setId, entry.opData, isSelf);
+        setEffects.forEach(eff => {
+            // 중첩 불가 체크
+            if (eff.nonStack) {
+                if (activeNonStackTypes.has(eff.type)) return;
+                activeNonStackTypes.add(eff.type);
+            }
+            // 서브 오퍼레이터인 경우 타겟 체크 (getSetEffects에서 이미 필터링되지만 안전장치)
+            if (idx > 0 && !isSubOpTargetValid(eff)) return;
+            const setName = DATA_SETS.find(s => s.id === entry.setId)?.name || entry.setId;
+            allEffects.push({ ...eff, name: `${entry.name} ${setName} 세트효과` });
+        });
+    });
 }
 
 /** '스탯' 효과들을 순회하며 고정치를 합산합니다. */
@@ -239,9 +274,24 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects) {
         const val = resolveVal(eff.val) * (eff.forgeMult || 1.0);
         const t = (eff.type || '').toString();
 
-        if (t === '공격력 증가') atkInc += val;
-        else if (t === '치명타 확률') { critRate += val; logs.crit.push(`[${eff.name}] +${val.toFixed(1)}%`); }
-        else if (t === '치명타 피해') { critDmg += val; logs.crit.push(`[${eff.name}] +${val.toFixed(1)}%`); }
+        if (t === '스탯') {
+            logs.atk.push(`[${eff.name}] +${val.toFixed(1)} (${getStatName(eff.stat)})`);
+        }
+        else if (t === '스탯%') {
+            logs.atk.push(`[${eff.name}] +${val.toFixed(1)}% (${getStatName(eff.stat)} 증가)`);
+        }
+        else if (t === '공격력 증가') {
+            atkInc += val;
+            logs.atk.push(`[${eff.name}] +${val.toFixed(1)}% (공격력)`);
+        }
+        else if (t === '치명타 확률') {
+            critRate += val;
+            logs.crit.push(`[${eff.name}] +${val.toFixed(1)}% (치명타 확률)`);
+        }
+        else if (t === '치명타 피해') {
+            critDmg += val;
+            logs.crit.push(`[${eff.name}] +${val.toFixed(1)}% (치명타 피해)`);
+        }
         else if (t === '연타') { multiHit = Math.max(multiHit, eff.val || 1.2); logs.multihit.push(`[${eff.name}] x${multiHit}`); }
         else if (t.endsWith('증폭')) { amp += val; logs.amp.push(`[${eff.name}] +${val.toFixed(1)}% (${t})`); }
         else if (t.endsWith('취약')) { vuln += val; logs.vuln.push(`[${eff.name}] +${val.toFixed(1)}% (${t})`); }
@@ -255,11 +305,6 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects) {
     const finalAtk = baseAtk * (1 + atkInc / 100) * (1 + statBonusPct);
 
     // 공격력 로그 추가
-    allEffects.filter(eff => eff.type === '공격력 증가' || eff.type === '스탯' || eff.type === '스탯%').forEach(eff => {
-        const val = resolveVal(eff.val) * (eff.forgeMult || 1.0);
-        let tag = eff.type === '공격력 증가' ? '공격력' : eff.type === '스탯%' ? `${STAT_NAME_MAP[eff.stat]} 증가` : STAT_NAME_MAP[eff.stat];
-        logs.atk.push(`[${eff.name}] +${val.toFixed(1)}${eff.type !== '스탯' ? '%' : ''} (${tag})`);
-    });
     logs.atk.push(`스탯 공격보너스: +${(statBonusPct * 100).toFixed(2)}%`);
     logs.atk.push(`주스탯 (${STAT_NAME_MAP[opData.mainStat]}): ${Math.floor(stats[opData.mainStat])}`);
     logs.atk.push(`부스탯 (${STAT_NAME_MAP[opData.subStat]}): ${Math.floor(stats[opData.subStat])}`);
@@ -271,8 +316,17 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects) {
 
     const finalDmg = finalAtk * critExp * (1 + dmgInc / 100) * (1 + amp / 100) * (1 + takenDmg / 100) * (1 + vuln / 100) * multiHit * (1 + finalUnbal / 100);
 
+    // 세트 효과 특수 계산 (검술사 추가 피해 등)
+    let finalWithExtra = finalDmg;
+    const swordsman = allEffects.find(e => e.setId === 'set_swordsman' && e.triggered);
+    if (swordsman) {
+        const extraDmg = finalAtk * 2.5; // 공격력 250%
+        finalWithExtra += extraDmg;
+        logs.dmgInc.push(`[검술사 추가피해] +${Math.floor(extraDmg).toLocaleString()}`);
+    }
+
     return {
-        finalDmg,
+        finalDmg: finalWithExtra,
         stats: { finalAtk, critExp, finalCritRate, critDmg, dmgInc, amp, vuln, takenDmg, unbalanceDmg: finalUnbal, originiumArts },
         logs
     };
@@ -327,4 +381,75 @@ function isApplicableEffect(opData, effectType, effectName) {
     if (checkElement(type.replace(' 피해', ''))) return true;
 
     return false;
+}
+
+// ============ 세트 효과 관련 로직 ============
+
+function getActiveSetID(gears) {
+    const counts = {};
+    gears.forEach(gId => {
+        if (!gId) return;
+        const gear = DATA_GEAR.find(g => g.id === gId);
+        if (gear && gear.set) {
+            counts[gear.set] = (counts[gear.set] || 0) + 1;
+        }
+    });
+    for (const [setId, count] of Object.entries(counts)) {
+        if (count >= 3) return setId;
+    }
+    return null;
+}
+
+function getSetEffects(setId, opData, isSelf = true) {
+    const set = DATA_SETS.find(s => s.id === setId);
+    if (!set || !set.effects) return [];
+
+    let activeEffects = [];
+    const skillStr = JSON.stringify(opData.skill);
+    const talentStr = JSON.stringify(opData.talents);
+
+    const canTrigger = (triggers) => {
+        if (!triggers) return true;
+        return triggers.some(t => skillStr.includes(t) || talentStr.includes(t));
+    };
+
+    set.effects.forEach(eff => {
+        const triggered = canTrigger(eff.triggers);
+
+        // 조건이 있는 효과인데 트리거되지 않은 경우 상시 효과가 아니면 패스
+        if (eff.triggers && !triggered) return;
+
+        // 특수 조건 체크 (phys_only 등)
+        if (eff.cond === 'phys_only' && opData.type !== 'phys') return;
+        if (eff.cond === 'arts_only' && opData.type !== 'arts') return;
+
+        // 타겟 체크: 자신을 제외한 팀원 대상인 경우 상시 패스 (자신 계산 시)
+        if (isSelf && eff.target === '팀_외') return;
+
+        // 검술사 특수 처리
+        if (eff.type === '검술사_추가피해') {
+            activeEffects.push({ ...eff, setId: 'set_swordsman', triggered: true });
+        } else {
+            activeEffects.push({ ...eff });
+        }
+    });
+
+    return activeEffects;
+}
+
+/** 오퍼레이터가 해당 세트의 조건부 효과를 발동할 수 있는지 확인 (UI용) */
+function checkSetViability(setId, opData) {
+    const set = DATA_SETS.find(s => s.id === setId);
+    if (!set || !set.effects) return false;
+
+    const skillStr = JSON.stringify(opData.skill);
+    const talentStr = JSON.stringify(opData.talents);
+
+    // 조건(triggers)이 있는 효과가 하나라도 있고, 그 중 하나라도 발동 가능하면 true
+    const conditionalEffects = set.effects.filter(e => e.triggers);
+    if (conditionalEffects.length === 0) return true; // 조건 없는 세트는 항상 발동가능
+
+    return conditionalEffects.some(eff =>
+        eff.triggers.some(t => skillStr.includes(t) || talentStr.includes(t))
+    );
 }

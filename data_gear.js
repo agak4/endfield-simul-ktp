@@ -76,16 +76,92 @@ const DATA_GEAR = [
 ];
 
 const DATA_SETS = [
-  { id: 'set_shikyang', name: '식양의 숨결', effect: { desc: '3개 세트 효과: 장착자의 생명력 +1000\n장착자가 증폭, 비호, 취약, 허약을 부여한 후, 다른 팀원이 주는 피해 +16%, 15초 동안 지속. 해당 효과는 중첩되지 않습니다.' } },
-  { id: 'set_joryu', name: '조류의 물결', effect: { desc: '3개 세트 효과: 장착자의 모든 스킬 피해 +20%\n장착자가 적에게 2스택 혹은 그 이상의 아츠 부착을 부여한 후, 주는 아츠 피해 +35%, 15초 동안 지속. 해당 효과는 중첩되지 않습니다.' } },
-  { id: 'set_eungryong', name: '응룡 50식', effect: { desc: '3개 세트 효과: 장착자의 공격력 +15%\n팀 내 임의의 오퍼레이터가 배틀 스킬을 사용할 때, 장착자가 응룡의 예리함 1스택 획득, 해당 오퍼레이터의 다음 연계 스킬 피해 +20%. 응룡의 예리함은 최대 3스택까지만 중첩됩니다.' } },
-  { id: 'set_mi_police', name: 'M. I. 경찰용', effect: { desc: '3개 세트 효과: 장착자의 치명타 확률 +5%\n장착자가 적에게 치명타를 준 후, 5초 동안 공격력 +5%, 최대 중첩 5스택. 최대 중첩 시, 치명타 확률 추가 +5%, 해당 효과는 중첩되지 않습니다.' } },
-  { id: 'set_heat_work', name: '열 작업용', effect: { desc: '3개 세트 효과: 장착자의 오리지늄 아츠 강도 +30\n장착자가 적에게 연소를 부여한 후, 열기 피해 +50%, 10초 동안 지속, 해당 효과는 중첩되지 않습니다.\n장착자가 적에게 부식을 부여한 후, 자연 피해 +50%, 10초 동안 지속, 해당 효과는 중첩되지 않습니다.' } },
-  { id: 'set_pioneer', name: '개척', effect: { desc: '3개 세트 효과: 장착자의 연계 스킬 쿨타임 감소 +15%\n장착자가 스킬을 사용하여 스킬 게이지를 회복한 후, 팀 전체가 주는 피해 +16%, 15초 동안 지속. 해당 효과는 30초마다 최대 1회만 발동합니다.' } },
-  { id: 'set_pulse', name: '펄스식', effect: { desc: '3개 세트 효과: 장착자의 오리지늄 아츠 강도 +30\n장착자가 적에게 감전을 부여한 후, 전기 피해 +50%, 10초 동안 지속, 해당 효과는 중첩되지 않습니다.\n장착자가 적에게 동결을 부여한 후, 냉기 피해 +50%, 10초 동안 지속, 해당 효과는 중첩되지 않습니다.' } },
-  { id: 'set_bone_crusher', name: '본 크러셔', effect: { desc: '3개 세트 효과: 장착자의 공격력 +15%\n장착자가 연계 스킬을 사용할 때, 본 크러셔의 압박 1스택 획득, 다음 배틀 스킬의 피해 +30%. 본 크러셔의 압박은 최대 2스택까지만 중첩됩니다.' } },
-  { id: 'set_light_super', name: '경량 초자연', effect: { desc: '3개 세트 효과: 장착자의 공격력 +8%\n장착자가 적에게 방어 불능을 부여한 후, 물리 피해 +8%, 15초 동안 지속, 최대 중첩 4스택. 목표의 방어 불능 스택이 4스택에 도달할 경우, 추가 물리 피해 +16%, 10초 동안 지속, 해당 효과는 중첩되지 않습니다.' } },
-  { id: 'set_bio_support', name: '생체 보조', effect: { desc: '3개 세트 효과: 장착자의 치유 효율 +20%\n장착자가 아군을 치유할 때, 목표가 10초 동안 받는 모든 유형 피해 -15%, 해당 목표가 받는 치유량이 최대치를 넘을 경우, 받는 모든 유형 피해 -30%, 해당 효과는 중첩되지 않습니다.' } },
-  { id: 'set_swordsman', name: '검술사', effect: { desc: '3개 세트 효과: 장착자의 불균형 효율 보너스 +20%\n장착자가 물리 이상 효과를 부여한 후, 공격력 250%만큼의 추가 물리 피해[10포인트 불균형치]. 해당 효과는 15초마다 최대 1회만 발동합니다.' } },
-  { id: 'set_crisis', name: '위기 탈출', effect: { desc: '세트 효과가 없는 장비.' } }
+  {
+    id: 'set_shikyang',
+    name: '식양의 숨결',
+    effects: [
+      { type: '스탯', stat: '최대 체력', val: 1000 },
+      { type: '주는 피해', val: 16, target: '팀_외', nonStack: true, triggers: ['증폭', '비호', '취약', '허약'] }
+    ]
+  },
+  {
+    id: 'set_joryu',
+    name: '조류의 물결',
+    effects: [
+      { type: '모든 스킬 피해', val: 20 },
+      { type: '아츠 피해', val: 35, nonStack: true, triggers: ['아츠 부착'] }
+    ]
+  },
+  {
+    id: 'set_eungryong',
+    name: '응룡 50식',
+    effects: [
+      { type: '공격력 증가', val: 15 },
+      { type: '연계 스킬 피해', val: 60 } // 20% * 3스택 기준
+    ]
+  },
+  {
+    id: 'set_mi_police',
+    name: 'M. I. 경찰용',
+    effects: [
+      { type: '치명타 확률', val: 10 },
+      { type: '공격력 증가', val: 25 }, // 5% * 5스택 기준
+    ]
+  },
+  {
+    id: 'set_heat_work',
+    name: '열 작업용',
+    effects: [
+      { type: '오리지늄 아츠 강도', val: 30 },
+      { type: '열기 피해', val: 50, nonStack: true, triggers: ['연소 부여'] },
+      { type: '자연 피해', val: 50, nonStack: true, triggers: ['부식 부여'] }
+    ]
+  },
+  {
+    id: 'set_pioneer',
+    name: '개척',
+    effects: [
+      { type: '연계 스킬 쿨타임 감소', val: 15 },
+      { type: '주는 피해', val: 16, target: '팀', nonStack: true, triggers: ['스킬 게이지 회복'] }
+    ]
+  },
+  {
+    id: 'set_pulse',
+    name: '펄스식',
+    effects: [
+      { type: '오리지늄 아츠 강도', val: 30 },
+      { type: '전기 피해', val: 50, nonStack: true, triggers: ['감전 부여'] },
+      { type: '냉기 피해', val: 50, nonStack: true, triggers: ['동결 부여'] }
+    ]
+  },
+  {
+    id: 'set_bone_crusher',
+    name: '본 크러셔',
+    effects: [
+      { type: '공격력 증가', val: 15 },
+      { type: '배틀 스킬 피해', val: 60 } // 30% * 2스택 기준
+    ]
+  },
+  {
+    id: 'set_light_super',
+    name: '경량 초자연',
+    effects: [
+      { type: '공격력 증가', val: 8 },
+      { type: '물리 피해', val: 48, triggers: ['방어 불능 부여'] } // 8% * 4스택 기준
+    ]
+  },
+  {
+    id: 'set_bio_support',
+    name: '생체 보조',
+    effects: [
+      { type: '치유 효율', val: 20 },
+      { type: '받는 피해', val: -30, target: '팀', nonStack: true, triggers: ['치유'] }
+    ]
+  },
+  {
+    id: 'set_swordsman',
+    name: '검술사',
+    effects: []
+  },
+  { id: 'set_crisis', name: '위기 탈출', effects: [] }
 ];

@@ -130,7 +130,12 @@ function setupSubOperatorEvents(i) {
     const setSel = document.getElementById(`sub-${i}-set`);
     if (setSel) {
         setSel.classList.add('visual-select-btn', 'btn-select');
-        DATA_SETS.forEach(s => setSel.add(new Option(s.name, s.id)));
+        setSel.innerHTML = '<option value="">(세트 없음)</option>';
+        DATA_SETS.forEach(s => {
+            if (s.id === 'set_crisis') return;
+            const option = new Option(s.name, s.id);
+            setSel.add(option);
+        });
         setSel.onchange = updateState;
     }
 
@@ -468,6 +473,34 @@ function renderResult(res) {
 
     for (const [id, list] of Object.entries(logMapping)) {
         renderLog(id, list);
+    }
+
+    // 활성 세트 UI 업데이트
+    updateActiveSetUI();
+}
+
+function updateActiveSetUI() {
+    const container = document.getElementById('main-active-set');
+    if (!container) return;
+    container.innerHTML = '';
+
+    if (state.activeSetId) {
+        const set = DATA_SETS.find(s => s.id === state.activeSetId);
+        const opData = DATA_OPERATORS.find(o => o.id === state.mainOp.id);
+
+        if (set && opData) {
+            const isViable = checkSetViability(state.activeSetId, opData);
+            const statusText = isViable ? '(발동가능)' : '(발동불가)';
+            const statusClass = isViable ? 'viable' : 'not-viable';
+
+            const badge = document.createElement('div');
+            badge.className = 'active-set-badge';
+            badge.innerHTML = `
+                <span class="set-name">${set.name} <span class="viability ${statusClass}">${statusText}</span></span>
+                <span class="set-status">ACTIVE (3피스)</span>
+            `;
+            container.appendChild(badge);
+        }
     }
 }
 
