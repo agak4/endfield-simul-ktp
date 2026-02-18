@@ -111,6 +111,14 @@ function initUI() {
     setupPotencyButtons('comp-wep-pot', 'comp-wep-pot-group');
     setupToggleButton('comp-wep-state', 'comp-wep-toggle', '기질');
 
+    const guideNav = document.getElementById('nav-guide');
+    if (guideNav) {
+        guideNav.onclick = () => {
+            const modal = document.getElementById('guide-modal');
+            if (modal) modal.classList.add('open');
+        };
+    }
+
     AppTooltip.init();
 }
 
@@ -225,7 +233,7 @@ function setupSubOperatorEvents(i) {
     const setSel = document.getElementById(`sub-${i}-set`);
     if (setSel) {
         setSel.classList.add('visual-select-btn', 'btn-select');
-        setSel.innerHTML = '<option value="">(세트 없음)</option>';
+        setSel.innerHTML = '<option value="">== 선택 해제 ==</option>';
         DATA_SETS.forEach(s => {
             if (s.id === 'set_crisis') return;
             setSel.add(new Option(s.name, s.id));
@@ -253,7 +261,7 @@ function setupSubOperatorEvents(i) {
         removeBtn.onclick = () => {
             const sel = document.getElementById(`sub-${i}-op`);
             sel.value = '';
-            document.getElementById(`sub-${i}-op-btn`).innerText = '선택하세요';
+            document.getElementById(`sub-${i}-op-btn`).innerText = '== 선택 해제 ==';
             document.getElementById(`sub-${i}-summary`).innerText = '';
             updateEntityImage('', `sub-${i}-image`, 'operators');
 
@@ -262,7 +270,7 @@ function setupSubOperatorEvents(i) {
                 wSel.innerHTML = '';
                 wSel.add(new Option('-', ''));
                 wSel.value = '';
-                document.getElementById(`sub-${i}-wep-btn`).innerText = '선택하세요'; // 버튼 텍스트 초기화
+                document.getElementById(`sub-${i}-wep-btn`).innerText = '== 선택 해제 =='; // 버튼 텍스트 초기화
                 updateEntityImage('', `sub-${i}-wep-image`, 'weapons');
             }
             updateState();
@@ -295,7 +303,7 @@ function setupOperatorSelect(selectId, btnId, onChangeInfo) {
         openOperatorModal((selectedId) => {
             sel.value = selectedId;
             const opData = DATA_OPERATORS.find(o => o.id === selectedId);
-            btn.innerText = opData ? opData.name : '선택하세요';
+            btn.innerText = opData ? opData.name : '== 선택 해제 ==';
             if (onChangeInfo) onChangeInfo(selectedId);
         }, currentSelectedIds, selectId);
     };
@@ -318,7 +326,7 @@ function setupWeaponSelect(selectId, btnId, getOpIdFunc) {
         openWeaponModal((selectedId) => {
             sel.value = selectedId;
             const wepData = DATA_WEAPONS.find(w => w.id === selectedId);
-            btn.innerText = wepData ? wepData.name : '선택하세요';
+            btn.innerText = wepData ? wepData.name : '== 선택 해제 ==';
 
             // Trigger change event manually
             const event = new Event('change');
@@ -592,7 +600,7 @@ function updateSubWeaponList(idx, opId) {
         if (btn) btn.innerText = stillValid.name;
     } else {
         sel.value = '';
-        if (btn) btn.innerText = '선택하세요';
+        if (btn) btn.innerText = '== 선택 해제 ==';
     }
 }
 
@@ -916,7 +924,7 @@ function applyStateToUI() {
         if (opSel) {
             opSel.value = s.id || '';
             const opData = DATA_OPERATORS.find(o => o.id === s.id);
-            document.getElementById(`sub-${i}-op-btn`).innerText = opData ? opData.name : '선택하세요';
+            document.getElementById(`sub-${i}-op-btn`).innerText = opData ? opData.name : '== 선택 해제 ==';
             document.getElementById(`sub-${i}-summary`).innerText = opData ? opData.name : '';
             updateSubWeaponList(i, s.id);
             updateEntityImage(s.id, `sub-${i}-image`, 'operators');
@@ -1031,9 +1039,8 @@ const AppTooltip = {
 
     getWepTypeName(type) {
         const map = {
-            sword: '한손검', greatsword: '대검', twin_blades: '쌍검',
-            staff: '지팡이', shotgun: '샷건', spear: '창',
-            heavy_axe: '도끼', guard_spear: '방패창'
+            sword: '한손검', great_sword: '양손검', polearm: '장병기',
+            handcannon: '권총', arts_unit: '아츠 유닛'
         };
         return map[type] || type;
     },
@@ -1110,7 +1117,7 @@ const AppTooltip = {
                     <div class="tooltip-stat-item" title="부스탯"><span class="tooltip-stat-key">${getStatName(op.subStat)}</span><span class="tooltip-stat-val">${op.stats ? op.stats[op.subStat] : 0}</span></div>
                 </div>
             </div>
-            ${traitItems.length > 0 ? `<div class="tooltip-section"><div class="tooltip-label">오퍼레이터 재능</div><div class="tooltip-desc">${renderSortedList(traitItems)}</div></div>` : ''}
+            ${traitItems.length > 0 ? `<div class="tooltip-section"><div class="tooltip-label">오퍼레이터 특성</div><div class="tooltip-desc">${renderSortedList(traitItems)}</div></div>` : ''}
             ${synergyItems.length > 0 ? `<div class="tooltip-section"><div class="tooltip-label">시너지</div><div class="tooltip-desc">${renderSortedList(synergyItems)}</div></div>` : ''}
         `;
     },

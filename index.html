@@ -18,7 +18,7 @@
             </div>
             <div class="header-nav">
                 <span class="nav-item active">시뮬레이터</span>
-                <span class="nav-item">가이드</span>
+                <span class="nav-item" id="nav-guide">가이드</span>
             </div>
         </div>
     </header>
@@ -29,14 +29,15 @@
             <h2>메인 오퍼레이터</h2>
             <div class="main-op-row">
                 <div class="main-op-left">
-                    <div id="main-op-image-container" class="op-image-container">
+                    <div id="main-op-image-container" class="op-image-container"
+                        onclick="document.getElementById('main-op-select-btn').click()">
                         <img id="main-op-image" src="" alt="오퍼레이터 이미지">
                     </div>
                 </div>
                 <div class="main-op-right">
                     <div class="control-row">
                         <select id="main-op-select" class="u-display-none"></select>
-                        <button id="main-op-select-btn" class="visual-select-btn btn-select">선택하세요</button>
+                        <button id="main-op-select-btn" class="visual-select-btn btn-select">== 선택 해제 ==</button>
                     </div>
                     <div class="control-row potency-row">
                         <label>잠재효과</label>
@@ -48,14 +49,15 @@
 
             <div class="wep-row">
                 <div class="wep-left">
-                    <div id="main-wep-image-container" class="op-image-container wep-image-container">
+                    <div id="main-wep-image-container" class="op-image-container wep-image-container"
+                        onclick="document.getElementById('main-wep-select-btn').click()">
                         <img id="main-wep-image" src="" alt="무기 이미지">
                     </div>
                 </div>
                 <div class="wep-right">
                     <div class="control-row">
                         <select id="main-wep-select" class="u-display-none"></select>
-                        <button id="main-wep-select-btn" class="visual-select-btn btn-select">선택하세요</button>
+                        <button id="main-wep-select-btn" class="visual-select-btn btn-select">== 선택 해제 ==</button>
                     </div>
                     <div class="control-row potency-row">
                         <label>잠재효과</label>
@@ -145,12 +147,15 @@
                     <div class="sub-op-content" id="sub-op-content-0">
                         <div class="sub-char-row">
                             <div class="sub-char-left">
-                                <div class="op-image-container"><img id="sub-0-image" src="" alt="서브1"></div>
+                                <div class="op-image-container"
+                                    onclick="document.getElementById('sub-0-op-btn').click()">
+                                    <img id="sub-0-image" src="" alt="서브1">
+                                </div>
                             </div>
                             <div class="sub-char-right">
                                 <div class="control-row">
                                     <select id="sub-0-op" class="u-display-none"></select>
-                                    <button id="sub-0-op-btn" class="visual-select-btn btn-select">선택하세요</button>
+                                    <button id="sub-0-op-btn" class="visual-select-btn btn-select">== 선택 해제 ==</button>
                                 </div>
                                 <div class="control-row potency-row">
                                     <label>잠재효과</label>
@@ -161,12 +166,15 @@
                         </div>
                         <div class="sub-wep-row">
                             <div class="sub-wep-left">
-                                <div class="op-image-container"><img id="sub-0-wep-image" src="" alt="무기"></div>
+                                <div class="op-image-container"
+                                    onclick="document.getElementById('sub-0-wep-btn').click()">
+                                    <img id="sub-0-wep-image" src="" alt="무기">
+                                </div>
                             </div>
                             <div class="sub-wep-right">
                                 <div class="control-row">
                                     <select id="sub-0-wep" class="u-display-none"></select>
-                                    <button id="sub-0-wep-btn" class="visual-select-btn btn-select">선택하세요</button>
+                                    <button id="sub-0-wep-btn" class="visual-select-btn btn-select">== 선택 해제 ==</button>
                                 </div>
                                 <div class="control-row potency-row">
                                     <label>잠재효과</label>
@@ -197,12 +205,15 @@
                     <div class="sub-op-content" id="sub-op-content-1">
                         <div class="sub-char-row">
                             <div class="sub-char-left">
-                                <div class="op-image-container"><img id="sub-1-image" src="" alt="서브2"></div>
+                                <div class="op-image-container"
+                                    onclick="document.getElementById('sub-1-op-btn').click()">
+                                    <img id="sub-1-image" src="" alt="서브2">
+                                </div>
                             </div>
                             <div class="sub-char-right">
                                 <div class="control-row">
                                     <select id="sub-1-op" class="u-display-none"></select>
-                                    <button id="sub-1-op-btn" class="visual-select-btn btn-select">선택하세요</button>
+                                    <button id="sub-1-op-btn" class="visual-select-btn btn-select">== 선택 해제 ==</button>
                                 </div>
                                 <div class="control-row potency-row">
                                     <label>잠재효과</label>
@@ -213,12 +224,15 @@
                         </div>
                         <div class="sub-wep-row">
                             <div class="sub-wep-left">
-                                <div class="op-image-container"><img id="sub-1-wep-image" src="" alt="무기"></div>
+                                <div class="op-image-container"
+                                    onclick="document.getElementById('sub-1-wep-btn').click()">
+                                    <img id="sub-1-wep-image" src="" alt="무기">
+                                </div>
                             </div>
                             <div class="sub-wep-right">
                                 <div class="control-row">
                                     <select id="sub-1-wep" class="u-display-none"></select>
-                                    <button id="sub-1-wep-btn" class="visual-select-btn btn-select">선택하세요</button>
+                                    <button id="sub-1-wep-btn" class="visual-select-btn btn-select">== 선택 해제 ==</button>
                                 </div>
                                 <div class="control-row potency-row">
                                     <label>잠재효과</label>
@@ -249,12 +263,15 @@
                     <div class="sub-op-content" id="sub-op-content-2">
                         <div class="sub-char-row">
                             <div class="sub-char-left">
-                                <div class="op-image-container"><img id="sub-2-image" src="" alt="서브3"></div>
+                                <div class="op-image-container"
+                                    onclick="document.getElementById('sub-2-op-btn').click()">
+                                    <img id="sub-2-image" src="" alt="서브3">
+                                </div>
                             </div>
                             <div class="sub-char-right">
                                 <div class="control-row">
                                     <select id="sub-2-op" class="u-display-none"></select>
-                                    <button id="sub-2-op-btn" class="visual-select-btn btn-select">선택하세요</button>
+                                    <button id="sub-2-op-btn" class="visual-select-btn btn-select">== 선택 해제 ==</button>
                                 </div>
                                 <div class="control-row potency-row">
                                     <label>잠재효과</label>
@@ -265,12 +282,15 @@
                         </div>
                         <div class="sub-wep-row">
                             <div class="sub-wep-left">
-                                <div class="op-image-container"><img id="sub-2-wep-image" src="" alt="무기"></div>
+                                <div class="op-image-container"
+                                    onclick="document.getElementById('sub-2-wep-btn').click()">
+                                    <img id="sub-2-wep-image" src="" alt="무기">
+                                </div>
                             </div>
                             <div class="sub-wep-right">
                                 <div class="control-row">
                                     <select id="sub-2-wep" class="u-display-none"></select>
-                                    <button id="sub-2-wep-btn" class="visual-select-btn btn-select">선택하세요</button>
+                                    <button id="sub-2-wep-btn" class="visual-select-btn btn-select">== 선택 해제 ==</button>
                                 </div>
                                 <div class="control-row potency-row">
                                     <label>잠재효과</label>
@@ -425,6 +445,35 @@
                     onclick="document.getElementById('wep-selector-modal').classList.remove('open')">&times;</button>
             </div>
             <div class="modal-grid" id="wep-modal-grid"></div>
+        </div>
+    </div>
+
+    <!-- 가이드 모달 -->
+    <div id="guide-modal" class="modal-overlay">
+        <div class="modal-content guide-content">
+            <div class="modal-header">
+                <span class="modal-header-title">사용 가이드</span>
+                <button class="modal-close"
+                    onclick="document.getElementById('guide-modal').classList.remove('open')">&times;</button>
+            </div>
+            <div class="guide-body">
+                <h3>개요</h3>
+                <p>본 계산기는 오퍼레이터의 세팅에 따른 이론적인 데미지 기댓값을 산출하기 위해 제작되었습니다.</p>
+
+                <h3>기본 스펙 기준</h3>
+                <ul>
+                    <li><strong>오퍼레이터:</strong> 90레벨, 신뢰도 100, 모든 스킬 마스터리(3레벨) 완료</li>
+                    <li><strong>무기:</strong> 90레벨 기준</li>
+                </ul>
+
+                <h3>계산 제외 항목</h3>
+                <ul>
+                    <li>오퍼레이터의 공격 사이클 및 전체 딜 지분</li>
+                    <li>버프 및 디버프의 지속 시간 (상시 적용으로 가정)</li>
+                    <li>데미지에 직접적인 영향이 없는 유틸리티 능력치 (예: 궁극기 충전 효율, 궁극기 게이지 감소 등)</li>
+                    <li>연타</li>
+                </ul>
+            </div>
         </div>
     </div>
 

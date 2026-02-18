@@ -325,7 +325,7 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects) {
         if (t === '공격력 증가') { atkInc += val; logs.atkBuffs.push(`[${eff.name}] +${val.toFixed(1)}% (공격력)`); }
         else if (t === '치명타 확률') { critRate += val; logs.crit.push(`[${eff.name}] +${val.toFixed(1)}% (치명타 확률)`); }
         else if (t === '치명타 피해') { critDmg += val; logs.crit.push(`[${eff.name}] +${val.toFixed(1)}% (치명타 피해)`); }
-        else if (t === '연타') { multiHit = Math.max(multiHit, eff.val || 1.2); logs.multihit.push(`[${eff.name}] x${multiHit}`); }
+        else if (t === '연타') { multiHit = Math.max(multiHit, eff.val || 1); logs.multihit.push(`[${eff.name}] x${multiHit}`); }
         else if (t.endsWith('증폭')) { amp += val; logs.amp.push(`[${eff.name}] +${val.toFixed(1)}% (${t})`); }
         else if (t.endsWith('취약')) { vuln += val; logs.vuln.push(`[${eff.name}] +${val.toFixed(1)}% (${t})`); }
         else if (t === '불균형 피해') { if (state.enemyUnbalanced) { unbalanceDmg += val; logs.unbal.push(`${eff.name}: +${val.toFixed(1)}%`); } }
