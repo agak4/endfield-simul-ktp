@@ -844,9 +844,40 @@ function renderLog(id, list) {
     const ul = document.getElementById(id);
     if (!ul) return;
     ul.innerHTML = '';
-    list.forEach(txt => {
+
+    const PROTECTED_UIDS = ['base_op_atk', 'base_wep_atk', 'stat_bonus_atk', 'unbalance_base'];
+
+    list.forEach(item => {
         const li = document.createElement('li');
+        const txt = typeof item === 'string' ? item : item.txt;
+        const uid = typeof item === 'string' ? null : item.uid;
+
         li.innerText = txt;
+
+        if (uid) {
+            li.dataset.uid = uid;
+            const isProtected = PROTECTED_UIDS.includes(uid);
+
+            if (!isProtected) {
+                li.style.cursor = 'pointer';
+                if (state.disabledEffects && state.disabledEffects.includes(uid)) {
+                    li.classList.add('disabled-effect');
+                }
+
+                li.onclick = () => {
+                    if (!state.disabledEffects) state.disabledEffects = [];
+                    const idx = state.disabledEffects.indexOf(uid);
+                    if (idx > -1) {
+                        state.disabledEffects.splice(idx, 1);
+                    } else {
+                        state.disabledEffects.push(uid);
+                    }
+                    updateState();
+                };
+            } else {
+                li.style.cursor = 'default';
+            }
+        }
         ul.appendChild(li);
     });
 }
@@ -1152,7 +1183,7 @@ const AppTooltip = {
 
     renderOperator(op, currentPot) {
         const TRAIT_TYPES = [
-            '공격력 증가', '물리 피해', '아츠 피해', '열기 피해', '전기 피해', '냉기 피해', '자연 피해', '불균형 피해',
+            '공격력 증가', '물리 피해', '아츠 피해', '열기 피해', '전기 피해', '냉기 피해', '자연 피해', '불균형 목표에 주는 피해',
             '일반 공격 피해', '배틀 스킬 피해', '연계 스킬 피해', '궁극기 피해', '모든 스킬 피해', '주는 피해',
             '오리지늄 아츠 강도', '치명타 확률', '치명타 피해'
         ];

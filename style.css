@@ -1320,6 +1320,19 @@ input[type="range"]::-webkit-slider-thumb {
     transition: all var(--transition-speed) ease;
     line-height: 1.5;
     border-radius: 4px;
+    cursor: pointer;
+}
+
+.detail-list li:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-color);
+    padding-left: 5px;
+}
+
+.detail-list li.disabled-effect {
+    text-decoration: line-through;
+    opacity: 0.4;
+    color: #888 !important;
 }
 
 /* 출처 강조 스타일 */

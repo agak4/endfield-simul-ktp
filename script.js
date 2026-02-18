@@ -16,7 +16,8 @@ let state = {
     ],
     subOpsCollapsed: [false, true, true], // 기본값: 첫 번째만 펼침
     enemyUnbalanced: false,
-    activeSetId: null
+    activeSetId: null,
+    disabledEffects: []
 };
 
 const STAT_NAME_MAP = {
@@ -81,7 +82,10 @@ function loadState() {
     try {
         const saved = localStorage.getItem('endfield_cal_save');
         if (saved) {
-            state = { ...state, ...JSON.parse(saved) };
+            const parsed = JSON.parse(saved);
+            state = { ...state, ...parsed };
+            // disabledEffects가 없으면 빈 배열로 초기화
+            if (!state.disabledEffects) state.disabledEffects = [];
             return true;
         }
     } catch (e) {
@@ -102,9 +106,14 @@ function calculateDamage(currentState) {
     let allEffects = [];
 
     collectAllEffects(currentState, opData, wepData, stats, allEffects);
-    applyFixedStats(allEffects, stats);
-    applyPercentStats(allEffects, stats);
 
+    // 비활성화된 효과 필터링 (스탯 계산용)
+    const activeEffects = allEffects.filter(eff => !currentState.disabledEffects.includes(eff.uid));
+
+    applyFixedStats(activeEffects, stats);
+    applyPercentStats(activeEffects, stats);
+
+    // 로그 표시를 위해 전체 효과(allEffects)를 전달
     return computeFinalDamageOutput(currentState, opData, wepData, stats, allEffects);
 }
 
@@ -112,10 +121,12 @@ function collectAllEffects(state, opData, wepData, stats, allEffects) {
     const addEffect = (source, name, forgeMult = 1.0, isSub = false) => {
         if (!source) return;
         const sources = Array.isArray(source) ? source : [source];
-        sources.forEach(eff => {
+        sources.forEach((eff, i) => {
             if (!eff) return;
             if (isSub && !isSubOpTargetValid(eff)) return;
-            allEffects.push({ ...eff, name, forgeMult });
+            // 고유 ID 생성 (출처_타입_인덱스)
+            const uid = `${name}_${eff.type}_${i}`;
+            allEffects.push({ ...eff, name, forgeMult, uid });
         });
     };
 
@@ -268,7 +279,8 @@ function collectAllEffects(state, opData, wepData, stats, allEffects) {
             if (idx > 0 && !isSubOpTargetValid(eff)) return;
 
             const setName = DATA_SETS.find(s => s.id === entry.setId)?.name || entry.setId;
-            allEffects.push({ ...eff, name: `${entry.name} ${setName} 세트효과` });
+            const uid = `set_${entry.setId}_${eff.type}_${idx}`;
+            allEffects.push({ ...eff, name: `${entry.name} ${setName} 세트효과`, uid });
         });
     });
 }
@@ -336,8 +348,8 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects) {
     };
 
     let atkBaseLogs = [
-        `오퍼레이터 공격력: ${opData.baseAtk.toLocaleString()}`,
-        `무기 공격력: ${wepData.baseAtk.toLocaleString()}`
+        { txt: `오퍼레이터 공격력: ${opData.baseAtk.toLocaleString()}`, uid: 'base_op_atk' },
+        { txt: `무기 공격력: ${wepData.baseAtk.toLocaleString()}`, uid: 'base_wep_atk' }
     ];
 
     const resolveVal = (val) => {
@@ -355,48 +367,87 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects) {
     let statLogs = [];
 
     allEffects.forEach(eff => {
+        // 비활성화 여부 체크
+        const isDisabled = state.disabledEffects.includes(eff.uid);
+
         // 스탯 관련 특성은 별도 로그 처리
         if (eff.type === '스탯' || eff.type === '스탯%') {
             const val = resolveVal(eff.val) * (eff.forgeMult || 1.0);
             const t = (eff.type || '').toString();
             const targetName = getStatName(eff.stat || eff.stats);
-            if (t === '스탯') statLogs.push(`[${eff.name}] +${val.toFixed(1)} (${targetName})`);
-            else if (t === '스탯%') statLogs.push(`[${eff.name}] +${val.toFixed(1)}% (${targetName})`);
-            return; // 계산은 이미 apply functions에서 처리됨
+            // 로그는 항상 추가
+            if (t === '스탯') statLogs.push({ txt: `[${eff.name}] +${val.toFixed(1)} (${targetName})`, uid: eff.uid });
+            else if (t === '스탯%') statLogs.push({ txt: `[${eff.name}] +${val.toFixed(1)}% (${targetName})`, uid: eff.uid });
+            return; // 계산은 이미 applyFixed/PercentStats에서 처리됨
         }
 
         if (!isApplicableEffect(opData, eff.type, eff.name)) return;
 
         const val = resolveVal(eff.val) * (eff.forgeMult || 1.0);
         const t = (eff.type || '').toString();
+        const uid = eff.uid;
 
-        if (t === '공격력 증가') { atkInc += val; logs.atkBuffs.push(`[${eff.name}] +${val.toFixed(1)}% (공격력)`); }
-        else if (t === '치명타 확률') { critRate += val; logs.crit.push(`[${eff.name}] +${val.toFixed(1)}% (치명타 확률)`); }
-        else if (t === '치명타 피해') { critDmg += val; logs.crit.push(`[${eff.name}] +${val.toFixed(1)}% (치명타 피해)`); }
-        else if (t === '연타') { multiHit = Math.max(multiHit, eff.val || 1); logs.multihit.push(`[${eff.name}] x${multiHit}`); }
-        else if (t.endsWith('증폭')) { amp += val; logs.amp.push(`[${eff.name}] +${val.toFixed(1)}% (${t})`); }
-        else if (t.endsWith('취약')) { vuln += val; logs.vuln.push(`[${eff.name}] +${val.toFixed(1)}% (${t})`); }
-        else if (t === '불균형 피해') { if (state.enemyUnbalanced) { unbalanceDmg += val; logs.unbal.push(`${eff.name}: +${val.toFixed(1)}%`); } }
-        else if (t.includes('받는')) { takenDmg += val; logs.taken.push(`[${eff.name}] +${val.toFixed(1)}% (${t})`); }
-        else if (t === '오리지늄 아츠' || t === '오리지늄 아츠 강도') { originiumArts += val; logs.arts.push(`[${eff.name}] +${val.toFixed(1)}`); }
-        else if (t.includes('피해') || t === '주는 피해' || t === '모든 스킬 피해') { dmgInc += val; logs.dmgInc.push(`[${eff.name}] +${val.toFixed(1)}% (${t})`); }
+        // 로그는 항상 추가하지만, 수치 합산은 비활성화되지 않은 경우만 수행
+        if (t === '공격력 증가') {
+            if (!isDisabled) atkInc += val;
+            logs.atkBuffs.push({ txt: `[${eff.name}] +${val.toFixed(1)}% (공격력)`, uid });
+        }
+        else if (t === '치명타 확률') {
+            if (!isDisabled) critRate += val;
+            logs.crit.push({ txt: `[${eff.name}] +${val.toFixed(1)}% (치명타 확률)`, uid });
+        }
+        else if (t === '치명타 피해') {
+            if (!isDisabled) critDmg += val;
+            logs.crit.push({ txt: `[${eff.name}] +${val.toFixed(1)}% (치명타 피해)`, uid });
+        }
+        else if (t === '연타') {
+            if (!isDisabled) multiHit = Math.max(multiHit, eff.val || 1);
+            logs.multihit.push({ txt: `[${eff.name}] x${eff.val || 1}`, uid });
+        }
+        else if (t.endsWith('증폭')) {
+            if (!isDisabled) amp += val;
+            logs.amp.push({ txt: `[${eff.name}] +${val.toFixed(1)}% (${t})`, uid });
+        }
+        else if (t.endsWith('취약')) {
+            if (!isDisabled) vuln += val;
+            logs.vuln.push({ txt: `[${eff.name}] +${val.toFixed(1)}% (${t})`, uid });
+        }
+        else if (t === '불균형 목표에 주는 피해') {
+            if (state.enemyUnbalanced) {
+                if (!isDisabled) dmgInc += val;
+                logs.dmgInc.push({ txt: `[${eff.name}] +${val.toFixed(1)}% (불균형시 피해)`, uid });
+            }
+        }
+        else if (t.includes('받는')) {
+            if (!isDisabled) takenDmg += val;
+            logs.taken.push({ txt: `[${eff.name}] +${val.toFixed(1)}% (${t})`, uid });
+        }
+        else if (t === '오리지늄 아츠' || t === '오리지늄 아츠 강도') {
+            if (!isDisabled) originiumArts += val;
+            logs.arts.push({ txt: `[${eff.name}] +${val.toFixed(1)}`, uid });
+        }
+        else if (t.includes('피해') || t === '주는 피해' || t === '모든 스킬 피해') {
+            if (!isDisabled) dmgInc += val;
+            logs.dmgInc.push({ txt: `[${eff.name}] +${val.toFixed(1)}% (${t})`, uid });
+        }
     });
 
     const statBonusPct = (stats[opData.mainStat] * 0.005) + (stats[opData.subStat] * 0.002);
     const finalAtk = baseAtk * (1 + atkInc / 100) * (1 + statBonusPct);
 
-    // 공격력 로그 조립 (기본 -> 공증% -> 스탯보너스 -> 스탯고정/%)
+    // 공격력 로그 조립 (기본 -> 스탯보너스 -> 공증% -> 스탯고정/%)
     logs.atk = [
-        ...atkBaseLogs,
+        atkBaseLogs[0], // 오퍼레이터 공격력
+        atkBaseLogs[1], // 무기 공격력
+        { txt: `스탯 공격보너스: +${(statBonusPct * 100).toFixed(2)}%`, uid: 'stat_bonus_atk' },
         ...logs.atkBuffs,
-        `스탯 공격보너스: +${(statBonusPct * 100).toFixed(2)}%`,
         ...statLogs
     ];
 
     const finalCritRate = Math.min(Math.max(critRate, 0), 100);
     const critExp = ((finalCritRate / 100) * (critDmg / 100)) + 1;
     let finalUnbal = unbalanceDmg + (state.enemyUnbalanced ? 30 : 0);
-    if (state.enemyUnbalanced) logs.unbal.push(`[불균형 기본] +30.0%`);
+    if (state.enemyUnbalanced) logs.unbal.push({ txt: `[불균형 기본] +30.0%`, uid: 'unbalance_base' });
 
     const finalDmg = finalAtk * critExp * (1 + dmgInc / 100) * (1 + amp / 100) * (1 + takenDmg / 100) * (1 + vuln / 100) * multiHit * (1 + finalUnbal / 100);
 
@@ -405,7 +456,7 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects) {
     if (swordsman) {
         const extraDmg = finalAtk * 2.5;
         finalWithExtra += extraDmg;
-        logs.dmgInc.push(`[검술사 추가피해] +${Math.floor(extraDmg).toLocaleString()}`);
+        logs.dmgInc.push({ txt: `[검술사 추가피해] +${Math.floor(extraDmg).toLocaleString()}`, uid: 'swordsman_extra' });
     }
 
     return {
@@ -450,7 +501,7 @@ function isApplicableEffect(opData, effectType, effectName) {
     const type = effectType.toString();
     const ALWAYS_APPLICABLE = ['공격력 증가', '치명타 확률', '치명타 피해', '최대 체력', '궁극기 충전', '치유 효율', '연타', '주는 피해', '스탯', '스탯%', '스킬 피해', '궁극기 피해', '연계 스킬 피해', '배틀 스킬 피해', '일반 공격 피해', '오리지늄 아츠', '오리지늄 아츠 강도', '모든 스킬 피해'];
     if (ALWAYS_APPLICABLE.includes(type)) return true;
-    if (type === '불균형 피해') return true;
+    if (type === '불균형 목표에 주는 피해') return true;
 
     const checkElement = (prefix) => {
         if (prefix === '피해' || prefix === '모든') return true;
