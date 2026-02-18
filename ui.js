@@ -32,7 +32,7 @@ window.onload = function () {
         // 버튼 텍스트 업데이트 추가
         const wepData = DATA_WEAPONS.find(w => w.id === DEFAULT_WEP_ID);
         if (wepData) document.getElementById('main-wep-select-btn').innerText = wepData.name;
-        
+
         updateEntityImage(DEFAULT_WEP_ID, 'main-wep-image', 'weapons');
     }
 
@@ -98,7 +98,7 @@ function initUI() {
 
     // 메인 무기 변경 이벤트 (모달 연결)
     setupWeaponSelect('main-wep-select', 'main-wep-select-btn', () => state.mainOp.id);
-    
+
     // 기존 select onchange 핸들러는 setupWeaponSelect 내부에서 트리거됨
     const mainWepSelect = document.getElementById('main-wep-select');
     if (mainWepSelect) {
@@ -319,19 +319,19 @@ function setupWeaponSelect(selectId, btnId, getOpIdFunc) {
     btn.onclick = () => {
         const opId = getOpIdFunc();
         const validWeapons = getValidWeapons(opId);
-        
+
         openWeaponModal((selectedId) => {
             sel.value = selectedId;
             const wepData = DATA_WEAPONS.find(w => w.id === selectedId);
             btn.innerText = wepData ? wepData.name : '선택하세요';
-            
+
             // Trigger change event manually
             const event = new Event('change');
             sel.dispatchEvent(event);
             if (sel.onchange) sel.onchange({ target: sel });
         }, validWeapons);
     };
-    
+
     if (sel.value) {
         const wepData = DATA_WEAPONS.find(w => w.id === sel.value);
         if (wepData) btn.innerText = wepData.name;
@@ -382,7 +382,7 @@ function openOperatorModal(onSelect, excludedIds = []) {
     DATA_OPERATORS.forEach(op => {
         const item = document.createElement('div');
         item.className = 'modal-item';
-        
+
         item.setAttribute('data-tooltip-id', op.id);
         item.setAttribute('data-tooltip-type', 'operator');
 
@@ -539,7 +539,7 @@ function updateMainWeaponList(opId) {
 
     const mainWepSelect = document.getElementById('main-wep-select');
     const mainWepBtn = document.getElementById('main-wep-select-btn');
-    
+
     if (validWeps.length > 0) {
         const firstWepId = validWeps[0].id;
         mainWepSelect.value = firstWepId;
@@ -554,16 +554,16 @@ function updateMainWeaponList(opId) {
 function updateSubWeaponList(idx, opId) {
     const sel = document.getElementById(`sub-${idx}-wep`);
     const btn = document.getElementById(`sub-${idx}-wep-btn`);
-    
+
     if (!sel) return;
     const currentVal = sel.value;
     sel.innerHTML = '';
     sel.add(new Option('-', ''));
     const validWeps = getValidWeapons(opId);
     validWeps.forEach(w => sel.add(new Option(w.name, w.id)));
-    
+
     const stillValid = validWeps.find(w => w.id === currentVal);
-    
+
     if (stillValid) {
         sel.value = currentVal;
         if (btn) btn.innerText = stillValid.name;
@@ -1098,19 +1098,39 @@ const AppTooltip = {
             const groupIdx = i >= 2 ? 3 : i + 1;
             let rangeStr = '';
             const unit = t.type.includes('확률') || t.type.includes('피해') || t.type.includes('충전') ? '%' : '';
-            let min, max;
-            if (t.valByLevel && t.valByLevel.length > 0) { min = Math.min(...t.valByLevel); max = Math.max(...t.valByLevel); }
-            else { min = t.valBase; max = t.valMax; }
 
-            if (t.type === '스탯') rangeStr = `${getStatName(t.stat)} +${min}~${max}`;
-            else rangeStr = (min !== undefined && max !== undefined) ? `${t.type} +${min}${unit}~${max}${unit}` : t.type;
+            let min, max;
+            // valByLevel 배열이 있는 경우 배열 내 최소/최대값 사용
+            if (t.valByLevel && t.valByLevel.length > 0) {
+                min = Math.min(...t.valByLevel);
+                max = Math.max(...t.valByLevel);
+            } else {
+                // 기존 방식 (valBase ~ valMax)
+                min = t.valBase;
+                max = t.valMax;
+            }
+
+            if (t.type === '스탯') {
+                // 스탯인 경우 범위로 표시
+                if (min !== undefined && max !== undefined) {
+                    rangeStr = `${getStatName(t.stat)} +${min}~${max}`;
+                } else {
+                    rangeStr = `${getStatName(t.stat)} +${t.val || 0}`;
+                }
+            } else {
+                if (min !== undefined && max !== undefined) {
+                    rangeStr = `${t.type} +${min}${unit}~${max}${unit}`;
+                } else {
+                    rangeStr = t.type;
+                }
+            }
             traitGroups[groupIdx].push(rangeStr);
         });
 
         const traitLines = Object.entries(traitGroups).map(([idx, lines]) => {
             if (lines.length === 0) return '';
             const content = lines.join(', ');
-            return `<div style="margin-bottom:5px;"><span style="color:inherit">•</span> ${content}</div>`;
+            return `<div style="margin-bottom:5px;"><span style="color: var(--accent)">•</span> ${content}</div>`;
         }).join('');
 
         return `

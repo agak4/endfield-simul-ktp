@@ -1277,9 +1277,8 @@ input[type="range"]::-webkit-slider-thumb {
 
 .footer-content {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    max-width: 1400px;
+    justify-content: center;
     margin: 0 auto;
 }
 

@@ -355,12 +355,19 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects) {
 }
 
 function calculateWeaponTraitLevel(idx, state, pot) {
+    // 특성 0, 1 (주스탯/부스탯)은 기질 OFF -> Lv3, ON -> Lv9 고정 적용
     if (idx === 0 || idx === 1) return state ? 9 : 3;
+    // 그 외 특성 (특성 3 등)은 기본 로직 (1+pot or 4+pot)
     return (state ? 4 : 1) + pot;
 }
 
 function calculateWeaponTraitValue(trait, level, state) {
-    if (trait.valByLevel) return trait.valByLevel[Math.min(level - 1, trait.valByLevel.length - 1)];
+    // valByLevel 배열이 있으면 레벨에 맞는 인덱스 값 반환 (1레벨 -> 0번 인덱스)
+    if (trait.valByLevel && trait.valByLevel.length > 0) {
+        return trait.valByLevel[Math.min(level - 1, trait.valByLevel.length - 1)];
+    }
+    
+    // 기존 로직 유지 (하위 호환성)
     if (trait.valStep !== undefined) return trait.valBase + (trait.valStep * (level - 1));
     if (trait.valBase !== undefined && trait.valMax !== undefined) return trait.valBase + (trait.valMax - trait.valBase) * ((level - 1) / 8);
     return state ? trait.valMax : (trait.valBase || trait.val || 0);
