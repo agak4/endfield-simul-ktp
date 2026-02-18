@@ -38,8 +38,8 @@ function updateState() {
     state.mainOp.gearForge = document.getElementById('main-gear-forge')?.checked || false;
 
     // 장비 정보 업데이트
-    const gearIds = ['gear-glove-select', 'gear-armor-select', 'gear-comp1-select', 'gear-comp2-select'];
-    const forgeIds = ['gear-glove-forge', 'gear-armor-forge', 'gear-comp1-forge', 'gear-comp2-forge'];
+    const gearIds = ['gear-gloves-select', 'gear-armor-select', 'gear-kit1-select', 'gear-kit2-select'];
+    const forgeIds = ['gear-gloves-forge', 'gear-armor-forge', 'gear-kit1-forge', 'gear-kit2-forge'];
 
     gearIds.forEach((id, idx) => {
         state.mainOp.gears[idx] = document.getElementById(id)?.value || null;

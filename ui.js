@@ -34,10 +34,10 @@ window.onload = function () {
 
     // 메인 장비 초기 설정 (응룡 50식 세트 예시)
     const defaultGears = [
-        { id: 'gear-glove-select', val: 'gear_13' },
+        { id: 'gear-gloves-select', val: 'gear_13' },
         { id: 'gear-armor-select', val: 'gear_16' },
-        { id: 'gear-comp1-select', val: 'gear_11' },
-        { id: 'gear-comp2-select', val: 'gear_12' }
+        { id: 'gear-kit1-select', val: 'gear_11' },
+        { id: 'gear-kit2-select', val: 'gear_12' }
     ];
 
     defaultGears.forEach(gear => {
@@ -58,28 +58,7 @@ function initUI() {
         updateState();
     });
 
-    const gearMap = [
-        { id: 'gear-glove-select', part: 'glove' },
-        { id: 'gear-armor-select', part: 'armor' },
-        { id: 'gear-comp1-select', part: 'component' },
-        { id: 'gear-comp2-select', part: 'component' }
-    ];
-
-    gearMap.forEach(m => {
-        const sel = document.getElementById(m.id);
-        if (!sel) return;
-        sel.innerHTML = '';
-        sel.add(new Option('-', ''));
-        DATA_GEAR.filter(e => e.part === m.part).forEach(e => {
-            const setName = (DATA_SETS.find(s => s.id === e.set)?.name || '').split(' ')[0] || '';
-            sel.add(new Option(`${e.name} ${setName ? '[' + setName + ']' : ''}`, e.id));
-        });
-        sel.onchange = (e) => {
-            updateState();
-            const imgId = m.id.replace('-select', '-image');
-            updateEntityImage(e.target.value, imgId, 'gears');
-        };
-    });
+    // gearMap logic removed - replaced by Sidebar
 
     for (let i = 0; i < 3; i++) {
         setupSubOperatorEvents(i);
@@ -92,6 +71,16 @@ function initUI() {
     setupToggleButton('main-wep-state', 'main-wep-toggle', '기질');
     setupMainForgeToggle();
     setupGearForgeToggles();
+
+    // 사이드바 외부 클릭 시 닫기
+    document.addEventListener('click', (e) => {
+        const sidebar = document.getElementById('gear-sidebar');
+        const isClickInside = sidebar.contains(e.target);
+        const isGearClick = e.target.closest('.gear-image-container');
+        if (sidebar.classList.contains('open') && !isClickInside && !isGearClick) {
+            closeGearSidebar();
+        }
+    });
 
     const enemyCb = document.getElementById('enemy-unbalanced');
     const enemyBtn = document.getElementById('enemy-unbalanced-toggle');
@@ -119,6 +108,107 @@ function initUI() {
 
     // 툴팁 초기화
     AppTooltip.init();
+}
+
+// ============ 장비 사이드바 로직 ============
+let currentGearInputId = null;
+
+window.openGearSidebar = function (inputId, partType) {
+    currentGearInputId = inputId;
+    const sidebar = document.getElementById('gear-sidebar');
+    if (sidebar) {
+        renderGearSidebar(partType);
+        sidebar.classList.add('open');
+    }
+};
+
+window.closeGearSidebar = function () {
+    const sidebar = document.getElementById('gear-sidebar');
+    if (sidebar) sidebar.classList.remove('open');
+    currentGearInputId = null;
+};
+
+function renderGearSidebar(filterPart) {
+    const container = document.querySelector('#gear-sidebar .sidebar-content');
+    if (!container) return;
+    container.innerHTML = '';
+
+    // 1. 장착 해제 버튼
+    const unequipBtn = document.createElement('div');
+    unequipBtn.className = 'sidebar-item unequip-item';
+    unequipBtn.innerHTML = `
+        <div class="sidebar-item-img unequip-img">
+            <span>-</span>
+        </div>
+        <span class="sidebar-item-name">장착 해제</span>
+    `;
+    unequipBtn.onclick = () => selectGear('');
+    container.appendChild(unequipBtn);
+
+    // 2. 세트별 그룹화 렌더링
+    DATA_SETS.forEach(set => {
+        // 해당 세트의 장비 필터링
+        const setGears = DATA_GEAR.filter(g => g.set === set.id);
+        if (setGears.length === 0) return;
+
+        // 세트 헤더
+        const header = document.createElement('h3');
+        header.className = 'sidebar-set-header';
+        header.innerText = `=== ${set.name} ===`;
+        container.appendChild(header);
+
+        // 그리드 컨테이너
+        const grid = document.createElement('div');
+        grid.className = 'gear-sidebar-grid';
+
+        setGears.forEach(gear => {
+            const item = document.createElement('div');
+            item.className = 'sidebar-item';
+
+            // 툴팁 활성화
+            item.setAttribute('data-tooltip-id', gear.id);
+            item.setAttribute('data-tooltip-type', 'gear');
+
+            // 필터링: 타입이 맞지 않으면 비활성화 (보이긴 함)
+            const isMatch = (gear.part === filterPart);
+            if (!isMatch) {
+                item.classList.add('disabled');
+            }
+
+            // 현재 선택된 아이템 하이라이트
+            if (document.getElementById(currentGearInputId)?.value === gear.id) {
+                item.classList.add('selected');
+            }
+
+            item.innerHTML = `
+                <div class="sidebar-item-img">
+                    <img src="images/gears/${gear.name}.webp" loading="lazy">
+                </div>
+                <span class="sidebar-item-name">${gear.name}</span>
+            `;
+
+            if (isMatch) {
+                item.onclick = () => selectGear(gear.id);
+            }
+
+            grid.appendChild(item);
+        });
+
+        container.appendChild(grid);
+    });
+}
+
+function selectGear(gearId) {
+    if (!currentGearInputId) return;
+
+    const input = document.getElementById(currentGearInputId);
+    if (input) {
+        input.value = gearId;
+        const imgId = currentGearInputId.replace('-select', '-image');
+        updateEntityImage(gearId, imgId, 'gears');
+        updateState();
+    }
+    closeGearSidebar();
 }
 
 function setupSubOperatorEvents(i) {
@@ -338,7 +428,7 @@ function setupMainForgeToggle() {
     mainForgeToggle.innerText = '단조: OFF';
     mainForgeToggle.onclick = () => {
         mainForgeCb.checked = !mainForgeCb.checked;
-        const gearIds = ['gear-glove-forge', 'gear-armor-forge', 'gear-comp1-forge', 'gear-comp2-forge'];
+        const gearIds = ['gear-gloves-forge', 'gear-armor-forge', 'gear-kit1-forge', 'gear-kit2-forge'];
         gearIds.forEach(gid => {
             const gcb = document.getElementById(gid);
             const gbtn = document.getElementById(gid + '-toggle');
@@ -353,7 +443,7 @@ function setupMainForgeToggle() {
 }
 
 function setupGearForgeToggles() {
-    const gearForgeIds = ['gear-glove-forge', 'gear-armor-forge', 'gear-comp1-forge', 'gear-comp2-forge'];
+    const gearForgeIds = ['gear-gloves-forge', 'gear-armor-forge', 'gear-kit1-forge', 'gear-kit2-forge'];
     const mainForgeCb = document.getElementById('main-gear-forge');
     const mainForgeToggle = document.getElementById('main-forge-toggle');
 
@@ -720,8 +810,8 @@ function applyStateToUI() {
         updateToggleButton(document.getElementById('main-forge-toggle'), gearForgeCb.checked, '단조');
     }
 
-    const gearIds = ['gear-glove-select', 'gear-armor-select', 'gear-comp1-select', 'gear-comp2-select'];
-    const forgeIds = ['gear-glove-forge', 'gear-armor-forge', 'gear-comp1-forge', 'gear-comp2-forge'];
+    const gearIds = ['gear-gloves-select', 'gear-armor-select', 'gear-kit1-select', 'gear-kit2-select'];
+    const forgeIds = ['gear-gloves-forge', 'gear-armor-forge', 'gear-kit1-forge', 'gear-kit2-forge'];
 
     gearIds.forEach((id, idx) => {
         const el = document.getElementById(id);
@@ -1027,9 +1117,8 @@ const AppTooltip = {
 
         const traitLines = Object.entries(traitGroups).map(([idx, lines]) => {
             if (lines.length === 0) return '';
-            const label = `특성${idx}`;
             const content = lines.join(', ');
-            return `<div style="margin-bottom:5px;"><span style="color:var(--accent)">${label}:</span> ${content}</div>`;
+            return `<div style="margin-bottom:5px;"><span style="color:var(--accent)">•</span> ${content}</div>`;
         }).join('');
 
         return `
@@ -1055,7 +1144,7 @@ const AppTooltip = {
 
     renderGear(gear) {
         const setName = (typeof DATA_SETS !== 'undefined' && DATA_SETS.find(s => s.id === gear.set)?.name) || '일반';
-        const typeMap = { helmet: '머리', armor: '상의', boots: '하의', gloves: '장갑', component: '부품' };
+        const typeMap = { armor: '방어구', gloves: '글러브', kit: '부품' };
 
         const stats = [];
         if (gear.stat1) stats.push({ type: gear.stat1, val: gear.val1 });

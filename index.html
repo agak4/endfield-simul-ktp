@@ -68,34 +68,46 @@
                 </div>
             </div>
 
-            <div id="main-gear-slots" class="gear-grid">
-                <div class="gear-slot" data-slot="glove">
-                    <div class="gear-image-container op-image-container">
-                        <img id="gear-glove-image" src="" alt="글러브">
+            <div id="main-gear-slots" class="gear-flex-row">
+                <div class="gear-slot" data-slot="gloves">
+                    <div class="gear-image-container op-image-container"
+                        onclick="openGearSidebar('gear-gloves-select', 'gloves')">
+                        <img id="gear-gloves-image" src="" alt="글러브">
                     </div>
-                    <select id="gear-glove-select" class="visual-select-btn btn-select"></select>
-                    <input type="checkbox" id="gear-glove-forge" class="hidden-checkbox">
+                    <input type="hidden" id="gear-gloves-select" value="">
+                    <div class="forge-toggle-wrapper">
+                        <input type="checkbox" id="gear-gloves-forge" class="hidden-checkbox">
+                    </div>
                 </div>
-                <div class="gear-slot" data-slot="comp1">
-                    <div class="gear-image-container op-image-container">
-                        <img id="gear-comp1-image" src="" alt="부품">
+                <div class="gear-slot" data-slot="kit1">
+                    <div class="gear-image-container op-image-container"
+                        onclick="openGearSidebar('gear-kit1-select', 'kit')">
+                        <img id="gear-kit1-image" src="" alt="부품">
                     </div>
-                    <select id="gear-comp1-select" class="visual-select-btn btn-select"></select>
-                    <input type="checkbox" id="gear-comp1-forge" class="hidden-checkbox">
+                    <input type="hidden" id="gear-kit1-select" value="">
+                    <div class="forge-toggle-wrapper">
+                        <input type="checkbox" id="gear-kit1-forge" class="hidden-checkbox">
+                    </div>
                 </div>
                 <div class="gear-slot" data-slot="armor">
-                    <div class="gear-image-container op-image-container">
+                    <div class="gear-image-container op-image-container"
+                        onclick="openGearSidebar('gear-armor-select', 'armor')">
                         <img id="gear-armor-image" src="" alt="방어구">
                     </div>
-                    <select id="gear-armor-select" class="visual-select-btn btn-select"></select>
-                    <input type="checkbox" id="gear-armor-forge" class="hidden-checkbox">
-                </div>
-                <div class="gear-slot" data-slot="comp2">
-                    <div class="gear-image-container op-image-container">
-                        <img id="gear-comp2-image" src="" alt="부품">
+                    <input type="hidden" id="gear-armor-select" value="">
+                    <div class="forge-toggle-wrapper">
+                        <input type="checkbox" id="gear-armor-forge" class="hidden-checkbox">
                     </div>
-                    <select id="gear-comp2-select" class="visual-select-btn btn-select"></select>
-                    <input type="checkbox" id="gear-comp2-forge" class="hidden-checkbox">
+                </div>
+                <div class="gear-slot" data-slot="kit2">
+                    <div class="gear-image-container op-image-container"
+                        onclick="openGearSidebar('gear-kit2-select', 'kit')">
+                        <img id="gear-kit2-image" src="" alt="부품">
+                    </div>
+                    <input type="hidden" id="gear-kit2-select" value="">
+                    <div class="forge-toggle-wrapper">
+                        <input type="checkbox" id="gear-kit2-forge" class="hidden-checkbox">
+                    </div>
                 </div>
             </div>
             <div class="u-flex-row u-gap-15">
@@ -107,6 +119,19 @@
                 </div>
             </div>
         </section>
+
+        <!-- 장비 선택 사이드바 -->
+        <div id="gear-sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <h3>장비 선택</h3>
+                <button class="sidebar-close" onclick="closeGearSidebar()">&times;</button>
+            </div>
+            <div class="sidebar-content">
+                <div id="gear-sidebar-grid" class="gear-sidebar-grid">
+                    <!-- JS로 동적 생성 -->
+                </div>
+            </div>
+        </div>
 
         <section class="panel center-panel">
             <h2>서브 오퍼레이터 (지원)</h2>
@@ -403,14 +428,15 @@
     <footer class="app-footer">
         <div class="footer-content">
             <div class="footer-info">
-                <span>© 2026 Endfield Simulator</span>
+                <!-- <span>© 2026 Endfield Simulator</span> -->
+                <span>Endfield Simulator</span>
                 <span class="divider">|</span>
                 <span>Powered by Antigravity</span>
             </div>
-            <div class="footer-links">
+            <!-- <div class="footer-links">
                 <span class="footer-link">Github</span>
                 <span class="footer-link">Discord</span>
-            </div>
+            </div> -->
         </div>
     </footer>
 
