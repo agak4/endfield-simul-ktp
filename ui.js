@@ -707,7 +707,7 @@ function updateEntityImage(entityId, imgElementId, folder) {
         if (rarity && container) {
             container.classList.add(`rarity-${rarity}`);
         }
-        
+
         const imgSrc = `images/${folder}/${fileName}.webp`;
         imgElement.src = imgSrc;
         imgElement.style.display = 'block';
@@ -1218,7 +1218,7 @@ const AppTooltip = {
             <div class="tooltip-section">
                 <div class="tooltip-label">기초 능력치</div>
                 <div class="tooltip-stat-grid">
-                    <div class="tooltip-stat-item" title="공격력"><span class="tooltip-stat-key">ATK</span><span class="tooltip-stat-val">${op.baseAtk || 0}</span></div>
+                    <div class="tooltip-stat-item" title="공격력"><span class="tooltip-stat-key">공격력</span><span class="tooltip-stat-val">${op.baseAtk || 0}</span></div>
                     <div class="tooltip-stat-item" title="주스탯"><span class="tooltip-stat-key">${getStatName(op.mainStat)}</span><span class="tooltip-stat-val">${op.stats ? op.stats[op.mainStat] : 0}</span></div>
                     <div class="tooltip-stat-item" title="부스탯"><span class="tooltip-stat-key">${getStatName(op.subStat)}</span><span class="tooltip-stat-val">${op.stats ? op.stats[op.subStat] : 0}</span></div>
                 </div>
@@ -1262,23 +1262,23 @@ const AppTooltip = {
 
             const label = t.type === '스탯' ? getStatName(t.stat) : t.type;
 
-                        if (min !== undefined && max !== undefined) {
-                            rangeStr = `${label} +${min}${unit}~${max}${unit}`;
-                        } else {
-                            rangeStr = `${label} +${t.val || 0}${unit}`;
-                        }
-            
-                        // [내부 규칙] 시너지 분류 로직
-                        // 타입이 '공격력 증가' 등일지라도 target이 '팀'/'적'이면 무조건 시너지 탭으로 분류함.
-                        const isSynergy = (t.target === '팀' || t.target === '적' || SYNERGY_TYPES.some(syn => t.type.includes(syn)));
-                        const bulletColor = isSynergy ? '#FFFA00' : 'var(--accent)';
-                        const itemHtml = `<div style="margin-bottom:2px;"><span style="color: ${bulletColor}">•</span> ${rangeStr}</div>`;
-                        
-                        if (isSynergy) synergyItems.push(itemHtml);
-                        else traitItems.push(itemHtml);
-                    });
-            
-                    return `
+            if (min !== undefined && max !== undefined) {
+                rangeStr = `${label} +${min}${unit}~${max}${unit}`;
+            } else {
+                rangeStr = `${label} +${t.val || 0}${unit}`;
+            }
+
+            // [내부 규칙] 시너지 분류 로직
+            // 타입이 '공격력 증가' 등일지라도 target이 '팀'/'적'이면 무조건 시너지 탭으로 분류함.
+            const isSynergy = (t.target === '팀' || t.target === '적' || SYNERGY_TYPES.some(syn => t.type.includes(syn)));
+            const bulletColor = isSynergy ? '#FFFA00' : 'var(--accent)';
+            const itemHtml = `<div style="margin-bottom:2px;"><span style="color: ${bulletColor}">•</span> ${rangeStr}</div>`;
+
+            if (isSynergy) synergyItems.push(itemHtml);
+            else traitItems.push(itemHtml);
+        });
+
+        return `
                         <div class="tooltip-header">
                             <div class="tooltip-icon"><img src="images/weapons/${wep.name}.webp"></div>
                             <div class="tooltip-title-group">
@@ -1289,12 +1289,13 @@ const AppTooltip = {
                         <div class="tooltip-section">
                             <div class="tooltip-label">기초 능력치</div>
                             <div class="tooltip-stat-grid">
-                                <div class="tooltip-stat-item" title="공격력"><span class="tooltip-stat-key">ATK</span><span class="tooltip-stat-val">${wep.baseAtk}</span></div>
+                                <div class="tooltip-stat-item" title="공격력"><span class="tooltip-stat-key">공격력</span><span class="tooltip-stat-val">${wep.baseAtk}</span></div>
                             </div>
                         </div>
                         ${traitItems.length > 0 ? `<div class="tooltip-section"><div class="tooltip-label">무기 특성</div><div class="tooltip-desc">${traitItems.join('')}</div></div>` : ''}
                         ${synergyItems.length > 0 ? `<div class="tooltip-section"><div class="tooltip-label" style="color: #FFFA00">시너지</div><div class="tooltip-desc">${synergyItems.join('')}</div></div>` : ''}
-                    `;    },
+                    `;
+    },
 
     renderGear(gear, forged = false) {
         const setName = (typeof DATA_SETS !== 'undefined' && DATA_SETS.find(s => s.id === gear.set)?.name) || '일반';
