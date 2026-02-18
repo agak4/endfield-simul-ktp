@@ -89,7 +89,7 @@ const DATA_SETS = [
     name: '조류의 물결',
     effects: [
       { type: '모든 스킬 피해', val: 20 },
-      { type: '아츠 피해', val: 35, nonStack: true, triggers: ['아츠 부착'] }
+      { type: '아츠 피해', val: 35, triggers: ['아츠 부착'] }
     ]
   },
   {
@@ -113,15 +113,15 @@ const DATA_SETS = [
     name: '열 작업용',
     effects: [
       { type: '오리지늄 아츠 강도', val: 30 },
-      { type: '열기 피해', val: 50, nonStack: true, triggers: ['연소 부여'] },
-      { type: '자연 피해', val: 50, nonStack: true, triggers: ['부식 부여'] }
+      { type: '열기 피해', val: 50, triggers: ['연소 부여'] },
+      { type: '자연 피해', val: 50, triggers: ['부식 부여'] }
     ]
   },
   {
     id: 'set_pioneer',
     name: '개척',
     effects: [
-      { type: '주는 피해', val: 16, target: '팀', nonStack: true, triggers: ['스킬 게이지 회복'] }
+      { type: '주는 피해', val: 16, target: '팀', triggers: ['스킬 게이지 회복'] }
     ]
   },
   {
@@ -129,8 +129,8 @@ const DATA_SETS = [
     name: '펄스식',
     effects: [
       { type: '오리지늄 아츠 강도', val: 30 },
-      { type: '전기 피해', val: 50, nonStack: true, triggers: ['감전 부여'] },
-      { type: '냉기 피해', val: 50, nonStack: true, triggers: ['동결 부여'] }
+      { type: '전기 피해', val: 50, triggers: ['감전 부여'] },
+      { type: '냉기 피해', val: 50, triggers: ['동결 부여'] }
     ]
   },
   {
