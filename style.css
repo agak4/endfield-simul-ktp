@@ -397,6 +397,9 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 .modal-item {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
     background: #1a1a1a;
     border-radius: 8px;
     padding: 12px;
@@ -414,7 +417,7 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 .modal-item.selected {
-    background: rgba(255, 215, 0, 0.1);
+    background: rgba(88, 155, 255, 0.1);
     border-color: var(--accent);
     box-shadow: 0 0 15px var(--accent-glow);
 }

@@ -139,9 +139,7 @@ function renderGearSidebar(filterPart) {
 
     const unequipBtn = document.createElement('div');
     unequipBtn.className = 'sidebar-item unequip-item';
-    unequipBtn.innerHTML = `
-        <span class="sidebar-item-name">== 장착 해제 ==</span>
-    `;
+    unequipBtn.innerHTML = `<span class="sidebar-item-name">== 장착 해제 ==</span>`;
     unequipBtn.onclick = () => selectGear('');
     container.appendChild(unequipBtn);
 
@@ -299,7 +297,7 @@ function setupOperatorSelect(selectId, btnId, onChangeInfo) {
             const opData = DATA_OPERATORS.find(o => o.id === selectedId);
             btn.innerText = opData ? opData.name : '선택하세요';
             if (onChangeInfo) onChangeInfo(selectedId);
-        }, currentSelectedIds);
+        }, currentSelectedIds, selectId);
     };
 
     if (sel.value) {
@@ -326,7 +324,7 @@ function setupWeaponSelect(selectId, btnId, getOpIdFunc) {
             const event = new Event('change');
             sel.dispatchEvent(event);
             if (sel.onchange) sel.onchange({ target: sel });
-        }, validWeapons);
+        }, validWeapons, sel.value);
     };
 
     if (sel.value) {
@@ -335,7 +333,7 @@ function setupWeaponSelect(selectId, btnId, getOpIdFunc) {
     }
 }
 
-function openWeaponModal(onSelect, validWeapons) {
+function openWeaponModal(onSelect, validWeapons, currentValue) {
     const modal = document.getElementById('wep-selector-modal');
     const grid = document.getElementById('wep-modal-grid');
     if (!modal || !grid) return;
@@ -354,6 +352,9 @@ function openWeaponModal(onSelect, validWeapons) {
     validWeapons.forEach(wep => {
         const item = document.createElement('div');
         item.className = 'modal-item';
+        if (wep.id === currentValue) {
+            item.classList.add('selected');
+        }
         item.setAttribute('data-tooltip-id', wep.id);
         item.setAttribute('data-tooltip-type', 'weapon');
 
@@ -377,26 +378,33 @@ function openWeaponModal(onSelect, validWeapons) {
     modal.onclick = (e) => { if (e.target === modal) modal.classList.remove('open'); };
 }
 
-function openOperatorModal(onSelect, excludedIds = []) {
+function openOperatorModal(onSelect, excludedIds = [], selectId = null) {
     const modal = document.getElementById('op-selector-modal');
     const grid = document.getElementById('op-modal-grid');
     const closeBtn = document.getElementById('modal-close-btn');
     if (!modal || !grid) return;
 
+    const currentVal = selectId ? document.getElementById(selectId)?.value : null;
+
     grid.innerHTML = '';
 
-    const unequipItem = document.createElement('div');
-    unequipItem.className = 'modal-item unselect-item';
-    unequipItem.innerHTML = `<span class="name">선택 해제</span>`;
-    unequipItem.onclick = () => {
-        modal.classList.remove('open');
-        onSelect('');
-    };
-    grid.appendChild(unequipItem);
+    if (selectId !== 'main-op-select') {
+        const unequipItem = document.createElement('div');
+        unequipItem.className = 'modal-item unselect-item';
+        unequipItem.innerHTML = `<span class="name">선택 해제</span>`;
+        unequipItem.onclick = () => {
+            modal.classList.remove('open');
+            onSelect('');
+        };
+        grid.appendChild(unequipItem);
+    }
 
     DATA_OPERATORS.forEach(op => {
         const item = document.createElement('div');
         item.className = 'modal-item';
+        if (op.id === currentVal) {
+            item.classList.add('selected');
+        }
 
         item.setAttribute('data-tooltip-id', op.id);
         item.setAttribute('data-tooltip-type', 'operator');
