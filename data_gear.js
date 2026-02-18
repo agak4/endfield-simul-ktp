@@ -121,7 +121,6 @@ const DATA_SETS = [
     id: 'set_pioneer',
     name: '개척',
     effects: [
-      { type: '연계 스킬 쿨타임 감소', val: 15 },
       { type: '주는 피해', val: 16, target: '팀', nonStack: true, triggers: ['스킬 게이지 회복'] }
     ]
   },

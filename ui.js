@@ -278,9 +278,29 @@ function setupPotencyButtons(inputId, groupId) {
             input.value = i;
             Array.from(group.children).forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
+
+            // 툴팁 연동용 data-tooltip-pot 동기화
+            syncPotencyToTooltip(inputId, i);
             updateState();
         };
         group.appendChild(btn);
+    }
+
+    // 초기 로딩 시에도 툴팁 속성 동기화
+    syncPotencyToTooltip(inputId, currentVal);
+}
+
+function syncPotencyToTooltip(inputId, potValue) {
+    let targetImgId = '';
+    if (inputId === 'main-op-pot') targetImgId = 'main-op-image';
+    else if (inputId === 'main-wep-pot') targetImgId = 'main-wep-image';
+    else if (inputId.includes('sub-')) {
+        targetImgId = inputId.replace('-pot', '-image');
+    }
+
+    if (targetImgId) {
+        const img = document.getElementById(targetImgId);
+        if (img) img.setAttribute('data-tooltip-pot', potValue);
     }
 }
 
@@ -427,15 +447,17 @@ function updateEntityImage(entityId, imgElementId, folder) {
 
         // 잠재력 정보 찾기 (툴팁 표시용)
         let potency = 0;
-        if (folder === 'operators') {
-            if (imgElementId === 'main-op-image') {
-                potency = Number(document.getElementById('main-op-pot')?.value) || 0;
-            } else {
-                const subIdxMatch = imgElementId.match(/sub-(\d+)-op-image/);
-                if (subIdxMatch) {
-                    const idx = subIdxMatch[1];
-                    potency = Number(document.getElementById(`sub-${idx}-pot`)?.value) || 0;
-                }
+        if (folder === 'operators' || folder === 'weapons') {
+            let inputId = '';
+            if (imgElementId === 'main-op-image') inputId = 'main-op-pot';
+            else if (imgElementId === 'main-wep-image') inputId = 'main-wep-pot';
+            else if (imgElementId.startsWith('sub-')) {
+                // sub-N-image -> sub-N-pot, sub-N-wep-image -> sub-N-wep-pot
+                inputId = imgElementId.replace('-image', '-pot');
+            }
+
+            if (inputId) {
+                potency = Number(document.getElementById(inputId)?.value) || 0;
             }
         }
         imgElement.setAttribute('data-tooltip-pot', potency);
@@ -663,14 +685,18 @@ function applyStateToUI() {
     const mainOpSelect = document.getElementById('main-op-select');
     if (mainOpSelect) {
         mainOpSelect.value = state.mainOp.id;
-        const opData = DATA_OPERATORS.find(o => o.id === state.mainOp.id);
-        document.getElementById('main-op-select-btn').innerText = opData ? opData.name : '선택하세요';
-        updateMainWeaponList(state.mainOp.id);
-        updateEntityImage(state.mainOp.id, 'main-op-image', 'operators');
     }
-
     document.getElementById('main-op-pot').value = state.mainOp.pot;
     setupPotencyButtons('main-op-pot', 'main-op-pot-group');
+
+    if (state.mainOp.id) {
+        const opData = DATA_OPERATORS.find(o => o.id === state.mainOp.id);
+        if (opData) {
+            document.getElementById('main-op-select-btn').innerText = opData.name;
+            updateMainWeaponList(state.mainOp.id);
+            updateEntityImage(state.mainOp.id, 'main-op-image', 'operators');
+        }
+    }
 
     // 메인 무기
     const mainWepSelect = document.getElementById('main-wep-select');
@@ -715,6 +741,9 @@ function applyStateToUI() {
     // 서브 오퍼레이터
     for (let i = 0; i < 3; i++) {
         const s = state.subOps[i];
+        document.getElementById(`sub-${i}-pot`).value = s.pot;
+        setupPotencyButtons(`sub-${i}-pot`, `sub-${i}-pot-group`);
+
         const opSel = document.getElementById(`sub-${i}-op`);
         if (opSel) {
             opSel.value = s.id || '';
@@ -724,9 +753,6 @@ function applyStateToUI() {
             updateSubWeaponList(i, s.id);
             updateEntityImage(s.id, `sub-${i}-image`, 'operators');
         }
-
-        document.getElementById(`sub-${i}-pot`).value = s.pot;
-        setupPotencyButtons(`sub-${i}-pot`, `sub-${i}-pot-group`);
 
         const wepSel = document.getElementById(`sub-${i}-wep`);
         if (wepSel) {
@@ -852,59 +878,88 @@ const AppTooltip = {
     },
 
     renderOperator(op, currentPot) {
-        // 특성 분류 (본인 vs 시너지)
-        const opTraits = [];
+        // 엄격한 분류 규칙 정의
+        const TRAIT_TYPES = [
+            '공격력 증가', '물리 피해', '아츠 피해', '열기 피해', '전기 피해', '냉기 피해', '자연 피해', '불균형 피해',
+            '일반 공격 피해', '배틀 스킬 피해', '연계 스킬 피해', '궁극기 피해', '모든 스킬 피해', '주는 피해',
+            '오리지늄 아츠 강도', '치명타 확률', '치명타 피해'
+        ];
+        const SYNERGY_TYPES = [
+            '물리 증폭', '아츠 증폭', '열기 증폭', '전기 증폭', '냉기 증폭', '자연 증폭',
+            '물리 취약', '아츠 취약', '열기 취약', '전기 취약', '냉기 취약', '자연 취약',
+            '아츠 취약', '받는 물리 피해', '받는 아츠 피해', '받는 열기 피해', '받는 전기 피해', '받는 냉기 피해', '받는 자연 피해',
+            '받는 불균형 피해', '받는 피해', '연타'
+        ];
+        const EXCLUDE_TYPES = [
+            '최대 체력', '궁극기 충전', '치유 효율', '모든 능력치', '아츠 부착', '동결 부여', '치유', '비호', '보호'
+        ];
+
+        const traitItems = [];
         const synergyItems = [];
+        const potentialItems = []; // 잠재는 나중에 합치기 위해 따로 보관
 
-        // 1. Talents
-        if (op.talents) {
-            op.talents.forEach(t => {
-                if (!t || !t.type || t.type === '스탯') return;
-                if (t.target === '팀' || t.target === '적') synergyItems.push({ ...t, source: '특성' });
-                else opTraits.push(t);
+        const processData = (data, source, potLevel = null) => {
+            if (!data) return;
+            const items = Array.isArray(data) ? data : [data];
+
+            items.forEach(t => {
+                if (Array.isArray(t)) {
+                    t.forEach(sub => processSingle(sub, source, potLevel));
+                } else {
+                    processSingle(t, source, potLevel);
+                }
             });
-        }
-
-        // 2. Potential (활성화 여부 체크)
-        if (op.potential) {
-            op.potential.forEach((p, i) => {
-                if (!p || !p.type || p.type === '스탯') return;
-                const isActive = (currentPot >= i + 1);
-                const item = { ...p, source: '잠재', active: isActive };
-                if (p.target === '팀' || p.target === '적') synergyItems.push(item);
-                else opTraits.push(item);
-            });
-        }
-
-        // 3. Skills (시너지 전용 추출)
-        if (op.skill) {
-            op.skill.forEach((s, i) => {
-                const skillName = (i === 0 ? '배틀' : i === 1 ? '연계' : '궁극기');
-                const items = Array.isArray(s) ? s : [s];
-                items.forEach(si => {
-                    if (!si || !si.type || si.type === '스탯') return;
-                    if (si.target === '팀' || si.target === '적') {
-                        synergyItems.push({ ...si, source: skillName });
-                    }
-                });
-            });
-        }
-
-        const renderTraitList = (list) => {
-            return list.map(t => {
-                const unit = String(t.type).includes('확률') || String(t.type).includes('피해') || String(t.type).includes('충전') ? '%' : '';
-                const valStr = t.val !== undefined ? ` +${t.val}${unit}` : '';
-                const activeStyle = t.active === false ? 'opacity: 0.4; text-decoration: line-through;' : '';
-                return `<div style="margin-bottom:2px; ${activeStyle}"><span style="color:var(--accent)">•</span> ${t.type}${valStr}</div>`;
-            }).join('');
         };
 
-        const renderSynergyList = (list) => {
-            return list.map(t => {
-                const unit = String(t.type).includes('확률') || String(t.type).includes('피해') || String(t.type).includes('충전') ? '%' : '';
+        const processSingle = (t, source, potLevel) => {
+            if (!t || !t.type) return;
+            if (EXCLUDE_TYPES.some(ex => t.type.includes(ex)) || t.type === '스탯') return;
+
+            const isPotential = potLevel !== null;
+            const isActive = isPotential ? (currentPot >= potLevel) : true;
+            const sourceLabel = isPotential ? `${potLevel}잠재` : source;
+
+            const item = { ...t, sourceLabel, active: isActive, isPotential };
+
+            // 분류 결정
+            const isSynergy = SYNERGY_TYPES.some(syn => t.type.includes(syn)) ||
+                t.target === '팀' ||
+                t.target === '적';
+
+            if (isSynergy) {
+                synergyItems.push(item);
+            } else if (TRAIT_TYPES.some(tr => t.type.includes(tr))) {
+                traitItems.push(item);
+            }
+        };
+
+        // 데이터 추출
+        processData(op.talents, '재능');
+        if (op.skill) {
+            op.skill.forEach((s, i) => {
+                const name = (i === 0 ? '배틀' : i === 1 ? '연계' : '궁극기');
+                processData(s, name);
+            });
+        }
+        if (op.potential) {
+            op.potential.forEach((p, i) => processData(p, '잠재', i + 1));
+        }
+
+        const renderSortedList = (list) => {
+            // 일반 항목 먼저, 그 다음 잠재 항목 순으로 정렬
+            const sorted = [...list].sort((a, b) => {
+                if (a.isPotential !== b.isPotential) return a.isPotential ? 1 : -1;
+                return 0;
+            });
+
+            return sorted.map(t => {
+                const unit = '%';
                 const valStr = t.val !== undefined ? ` +${t.val}${unit}` : '';
-                const activeStyle = t.active === false ? 'opacity: 0.4; text-decoration: line-through;' : '';
-                return `<div style="margin-bottom:2px; ${activeStyle}"><span style="color:var(--accent)">•</span> [${t.source}] ${t.type}${valStr}</div>`;
+                const style = t.active === false
+                    ? 'color: rgba(255,255,255,0.3); font-weight: normal;'
+                    : 'color: var(--accent); font-weight: bold;';
+
+                return `<div style="margin-bottom:2px; ${style}"><span style="color:inherit">•</span> [${t.sourceLabel}] ${t.type}${valStr}</div>`;
             }).join('');
         };
 
@@ -920,20 +975,20 @@ const AppTooltip = {
                 <div class="tooltip-label">기초 능력치</div>
                 <div class="tooltip-stat-grid">
                     <div class="tooltip-stat-item" title="공격력"><span class="tooltip-stat-key">ATK</span><span class="tooltip-stat-val">${op.baseAtk || 0}</span></div>
-                    <div class="tooltip-stat-item" title="주스탯"><span class="tooltip-stat-key">${getStatName(op.mainStat)}</span><span class="tooltip-stat-val">MAIN</span></div>
-                    <div class="tooltip-stat-item" title="부스탯"><span class="tooltip-stat-key">${getStatName(op.subStat)}</span><span class="tooltip-stat-val">SUB</span></div>
+                    <div class="tooltip-stat-item" title="주스탯"><span class="tooltip-stat-key">주스탯</span><span class="tooltip-stat-val">${getStatName(op.mainStat)}</span></div>
+                    <div class="tooltip-stat-item" title="부스탯"><span class="tooltip-stat-key">부스탯</span><span class="tooltip-stat-val">${getStatName(op.subStat)}</span></div>
                 </div>
             </div>
-            ${opTraits.length > 0 ? `
+            ${traitItems.length > 0 ? `
             <div class="tooltip-section">
-                <div class="tooltip-label">오퍼레이터 특성</div>
-                <div class="tooltip-desc">${renderTraitList(opTraits)}</div>
+                <div class="tooltip-label">오퍼레이터 재능</div>
+                <div class="tooltip-desc">${renderSortedList(traitItems)}</div>
             </div>
             ` : ''}
             ${synergyItems.length > 0 ? `
             <div class="tooltip-section">
                 <div class="tooltip-label">시너지</div>
-                <div class="tooltip-desc">${renderSynergyList(synergyItems)}</div>
+                <div class="tooltip-desc">${renderSortedList(synergyItems)}</div>
             </div>
             ` : ''}
         `;
@@ -988,7 +1043,7 @@ const AppTooltip = {
             <div class="tooltip-section">
                 <div class="tooltip-label">기초 능력치</div>
                 <div class="tooltip-stat-grid">
-                    <div class="tooltip-stat-item" title="공격력"><span class="tooltip-stat-key">기초 ATK</span><span class="tooltip-stat-val">${wep.baseAtk}</span></div>
+                    <div class="tooltip-stat-item" title="공격력"><span class="tooltip-stat-key">ATK</span><span class="tooltip-stat-val">${wep.baseAtk}</span></div>
                 </div>
             </div>
             <div class="tooltip-section">
@@ -1000,18 +1055,39 @@ const AppTooltip = {
 
     renderGear(gear) {
         const setName = (typeof DATA_SETS !== 'undefined' && DATA_SETS.find(s => s.id === gear.set)?.name) || '일반';
-        const typeMap = { helmet: '머리', armor: '상의', boots: '하의', gloves: '장갑' };
+        const typeMap = { helmet: '머리', armor: '상의', boots: '하의', gloves: '장갑', component: '부품' };
 
-        const statsHtml = gear.stats.map(s => {
-            return `<div class="tooltip-stat-item"><span class="tooltip-stat-key">${getStatName(s.type)}</span><span class="tooltip-stat-val">+${s.valBase}~${s.valMax}</span></div>`;
+        const stats = [];
+        if (gear.stat1) stats.push({ type: gear.stat1, val: gear.val1 });
+        if (gear.stat2) stats.push({ type: gear.stat2, val: gear.val2 });
+
+        const statsHtml = stats.map(s => {
+            return `<div class="tooltip-stat-item"><span class="tooltip-stat-key">${getStatName(s.type)}</span><span class="tooltip-stat-val">+${s.val}</span></div>`;
         }).join('');
+
+        // 특성(Trait) 처리
+        let traitHtml = '';
+        if (gear.trait) {
+            const traits = Array.isArray(gear.trait) ? gear.trait : [gear.trait];
+            const traitLines = traits.map(t => {
+                const unit = t.type.includes('확률') || t.type.includes('피해') || t.type.includes('충전') || t.type.includes('효율') ? '%' : '';
+                const valStr = t.val !== undefined ? ` +${t.val}${unit}` : '';
+                return `<div style="margin-bottom:2px;"><span style="color:var(--accent)">•</span> ${t.type}${valStr}</div>`;
+            }).join('');
+            traitHtml = `
+                <div class="tooltip-section">
+                    <div class="tooltip-label">장비 특성</div>
+                    <div class="tooltip-desc">${traitLines}</div>
+                </div>
+            `;
+        }
 
         return `
             <div class="tooltip-header">
-                <div class="tooltip-icon"><img src="images/gears/${gear.type}.webp"></div>
+                <div class="tooltip-icon"><img src="images/gears/${gear.name}.webp"></div>
                 <div class="tooltip-title-group">
                     <div class="tooltip-name">${gear.name}</div>
-                    <div class="tooltip-sub">${typeMap[gear.type] || gear.type} / ${setName}</div>
+                    <div class="tooltip-sub">${typeMap[gear.part] || gear.part} / ${setName}</div>
                 </div>
             </div>
             <div class="tooltip-section">
@@ -1020,6 +1096,7 @@ const AppTooltip = {
                     ${statsHtml}
                 </div>
             </div>
+            ${traitHtml}
         `;
     }
 };
