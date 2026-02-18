@@ -58,8 +58,6 @@ function initUI() {
         updateState();
     });
 
-    // gearMap logic removed - replaced by Sidebar
-
     for (let i = 0; i < 3; i++) {
         setupSubOperatorEvents(i);
         updateEntityImage(null, `sub-${i}-image`, 'operators');
