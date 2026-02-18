@@ -386,6 +386,9 @@ function openWeaponModal(onSelect, validWeapons, currentValue) {
         if (wep.id === currentValue) {
             item.classList.add('selected');
         }
+        if (wep.rarity) {
+            item.classList.add(`rarity-${wep.rarity}`);
+        }
         item.setAttribute('data-tooltip-id', wep.id);
         item.setAttribute('data-tooltip-type', 'weapon');
 
@@ -435,6 +438,9 @@ function openOperatorModal(onSelect, excludedIds = [], selectId = null) {
         item.className = 'modal-item';
         if (op.id === currentVal) {
             item.classList.add('selected');
+        }
+        if (op.rarity) {
+            item.classList.add(`rarity-${op.rarity}`);
         }
 
         item.setAttribute('data-tooltip-id', op.id);
@@ -666,6 +672,13 @@ function updateEntityImage(entityId, imgElementId, folder) {
     const imgElement = document.getElementById(imgElementId);
     if (!imgElement) return;
 
+    // 부모 컨테이너 찾기 (이미지 드래그 방지 로직 등을 위해)
+    const container = imgElement.parentElement;
+    if (container) {
+        // 기존 희귀도 클래스 제거
+        container.classList.remove('rarity-6', 'rarity-5', 'rarity-4');
+    }
+
     if (!entityId) {
         imgElement.src = '';
         imgElement.style.display = 'none';
@@ -673,15 +686,25 @@ function updateEntityImage(entityId, imgElementId, folder) {
     }
 
     let fileName = '';
+    let rarity = 0;
     if (folder === 'operators') {
-        fileName = DATA_OPERATORS.find(op => op.id === entityId)?.name;
+        const op = DATA_OPERATORS.find(o => o.id === entityId);
+        fileName = op?.name;
+        rarity = op?.rarity || 0;
     } else if (folder === 'weapons') {
-        fileName = DATA_WEAPONS.find(wep => wep.id === entityId)?.name;
+        const wep = DATA_WEAPONS.find(w => w.id === entityId);
+        fileName = wep?.name;
+        rarity = wep?.rarity || 0;
     } else if (folder === 'gears') {
         fileName = DATA_GEAR.find(gear => gear.id === entityId)?.name;
     }
 
     if (fileName) {
+        // 희귀도 클래스 적용
+        if (rarity && container) {
+            container.classList.add(`rarity-${rarity}`);
+        }
+        
         const imgSrc = `images/${folder}/${fileName}.webp`;
         imgElement.src = imgSrc;
         imgElement.style.display = 'block';
@@ -1221,11 +1244,11 @@ const AppTooltip = {
             // 2. traits[2] 이상인 항목들 중 '확률/피해/충전/공격력/스탯/능력치' 포함 시에만 '%' 추가.
             const isBaseStatIdx = (i < 2);
             const isPercentType = !isBaseStatIdx && (
-                t.type.includes('확률') || t.type.includes('피해') || t.type.includes('충전') || 
+                t.type.includes('확률') || t.type.includes('피해') || t.type.includes('충전') ||
                 t.type.includes('공격력') || t.type.includes('스탯') || t.type.includes('능력치')
             );
             const unit = isPercentType ? '%' : '';
-            
+
             let rangeStr = '';
             let min, max;
             if (t.valByLevel && t.valByLevel.length > 0) {
@@ -1234,7 +1257,7 @@ const AppTooltip = {
             }
 
             const label = t.type === '스탯' ? getStatName(t.stat) : t.type;
-            
+
             if (min !== undefined && max !== undefined) {
                 rangeStr = `${label} +${min}${unit}~${max}${unit}`;
             } else {
@@ -1242,11 +1265,11 @@ const AppTooltip = {
             }
 
             const itemHtml = `<div style="margin-bottom:2px;"><span style="color: var(--accent)">•</span> ${rangeStr}</div>`;
-            
+
             // [내부 규칙] 시너지 분류 로직
             // 타입이 '공격력 증가' 등일지라도 target이 '팀'/'적'이면 무조건 시너지 탭으로 분류함.
             const isSynergy = (t.target === '팀' || t.target === '적' || SYNERGY_TYPES.some(syn => t.type.includes(syn)));
-            
+
             if (isSynergy) synergyItems.push(itemHtml);
             else traitItems.push(itemHtml);
         });
@@ -1301,7 +1324,7 @@ const AppTooltip = {
                 if (forged) v = (t.val_f !== undefined) ? t.val_f : t.val;
                 const valStr = v !== undefined ? ` +${(v).toFixed(1)}${unit}` : '';
                 const spanStyle = forged ? `style="color: var(--accent); font-weight: bold;"` : '';
-                
+
                 const label = isStatTrait ? getStatName(t.stat) : t.type;
                 return `<div style="margin-bottom:2px;"><span style="color:var(--accent)">•</span> ${label}<span ${spanStyle}>${valStr}</span></div>`;
             }).join('');

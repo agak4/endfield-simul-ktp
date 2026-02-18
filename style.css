@@ -34,6 +34,16 @@
     --transition-speed: 0.2s;
 }
 
+/* ============ 희귀도 스타일 ============ */
+.rarity-6 { border-color: #FC5C00 !important; box-shadow: 0 0 10px rgba(252, 92, 0, 0.4) !important; }
+.rarity-5 { border-color: #FFBA03 !important; box-shadow: 0 0 10px rgba(255, 186, 3, 0.4) !important; }
+.rarity-4 { border-color: #9451F8 !important; box-shadow: 0 0 10px rgba(148, 81, 248, 0.4) !important; }
+
+/* 이미지 컨테이너 호버 시 발광 강화 */
+.op-image-container.rarity-6:hover { box-shadow: 0 0 15px rgba(252, 92, 0, 0.6) !important; }
+.op-image-container.rarity-5:hover { box-shadow: 0 0 15px rgba(255, 186, 3, 0.6) !important; }
+.op-image-container.rarity-4:hover { box-shadow: 0 0 15px rgba(148, 81, 248, 0.6) !important; }
+
 /* ============ 기본 스타일 ============ */
 * {
     margin: 0;
