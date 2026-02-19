@@ -300,3 +300,122 @@ function renderSelect(id, list) {
     sel.innerHTML = '';
     list.forEach(item => sel.add(new Option(item.name, item.id)));
 }
+
+// ============ 디버프 아이콘 ============
+
+/**
+ * 아이콘 래퍼 요소에 stacks값을 반영하여 호(ring-seg)를 활성/비활성 처리.
+ * seg-0(상단)부터 stacks 개수만큼 active 클래스 부여.
+ *
+ * @param {HTMLElement} wrap   - .debuff-icon-wrap 요소
+ * @param {number}      stacks - 활성 단계 (0~4)
+ */
+function applyDebuffIconState(wrap, stacks) {
+    wrap.dataset.stacks = stacks;
+    const label = wrap.querySelector('.debuff-stack-label');
+    if (label) label.textContent = stacks;
+    wrap.querySelectorAll('.ring-seg').forEach((seg, i) => {
+        seg.classList.toggle('active', i < stacks);
+    });
+}
+
+/**
+ * 방어불능 아이콘 클릭: 0→1→2→3→4→0 순환.
+ * state.debuffState.defenseless 갱신 후 재계산.
+ *
+ * @param {HTMLElement} el - 클릭된 .debuff-icon-wrap
+ */
+function cycleDebuffIcon(el) {
+    const cur = parseInt(el.dataset.stacks, 10) || 0;
+    const next = (cur + 1) % 5;
+    state.debuffState.defenseless = next;
+    applyDebuffIconState(el, next);
+    saveState();
+    updateState();
+}
+
+/**
+ * 아츠 부착 아이콘 클릭: 한 종류만 활성 가능.
+ * - 다른 종류가 활성화된 상태에서 클릭하면 해당 종류로 전환 (스택 1부터 시작).
+ * - 같은 종류 클릭: 0→1→2→3→4→0 순환. 0이 되면 type도 null.
+ *
+ * @param {HTMLElement} el - 클릭된 .debuff-icon-wrap
+ */
+function cycleDebuffAttach(el) {
+    const attachType = el.dataset.attachType;
+    const ds = state.debuffState.artsAttach;
+
+    let nextStacks;
+    if (ds.type !== null && ds.type !== attachType) {
+        // 다른 종류 선택 → 해당 종류 1단계로 전환
+        nextStacks = 1;
+    } else {
+        const cur = parseInt(el.dataset.stacks, 10) || 0;
+        nextStacks = (cur + 1) % 5;
+    }
+
+    state.debuffState.artsAttach.type = nextStacks === 0 ? null : attachType;
+    state.debuffState.artsAttach.stacks = nextStacks;
+
+    // 4개 아이콘 모두 갱신
+    const ATTACH_TYPES = ['열기 부착', '전기 부착', '냉기 부착', '자연 부착'];
+    ATTACH_TYPES.forEach(t => {
+        const wrap = document.getElementById(`debuff-icon-${t}`);
+        if (!wrap) return;
+        const isSelected = (t === attachType && nextStacks > 0);
+        const isOther = (state.debuffState.artsAttach.type !== null && t !== state.debuffState.artsAttach.type);
+        applyDebuffIconState(wrap, isSelected ? nextStacks : 0);
+        wrap.classList.toggle('attach-disabled', isOther);
+    });
+
+    saveState();
+    updateState();
+}
+
+/**
+ * 아츠 이상 아이콘 클릭: 각 종류 독립적으로 0→1→2→3→4→0 순환.
+ * state.debuffState.artsAbnormal[type] 갱신 후 재계산.
+ *
+ * @param {HTMLElement} el - 클릭된 .debuff-icon-wrap
+ */
+function cycleDebuffAbnormal(el) {
+    const abnType = el.dataset.abnormalType;
+    const cur = parseInt(el.dataset.stacks, 10) || 0;
+    const next = (cur + 1) % 5;
+    state.debuffState.artsAbnormal[abnType] = next;
+    applyDebuffIconState(el, next);
+    saveState();
+    updateState();
+}
+
+/**
+ * 저장된 state.debuffState를 UI 아이콘에 반영한다.
+ * loadState() 후 applyStateToUI()에서 호출한다.
+ */
+function applyDebuffStateToUI() {
+    const ds = state.debuffState;
+    if (!ds) return;
+
+    // 방어불능
+    const defEl = document.getElementById('debuff-icon-defenseless');
+    if (defEl) applyDebuffIconState(defEl, ds.defenseless || 0);
+
+    // 아츠 부착
+    const ATTACH_TYPES = ['열기 부착', '전기 부착', '냉기 부착', '자연 부착'];
+    ATTACH_TYPES.forEach(t => {
+        const wrap = document.getElementById(`debuff-icon-${t}`);
+        if (!wrap) return;
+        const activeType = ds.artsAttach?.type;
+        const isSelected = activeType === t;
+        const isOther = activeType !== null && activeType !== t;
+        applyDebuffIconState(wrap, isSelected ? (ds.artsAttach?.stacks || 0) : 0);
+        wrap.classList.toggle('attach-disabled', isOther);
+    });
+
+    // 아츠 이상
+    const ABNORMAL_TYPES = ['연소', '감전', '동결', '부식'];
+    ABNORMAL_TYPES.forEach(t => {
+        const wrap = document.getElementById(`debuff-icon-${t}`);
+        if (wrap) applyDebuffIconState(wrap, ds.artsAbnormal?.[t] || 0);
+    });
+}

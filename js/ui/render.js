@@ -51,7 +51,9 @@ function renderResult(res) {
         'stat-vuln': res.stats.vuln.toFixed(1) + '%',
         'stat-taken': res.stats.takenDmg.toFixed(1) + '%',
         'stat-unbal': res.stats.unbalanceDmg.toFixed(1) + '%',
-        'stat-arts': res.stats.originiumArts.toFixed(1)
+        'stat-arts': res.stats.originiumArts.toFixed(1),
+        'stat-res': (res.stats.resistance ?? 0).toFixed(0),
+        'stat-res-mult': (((res.stats.resMult ?? 1) - 1) * 100).toFixed(1) + '%'
     };
 
     for (const [id, val] of Object.entries(mapping)) {
@@ -78,7 +80,8 @@ function renderResult(res) {
         'list-taken': res.logs.taken,
         'list-unbal': res.logs.unbal,
         'list-multihit': res.logs.multihit,
-        'list-arts': res.logs.arts
+        'list-arts': res.logs.arts,
+        'list-res': res.logs.res
     };
 
     for (const [id, list] of Object.entries(logMapping)) {

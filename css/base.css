@@ -90,18 +90,14 @@ body {
 }
 
 /* ============ 스크롤바 ============ */
-::-webkit-scrollbar {
-    width: 8px;
-}
-
-::-webkit-scrollbar-track {
+/* ::-webkit-scrollbar-track {
     background: var(--sidebar-bg);
 }
 
 ::-webkit-scrollbar-thumb {
     background: var(--accent);
     border-radius: 10px;
-}
+} */
 
 /* ============ 타이포그래피 ============ */
 h2 {
@@ -111,7 +107,6 @@ h2 {
     letter-spacing: 1px;
     color: var(--text-gold);
     padding-bottom: 10px;
-    margin-bottom: 20px;
     border-bottom: 2px solid var(--accent);
 }
 

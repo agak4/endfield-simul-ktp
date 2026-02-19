@@ -23,7 +23,13 @@
  *   실제 수치 누산(atkInc, critRate 등)은 isDisabled 체크 후 별도로 수행한다.
  *   (두 로직이 분리된 이유: 비활성화된 효과도 로그에는 표시해야 하기 때문)
  * - computeFinalDamageOutput의 데미지 공식:
- *   finalAtk × critExp × (1 + dmgInc) × (1 + amp) × (1 + takenDmg) × (1 + vuln) × multiHit × (1 + unbal)
+ *   finalAtk × critExp × (1 + dmgInc) × (1 + amp) × (1 + takenDmg) × (1 + vuln) × multiHit × (1 + unbal) × resMult
+ *   resMult = 1 − resistance / 100  (resistance가 0이면 resMult=1, 음수일수록 피해 증가)
+ * - 디버프 직접 적용 규칙 (부식/감전 등 state.debuffState 기반 효과):
+ *   ① uid를 'debuff_XXXX' 형태로 고정한다.
+ *   ② 로그는 항상 추가한다 (state.disabledEffects와 무관하게).
+ *   ③ 수치 누산은 `!state.disabledEffects.includes('디버프_uid')` 조건에서만 수행한다.
+ *   ④ 새 디버프 속성을 추가할 때 반드시 위 세 규칙을 지켜야 한다.
  */
 
 // ============ 데미지 계산 엔진 ============
@@ -248,8 +254,29 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects) {
 
     const logs = {
         atk: [], atkBuffs: [], dmgInc: [], amp: [], vuln: [],
-        taken: [], unbal: [], multihit: [], crit: [], arts: []
+        taken: [], unbal: [], multihit: [], crit: [], arts: [], res: []
     };
+
+    // ---- 저항 (적 속성별, 0 시작 / 낮을수록 피해 증가) ----
+    const ALL_RES_KEYS = ['물리', '열기', '전기', '냉기', '자연'];
+    const resistance = { '물리': 0, '열기': 0, '전기': 0, '냉기': 0, '자연': 0 };
+
+
+    // 부식 디버프: 모든 저항 감소
+    const BUSIK_RED = [0, 12, 16, 20, 24];
+    const busikStacks = state.debuffState?.artsAbnormal?.['\ubd80\uc2dd'] || 0;
+    const busikVal = BUSIK_RED[busikStacks];
+    // [디버프 직접 적용 규칙] 로그는 항상 push, 수치 반영은 !isDisabled 시에만
+    const busikDisabled = state.disabledEffects.includes('debuff_busik');
+    if (busikVal > 0) {
+        if (!busikDisabled) ALL_RES_KEYS.forEach(k => resistance[k] -= busikVal);
+        logs.res.push({ txt: `[부식 ${busikStacks}단계] 모든 저항 -${busikVal}`, uid: 'debuff_busik' });
+    }
+
+    // 감전 디버프: 받는 아츠 피해 증가 (아츠형 열미는 피해)
+    const GAMSUN_BONUS = [0, 12, 16, 20, 24];
+    const gamsunStacks = state.debuffState?.artsAbnormal?.['\uac10\uc804'] || 0;
+    const gamsunVal = GAMSUN_BONUS[gamsunStacks];
 
     const atkBaseLogs = [
         { txt: `오퍼레이터 공격력: ${opData.baseAtk.toLocaleString()}`, uid: 'base_op_atk' },
@@ -292,6 +319,18 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects) {
             return;
         }
 
+        if (eff.type === '저항 감소') {
+            const val = resolveVal(eff.val) * (eff.forgeMult || 1.0);
+            const resKey = opData.type === 'phys' ? '물리' : (
+                { heat: '열기', elec: '전기', cryo: '냉기', nature: '자연' }[opData.element] || null
+            );
+            if (resKey) {
+                logs.res.push({ txt: `[${displayName}] ${resKey} 저항 ${val > 0 ? '+' : ''}${val.toFixed(1)}`, uid: eff.uid });
+                if (!isDisabled) resistance[resKey] += val;
+            }
+            return;
+        }
+
         if (!isApplicableEffect(opData, eff.type, eff.name)) return;
 
         const val = resolveVal(eff.val) * (eff.forgeMult || 1.0);
@@ -329,6 +368,13 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects) {
         }
     });
 
+    // [디버프 직접 적용 규칙] 로그는 항상 push, 수치 반영은 !isDisabled 시에만
+    const gamsunDisabled = state.disabledEffects.includes('debuff_gamsun');
+    if (gamsunVal > 0 && opData.type === 'arts') {
+        if (!gamsunDisabled) takenDmg += gamsunVal;
+        logs.taken.push({ txt: `[감전 ${gamsunStacks}단계] 받는 아츠 피해 +${gamsunVal}%`, uid: 'debuff_gamsun' });
+    }
+
     const statBonusPct = (stats[opData.mainStat] * 0.005) + (stats[opData.subStat] * 0.002);
     const finalAtk = baseAtk * (1 + atkInc / 100) * (1 + statBonusPct);
 
@@ -345,7 +391,14 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects) {
     let finalUnbal = unbalanceDmg + (state.enemyUnbalanced ? 30 : 0);
     if (state.enemyUnbalanced) logs.unbal.push({ txt: `[불균형 기본] +30.0%`, uid: 'unbalance_base' });
 
-    let finalDmg = finalAtk * critExp * (1 + dmgInc / 100) * (1 + amp / 100) * (1 + takenDmg / 100) * (1 + vuln / 100) * multiHit * (1 + finalUnbal / 100);
+    // 적용할 저항 (오퍼레이터 속성에 매핑)
+    const resKeyMap = { heat: '열기', elec: '전기', cryo: '냉기', nature: '자연' };
+    const activeResKey = opData.type === 'phys' ? '물리' : (resKeyMap[opData.element] || null);
+    const activeResVal = activeResKey ? resistance[activeResKey] : 0;
+    // 저항 0 기준, 음수 = 저항 감소 = 피해 배율 1 이상
+    const resMult = 1 - activeResVal / 100;
+
+    let finalDmg = finalAtk * critExp * (1 + dmgInc / 100) * (1 + amp / 100) * (1 + takenDmg / 100) * (1 + vuln / 100) * multiHit * (1 + finalUnbal / 100) * resMult;
 
     const swordsman = allEffects.find(e => e.setId === 'set_swordsman' && e.triggered);
     if (swordsman) {
@@ -360,7 +413,8 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects) {
             finalAtk, atkInc,
             mainStatName: STAT_NAME_MAP[opData.mainStat], mainStatVal: stats[opData.mainStat],
             subStatName: STAT_NAME_MAP[opData.subStat], subStatVal: stats[opData.subStat],
-            critExp, finalCritRate, critDmg, dmgInc, amp, vuln, takenDmg, unbalanceDmg: finalUnbal, originiumArts
+            critExp, finalCritRate, critDmg, dmgInc, amp, vuln, takenDmg, unbalanceDmg: finalUnbal, originiumArts,
+            resistance: activeResVal, resMult
         },
         logs
     };

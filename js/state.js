@@ -47,7 +47,25 @@ let state = {
     subOpsCollapsed: [false, true, true], // 기본값: 첫 번째만 펼침
     enemyUnbalanced: false,
     activeSetId: null,   // collectAllEffects에서 갱신됨
-    disabledEffects: []  // uid 문자열 배열
+    disabledEffects: [],  // uid 문자열 배열
+
+    /**
+     * 디버프 상태 (이후 스킬 트리거 조건 계산에 활용)
+     *
+     * artsAttach: 아츠 부착 (단 하나의 종류만 선택 가능)
+     *   - type: '열기 부착' | '전기 부착' | '냉기 부착' | '자연 부착' | null
+     *   - stacks: 0~4 단계
+     *
+     * artsAbnormal: 아츠 이상 4종, 각 0~4단계
+     *   - 연소 | 감전 | 동결 | 부식
+     *
+     * defenseless: 방어불능, 0~4단계
+     */
+    debuffState: {
+        defenseless: 0,
+        artsAttach: { type: null, stacks: 0 }, // 한 종류만 가능
+        artsAbnormal: { '연소': 0, '감전': 0, '동결': 0, '부식': 0 }
+    }
 };
 
 // ============ 공통 상수 ============
@@ -148,6 +166,12 @@ function loadState() {
             state = { ...state, ...parsed };
             // 구버전 저장 데이터 호환: disabledEffects 필드가 없는 경우 초기화
             if (!state.disabledEffects) state.disabledEffects = [];
+            // 구버전 저장 데이터 호환: debuffState 필드 없으면 기본값
+            if (!state.debuffState) state.debuffState = {
+                defenseless: 0,
+                artsAttach: { type: null, stacks: 0 },
+                artsAbnormal: { '연소': 0, '감전': 0, '동결': 0, '부식': 0 }
+            };
             return true;
         }
     } catch (e) {

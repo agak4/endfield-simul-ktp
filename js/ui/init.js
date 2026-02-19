@@ -319,6 +319,7 @@ function applyStateToUI() {
         updateToggleButton(document.getElementById('enemy-unbalanced-toggle'), enemyCb.checked, '불균형');
     }
 
+    applyDebuffStateToUI();
     updateState();
 }
 

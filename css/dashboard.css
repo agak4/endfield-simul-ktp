@@ -6,9 +6,11 @@
     border-radius: 12px;
     text-align: center;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-    margin-bottom: 20px;
-    position: relative;
-    overflow: hidden;
+    position: sticky;
+    top: 20px;
+    z-index: 100;
+    overflow: visible;
+    /* 툴팁 표시를 위해 visible로 변경 */
     min-height: 150px;
     display: flex;
     flex-direction: column;
@@ -412,4 +414,103 @@
         flex-direction: column;
         gap: 10px;
     }
+}
+
+/* ============ 디버프 아이콘 섹션 ============ */
+.debuff-icon-section {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 18px;
+}
+
+.debuff-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid rgba(0, 217, 255, 0.12);
+    border-radius: 10px;
+    padding: 8px 10px 6px;
+    background: rgba(0, 0, 0, 0.18);
+}
+
+.debuff-attach-row {
+    display: flex;
+    gap: 8px;
+}
+
+.debuff-label {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+    text-align: center;
+    margin-top: 2px;
+}
+
+/* 아이콘 래퍼 */
+.debuff-icon-wrap {
+    position: relative;
+    width: 52px;
+    height: 52px;
+    cursor: pointer;
+    user-select: none;
+    flex-shrink: 0;
+}
+
+.debuff-icon-wrap:hover {
+    filter: brightness(1.15);
+}
+
+/* SVG 링 (X자 4분할 호) */
+.debuff-ring-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+/* 호 기본 (비활성) */
+.ring-seg {
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.15);
+    stroke-width: 6;
+    stroke-linecap: round;
+    transition: stroke 0.18s ease;
+}
+
+/* 활성화된 호 */
+.ring-seg.active {
+    stroke: rgba(200, 200, 200, 0.9);
+    filter: drop-shadow(0 0 2px rgba(200, 200, 200, 0.5));
+}
+
+/* 다른 종류가 선택된 아츠부착 아이콘: 비활성 표시 */
+.debuff-icon-wrap.attach-disabled {
+    opacity: 0.35;
+    pointer-events: auto;
+}
+
+/* 아이콘 이미지 래퍼 */
+.debuff-icon-img-wrap {
+    position: absolute;
+    inset: 8px;
+    border-radius: 50%;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.55);
+}
+
+.debuff-icon-img-wrap img {
+    width: 80%;
+    height: 80%;
+    object-fit: contain;
+}
+
+/* 단계 숫자 레이블: 미표시 */
+.debuff-stack-label {
+    display: none;
 }
