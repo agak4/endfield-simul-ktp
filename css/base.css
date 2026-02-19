@@ -89,16 +89,6 @@ body {
     opacity: 0.5;
 }
 
-/* ============ 스크롤바 ============ */
-::-webkit-scrollbar {
-    display: none;
-}
-
-/* ::-webkit-scrollbar-thumb {
-    background: var(--accent);
-    border-radius: 10px;
-} */
-
 /* ============ 타이포그래피 ============ */
 h2 {
     font-size: 1.3rem;

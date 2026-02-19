@@ -270,7 +270,7 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects) {
     const resistance = { '물리': 0, '열기': 0, '전기': 0, '냉기': 0, '자연': 0 };
 
     // 갑옷 파괴 디버프 (물리 받는 피해 증가)
-    const ARMOR_BREAK_BONUS = [0, 15, 30, 45, 60]; // 15% 씩 증가
+    const ARMOR_BREAK_BONUS = [0, 12, 16, 20, 24];
     const abStacks = state.debuffState.physDebuff?.armorBreak || 0;
     const abVal = ARMOR_BREAK_BONUS[abStacks];
     const abDisabled = state.disabledEffects.includes('debuff_armorBreak');
