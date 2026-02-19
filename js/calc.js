@@ -105,7 +105,9 @@ function collectAllEffects(state, opData, wepData, stats, allEffects) {
                 let type = t.type;
                 let stat = t.stat;
                 if (t.type === '스탯') {
-                    type = '스탯%';
+                    // 값에 % 포함 여부로 결정
+                    const isPercent = (typeof val === 'string' && val.includes('%'));
+                    type = isPercent ? '스탯%' : '스탯';
                     stat = t.stat === '주스탯' ? opData.mainStat
                         : t.stat === '부스탯' ? opData.subStat
                             : t.stat;
@@ -147,7 +149,9 @@ function collectAllEffects(state, opData, wepData, stats, allEffects) {
                 const targetStat = trait.stat === '주스탯' ? opData.mainStat
                     : trait.stat === '부스탯' ? opData.subStat
                         : trait.stat;
-                const type = idx >= 2 ? '스탯%' : '스탯';
+                // idx 기반 판정 삭제, 값에 % 포함 여부로 결정
+                const isPercent = typeof val === 'string' && val.includes('%');
+                const type = isPercent ? '스탯%' : '스탯';
                 addEffect({ ...eff, type, stat: targetStat }, uniqueLabel, 1.0, wIdx > 0);
             } else {
                 addEffect(eff, uniqueLabel, 1.0, wIdx > 0);
@@ -300,36 +304,32 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects) {
 
     const statLogs = [];
 
-    // 효과 타입별 로그 핸들러 (누산은 외부에서만 처리)
-    const EFFECT_LOG_HANDLERS = {
-        '공격력 증가': (v, uid, name) => logs.atkBuffs.push({ txt: `[${name}] +${v.toFixed(1)}% (공격력)`, uid }),
-        '치명타 확률': (v, uid, name) => logs.crit.push({ txt: `[${name}] +${v.toFixed(1)}% (치명타 확률)`, uid }),
-        '치명타 피해': (v, uid, name) => logs.crit.push({ txt: `[${name}] +${v.toFixed(1)}% (치명타 피해)`, uid }),
-        '오리지늄 아츠': (v, uid, name) => logs.arts.push({ txt: `[${name}] +${v.toFixed(1)}`, uid }),
-        '오리지늄 아츠 강도': (v, uid, name) => logs.arts.push({ txt: `[${name}] +${v.toFixed(1)}`, uid }),
-    };
+    // 효과 타입별 로그 핸들러 (사용되지 않음)
+    const EFFECT_LOG_HANDLERS = {};
 
     allEffects.forEach(eff => {
         const isDisabled = state.disabledEffects.includes(eff.uid);
         const displayName = (eff.name || '').replace(/_t\d+$/, '');
 
+        // 표시용 수치 (입력된 값 그대로 사용, 양수면 + 붙임)
+        let valDisplay = eff.val;
+        if (typeof eff.val === 'number' && eff.val > 0) valDisplay = '+' + eff.val;
+        else if (typeof eff.val === 'string' && !eff.val.startsWith('-') && !eff.val.startsWith('+')) valDisplay = '+' + eff.val;
+
         if (eff.type === '스탯' || eff.type === '스탯%') {
-            const val = resolveVal(eff.val) * (eff.forgeMult || 1.0);
             const tgt = getStatName(eff.stat || eff.stats);
-            const line = eff.type === '스탯'
-                ? `[${displayName}] +${val.toFixed(1)} (${tgt})`
-                : `[${displayName}] +${val.toFixed(1)}% (${tgt})`;
+            const line = `[${displayName}] ${valDisplay} (${tgt})`;
             statLogs.push({ txt: line, uid: eff.uid });
             return;
         }
 
         if (eff.type === '저항 감소') {
-            const val = resolveVal(eff.val) * (eff.forgeMult || 1.0);
+            const val = (parseFloat(eff.val) || 0) * (eff.forgeMult || 1.0);
             const resKey = opData.type === 'phys' ? '물리' : (
                 { heat: '열기', elec: '전기', cryo: '냉기', nature: '자연' }[opData.element] || null
             );
             if (resKey) {
-                logs.res.push({ txt: `[${displayName}] ${resKey} 저항 ${val > 0 ? '+' : ''}${val.toFixed(1)}`, uid: eff.uid });
+                logs.res.push({ txt: `[${displayName}] ${resKey} 저항 ${valDisplay}`, uid: eff.uid });
                 if (!isDisabled) resistance[resKey] += val;
             }
             return;
@@ -339,10 +339,6 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects) {
 
         // 계산용 수치 (문자열일 수 있으므로 parseFloat)
         const val = (parseFloat(eff.val) || 0) * (eff.forgeMult || 1.0);
-        // 표시용 수치 (입력된 값 그대로 사용, 양수면 + 붙임)
-        let valDisplay = eff.val;
-        if (typeof eff.val === 'number' && eff.val > 0) valDisplay = '+' + eff.val;
-        else if (typeof eff.val === 'string' && !eff.val.startsWith('-') && !eff.val.startsWith('+')) valDisplay = '+' + eff.val;
 
         const t = (eff.type || '').toString();
         const uid = eff.uid;

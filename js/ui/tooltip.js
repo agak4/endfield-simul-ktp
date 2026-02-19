@@ -185,7 +185,7 @@ const AppTooltip = {
         const renderList = (list, isSynergy = false) => {
             return [...list].sort((a, b) => a.isPotential !== b.isPotential ? (a.isPotential ? 1 : -1) : 0)
                 .map(t => {
-                    const valStr = t.val !== undefined ? ` +${t.val}%` : '';
+                    const valStr = t.val !== undefined ? ` +${t.val}` : '';
                     const color = isSynergy ? '#FFFA00' : 'var(--accent)';
                     const style = t.active === false ? 'color:rgba(255,255,255,0.3);font-weight:normal;' : `color:${color};font-weight:bold;`;
                     return `<div style="margin-bottom:2px;${style}"><span style="color:inherit">•</span> [${t.sourceLabel}] ${t.type}${valStr}</div>`;
@@ -224,23 +224,22 @@ const AppTooltip = {
         const traitItems = [], synergyItems = [];
 
         wep.traits.forEach((t, i) => {
-            const isExclusion = (t.type === '오리지늄 아츠 강도') || (t.type === '스탯' && i < 2);
-            const isPercentType = !isExclusion && (
-                t.type.includes('확률') || t.type.includes('피해') || t.type.includes('충전') ||
-                t.type.includes('공격력') || t.type.includes('능력치') || t.type.includes('효율') ||
-                t.type.includes('증폭') || t.type.includes('취약') || t.type.includes('체력') ||
-                (t.type === '스탯' && i >= 2)
-            );
-            const unit = isPercentType ? '%' : '';
             const label = t.type === '스탯' ? getStatName(t.stat) : t.type;
 
             let rangeStr;
+            const fmt = (v) => {
+                if (typeof v === 'number') return (v > 0 ? '+' : '') + v;
+                if (typeof v === 'string') return (!v.startsWith('+') && !v.startsWith('-')) ? '+' + v : v;
+                return v;
+            };
+
             if (t.valByLevel?.length > 0) {
-                const min = Math.min(...t.valByLevel);
-                const max = Math.max(...t.valByLevel);
-                rangeStr = `${label} +${min}${unit}~${max}${unit}`;
+                // 레벨별 값이 있으면 최소~최대 구간 표시 (정렬 가정)
+                const v1 = t.valByLevel[0];
+                const v2 = t.valByLevel[t.valByLevel.length - 1];
+                rangeStr = `${label} ${fmt(v1)}~${fmt(v2)}`;
             } else {
-                rangeStr = `${label} +${t.val || 0}${unit}`;
+                rangeStr = `${label} ${fmt(t.val || 0)}`;
             }
 
             const isSynergy = (t.target === '팀' || t.target === '적' || this.SYNERGY_TYPES.some(syn => t.type.includes(syn)));
@@ -294,9 +293,19 @@ const AppTooltip = {
             const traits = Array.isArray(gear.trait) ? gear.trait : [gear.trait];
             const traitLines = traits.map(t => {
                 const isStatTrait = t.type === '스탯';
-                const unit = (isStatTrait || t.type.includes('확률') || t.type.includes('피해') || t.type.includes('충전') || t.type.includes('효율')) ? '%' : '';
                 const v = forged && t.val_f !== undefined ? t.val_f : t.val;
-                const valStr = v !== undefined ? ` +${v.toFixed(1)}${unit}` : '';
+
+                let valStr = '';
+                if (v !== undefined) {
+                    if (typeof v === 'number') {
+                        valStr = (v > 0 ? ' +' : ' ') + v.toFixed(1);
+                    } else {
+                        const sVal = String(v);
+                        if (!sVal.startsWith('+') && !sVal.startsWith('-')) valStr = ' +' + sVal;
+                        else valStr = ' ' + sVal;
+                    }
+                }
+
                 const spanStyle = forged ? `style="color:var(--accent);font-weight:bold;"` : '';
                 const label = isStatTrait ? getStatName(t.stat) : t.type;
                 return `<div style="margin-bottom:2px;"><span style="color:var(--accent)">•</span> ${label}<span ${spanStyle}>${valStr}</span></div>`;
