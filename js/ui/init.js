@@ -84,6 +84,8 @@ window.onload = function () {
 function initUI() {
     setupOperatorSelect('main-op-select', 'main-op-select-btn', (opId) => {
         updateMainWeaponList(opId);
+        // 저장된 설정 불러오기
+        applyOpSettingsToUI(opId, 'main');
         updateEntityImage(opId, 'main-op-image', 'operators');
         updateState();
     });
@@ -180,6 +182,8 @@ function setupSubOperatorEvents(i) {
 
     setupOperatorSelect(`sub-${i}-op`, `sub-${i}-op-btn`, (opId) => {
         updateSubWeaponList(i, opId);
+        // 저장된 설정 불러오기
+        applyOpSettingsToUI(opId, 'sub', i);
         updateEntityImage(opId, `sub-${i}-image`, 'operators');
         document.getElementById(`sub-${i}-summary`).innerText = DATA_OPERATORS.find(o => o.id === opId)?.name || '';
         updateState();
@@ -199,6 +203,10 @@ function setupSubOperatorEvents(i) {
             document.getElementById(`sub-${i}-op`).value = '';
             document.getElementById(`sub-${i}-op-btn`).innerText = '== 선택 해제 ==';
             document.getElementById(`sub-${i}-summary`).innerText = '';
+            // 잠재 초기화
+            document.getElementById(`sub-${i}-pot`).value = 0;
+            setupPotencyButtons(`sub-${i}-pot`, `sub-${i}-pot-group`);
+
             updateEntityImage('', `sub-${i}-image`, 'operators');
 
             const wSel = document.getElementById(`sub-${i}-wep`);
@@ -208,6 +216,9 @@ function setupSubOperatorEvents(i) {
                 wSel.value = '';
                 document.getElementById(`sub-${i}-wep-btn`).innerText = '== 선택 해제 ==';
                 updateEntityImage('', `sub-${i}-wep-image`, 'weapons');
+                // 무기 잠재도 초기화
+                document.getElementById(`sub-${i}-wep-pot`).value = 0;
+                setupPotencyButtons(`sub-${i}-wep-pot`, `sub-${i}-wep-pot-group`);
             }
             updateState();
         };
@@ -443,4 +454,110 @@ function preloadAllImages() {
             }
         });
     });
+}
+
+/**
+ * 오퍼레이터 선택 시 저장된 설정(잠재, 무기, 장비 등)을 UI에 반영한다.
+ * @param {string} opId - 오퍼레이터 ID
+ * @param {'main'|'sub'} type - 메인/서브 구분
+ * @param {number} [subIdx] - 서브 오퍼레이터 인덱스 (0~2)
+ */
+function applyOpSettingsToUI(opId, type, subIdx) {
+    const settings = loadOpSettings(opId);
+
+    // 설정이 없으면 기본값으로 초기화 (잠재 0 등)
+    const potVal = settings?.pot || 0;
+    const wepPotVal = settings?.wepPot || 0;
+    const wepStateVal = settings?.wepState || false;
+
+    if (type === 'main') {
+        // 잠재력
+        document.getElementById('main-op-pot').value = potVal;
+        setupPotencyButtons('main-op-pot', 'main-op-pot-group');
+
+        // 무기 (목록이 이미 갱신된 상태)
+        const wepSel = document.getElementById('main-wep-select');
+        const wepId = settings?.wepId;
+        if (wepId && wepSel.querySelector(`option[value="${wepId}"]`)) {
+            wepSel.value = wepId;
+            const wepData = DATA_WEAPONS.find(w => w.id === wepId);
+            if (wepData) document.getElementById('main-wep-select-btn').innerText = wepData.name;
+            updateEntityImage(wepId, 'main-wep-image', 'weapons');
+        } else if (!settings) {
+            // 저장된 설정이 없으면 기본 무기 자동 선택됨 (updateMainWeaponList에서 처리)
+        }
+
+        // 무기 잠재/기질
+        document.getElementById('main-wep-pot').value = wepPotVal;
+        setupPotencyButtons('main-wep-pot', 'main-wep-pot-group');
+        const wepStateCb = document.getElementById('main-wep-state');
+        if (wepStateCb) {
+            wepStateCb.checked = wepStateVal;
+            updateToggleButton(document.getElementById('main-wep-toggle'), wepStateVal, '기질');
+        }
+
+        // 장비
+        if (settings?.gears) {
+            GEAR_SELECT_IDS.forEach((id, idx) => {
+                const val = settings.gears[idx];
+                if (val) {
+                    document.getElementById(id).value = val;
+                    updateEntityImage(val, id.replace('-select', '-image'), 'gears');
+                }
+            });
+        }
+
+        // 장비 단조
+        if (settings?.gearForged) {
+            GEAR_FORGE_IDS.forEach((id, idx) => {
+                const checked = settings.gearForged[idx];
+                document.getElementById(id).checked = checked;
+                updateToggleButton(document.getElementById(id + '-toggle'), checked, '단조');
+                syncForgedToTooltip(id, checked);
+            });
+            // 메인 단조 토글 동기화
+            const allOn = GEAR_FORGE_IDS.every(gid => document.getElementById(gid)?.checked);
+            const mainForgeCb = document.getElementById('main-gear-forge');
+            if (mainForgeCb) {
+                mainForgeCb.checked = allOn;
+                updateToggleButton(document.getElementById('main-forge-toggle'), allOn, '단조');
+            }
+        }
+
+        // 스킬 횟수
+        if (settings?.skillCounts) {
+            state.skillCounts = settings.skillCounts;
+            if (typeof applySkillCountsToUI === 'function') applySkillCountsToUI();
+        }
+
+    } else {
+        // 서브 오퍼레이터
+        document.getElementById(`sub-${subIdx}-pot`).value = potVal;
+        setupPotencyButtons(`sub-${subIdx}-pot`, `sub-${subIdx}-pot-group`);
+
+        // 무기
+        const wepSel = document.getElementById(`sub-${subIdx}-wep`);
+        const wepId = settings?.wepId;
+        // 목록에 있는 경우에만 값 설정 (유효성 검사는 updateSubWeaponList에서 했지만, 저장된 무기가 해당 오퍼레이터 무기인지 확인 필요)
+        if (wepSel && wepId && wepSel.querySelector(`option[value="${wepId}"]`)) {
+            wepSel.value = wepId;
+            const wepData = DATA_WEAPONS.find(w => w.id === wepId);
+            if (wepData) document.getElementById(`sub-${subIdx}-wep-btn`).innerText = wepData.name;
+            updateEntityImage(wepId, `sub-${subIdx}-wep-image`, 'weapons');
+        } else {
+            // 저장된 무기가 없거나 유효하지 않으면 초기화 (이미 updateSubWeaponList에서 처리됨)
+        }
+
+        document.getElementById(`sub-${subIdx}-wep-pot`).value = wepPotVal;
+        setupPotencyButtons(`sub-${subIdx}-wep-pot`, `sub-${subIdx}-wep-pot-group`);
+
+        const wepStateCb = document.getElementById(`sub-${subIdx}-wep-state`);
+        if (wepStateCb) {
+            wepStateCb.checked = wepStateVal;
+            updateToggleButton(document.getElementById(`sub-${subIdx}-wep-toggle`), wepStateVal, '기질');
+        }
+
+        const setSel = document.getElementById(`sub-${subIdx}-set`);
+        if (setSel) setSel.value = settings?.equipSet || '';
+    }
 }

@@ -137,6 +137,28 @@ function updateState() {
     if (typeof renderWeaponComparison === 'function') renderWeaponComparison(result ? result.finalDmg : 0);
 
     saveState();
+
+    // 오퍼레이터별 설정 자동 저장 (메인/서브 모두)
+    if (state.mainOp.id) saveOpSettings(state.mainOp.id, {
+        pot: state.mainOp.pot,
+        wepId: state.mainOp.wepId,
+        wepPot: state.mainOp.wepPot,
+        wepState: state.mainOp.wepState,
+        gears: state.mainOp.gears,
+        gearForged: state.mainOp.gearForged,
+        gearForge: state.mainOp.gearForge,
+        skillCounts: state.skillCounts // 스킬 횟수도 오퍼레이터별 저장
+    });
+
+    for (let i = 0; i < 3; i++) {
+        if (state.subOps[i].id) saveOpSettings(state.subOps[i].id, {
+            pot: state.subOps[i].pot,
+            wepId: state.subOps[i].wepId,
+            wepPot: state.subOps[i].wepPot,
+            wepState: state.subOps[i].wepState,
+            equipSet: state.subOps[i].equipSet
+        });
+    }
 }
 
 // ============ 저장 / 로드 ============
@@ -149,7 +171,34 @@ function saveState() {
     try {
         localStorage.setItem('endfield_cal_save', JSON.stringify(state));
     } catch (e) {
-        console.error('State save failed:', e);
+        console.error('Failed to save state:', e);
+    }
+}
+
+/**
+ * 오퍼레이터별 설정을 로컬 스토리지에 저장한다.
+ */
+function saveOpSettings(opId, settings) {
+    if (!opId) return;
+    try {
+        localStorage.setItem(`opSettings_${opId}`, JSON.stringify(settings));
+    } catch (e) {
+        console.error('Failed to save op settings:', e);
+    }
+}
+
+/**
+ * 오퍼레이터별 설정을 불러온다.
+ * 저장된 설정이 없으면 null을 반환한다.
+ */
+function loadOpSettings(opId) {
+    if (!opId) return null;
+    try {
+        const saved = localStorage.getItem(`opSettings_${opId}`);
+        return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+        console.error('Failed to load op settings:', e);
+        return null;
     }
 }
 
