@@ -320,15 +320,20 @@ function applyDebuffIconState(wrap, stacks) {
 }
 
 /**
- * 방어불능 아이콘 클릭: 0→1→2→3→4→0 순환.
- * state.debuffState.defenseless 갱신 후 재계산.
+ * 단일 디버프(방어불능, 갑옷파괴) 아이콘 클릭: 0→1→2→3→4→0 순환.
+ * data-debuff 속성을 읽어 state.debuffState[type]을 갱신한다.
  *
  * @param {HTMLElement} el - 클릭된 .debuff-icon-wrap
  */
-function cycleDebuffIcon(el) {
+function cycleDebuff(el) {
+    const type = el.dataset.debuff;
     const cur = parseInt(el.dataset.stacks, 10) || 0;
     const next = (cur + 1) % 5;
-    state.debuffState.defenseless = next;
+
+    if (state.debuffState && state.debuffState[type] !== undefined) {
+        state.debuffState[type] = next;
+    }
+
     applyDebuffIconState(el, next);
     saveState();
     updateState();
@@ -399,6 +404,10 @@ function applyDebuffStateToUI() {
     // 방어불능
     const defEl = document.getElementById('debuff-icon-defenseless');
     if (defEl) applyDebuffIconState(defEl, ds.defenseless || 0);
+
+    // 갑옷 파괴
+    const abEl = document.getElementById('debuff-icon-armorBreak');
+    if (abEl) applyDebuffIconState(abEl, ds.armorBreak || 0);
 
     // 아츠 부착
     const ATTACH_TYPES = ['열기 부착', '전기 부착', '냉기 부착', '자연 부착'];

@@ -337,19 +337,35 @@
             <div class="debuff-icon-section">
                 <!-- 방어불능 -->
                 <div class="debuff-group">
-                    <div class="debuff-icon-wrap" id="debuff-icon-defenseless" data-debuff="defenseless" data-stacks="0"
-                        onclick="cycleDebuffIcon(this)">
-                        <svg class="debuff-ring-svg" viewBox="0 0 100 100">
-                            <!-- X자 분할 4개 호 (비활성) -->
-                            <path class="ring-seg seg-0" d="M77.6,18.3 A42,42 0 0,0 22.4,18.3" />
-                            <path class="ring-seg seg-1" d="M77.6,81.7 A42,42 0 0,0 77.6,18.3" />
-                            <path class="ring-seg seg-2" d="M22.4,81.7 A42,42 0 0,0 77.6,81.7" />
-                            <path class="ring-seg seg-3" d="M18.3,77.6 A42,42 0 0,1 18.3,22.4" />
-                        </svg>
-                        <div class="debuff-icon-img-wrap">
-                            <img src="images/debuff/방어불능.png" alt="방어불능">
+                    <div class="debuff-attach-row">
+                        <div class="debuff-icon-wrap" id="debuff-icon-defenseless" data-debuff="defenseless"
+                            onclick="cycleDebuff(this)">
+                            <svg class="debuff-ring-svg" viewBox="0 0 100 100">
+                                <!-- X자 분할 4개 호 (비활성) -->
+                                <path class="ring-seg seg-0" d="M77.6,18.3 A42,42 0 0,0 22.4,18.3" />
+                                <path class="ring-seg seg-1" d="M77.6,81.7 A42,42 0 0,0 77.6,18.3" />
+                                <path class="ring-seg seg-2" d="M22.4,81.7 A42,42 0 0,0 77.6,81.7" />
+                                <path class="ring-seg seg-3" d="M18.3,77.6 A42,42 0 0,1 18.3,22.4" />
+                            </svg>
+                            <div class="debuff-icon-img-wrap">
+                                <img src="images/debuff/방어불능.png" alt="방어불능">
+                            </div>
+                            <span class="debuff-stack-label">0</span>
                         </div>
-                        <span class="debuff-stack-label">0</span>
+
+                        <div class="debuff-icon-wrap" id="debuff-icon-armorBreak" data-debuff="armorBreak"
+                            onclick="cycleDebuff(this)">
+                            <svg class="debuff-ring-svg" viewBox="0 0 100 100">
+                                <path class="ring-seg seg-0" d="M77.6,18.3 A42,42 0 0,0 22.4,18.3" />
+                                <path class="ring-seg seg-1" d="M77.6,81.7 A42,42 0 0,0 77.6,18.3" />
+                                <path class="ring-seg seg-2" d="M22.4,81.7 A42,42 0 0,0 77.6,81.7" />
+                                <path class="ring-seg seg-3" d="M18.3,77.6 A42,42 0 0,1 18.3,22.4" />
+                            </svg>
+                            <div class="debuff-icon-img-wrap">
+                                <img src="images/debuff/갑옷 파괴.png" alt="갑옷 파괴">
+                            </div>
+                            <span class="debuff-stack-label">0</span>
+                        </div>
                     </div>
                 </div>
 

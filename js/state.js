@@ -62,9 +62,12 @@ let state = {
      * defenseless: 방어불능, 0~4단계
      */
     debuffState: {
-        defenseless: 0,
-        artsAttach: { type: null, stacks: 0 }, // 한 종류만 가능
-        artsAbnormal: { '연소': 0, '감전': 0, '동결': 0, '부식': 0 }
+        debuffState: {
+            defenseless: 0, // 방어 불능
+            armorBreak: 0, // 갑옷 파괴 (물리 받는 피해 증가)
+            artsAttach: { type: null, stacks: 0 }, // 한 종류만 가능
+            artsAbnormal: { '연소': 0, '감전': 0, '동결': 0, '부식': 0 }
+        }
     }
 };
 

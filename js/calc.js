@@ -100,6 +100,7 @@ function collectAllEffects(state, opData, wepData, stats, allEffects) {
 
         if (gear.trait) {
             const processGearTrait = (t) => {
+                // val은 원본 값을 유지하고, 계산 시 parseFloat 적용
                 const val = isForged && t.val_f !== undefined ? t.val_f : t.val;
                 let type = t.type;
                 let stat = t.stat;
@@ -218,7 +219,8 @@ function collectAllEffects(state, opData, wepData, stats, allEffects) {
 function applyFixedStats(effects, stats) {
     effects.forEach(eff => {
         if (eff.type !== '스탯') return;
-        const val = Number(eff.val) * (eff.forgeMult || 1.0);
+        const rawVal = eff.val || 0;
+        const val = parseFloat(rawVal) * (eff.forgeMult || 1.0);
         const target = eff.stat || eff.stats;
         if (target === '모든 능력치') {
             ['str', 'agi', 'int', 'wil'].forEach(k => stats[k] += val);
@@ -233,7 +235,8 @@ function applyPercentStats(effects, stats) {
     const statPct = { str: 0, agi: 0, int: 0, wil: 0 };
     effects.forEach(eff => {
         if (eff.type !== '스탯%') return;
-        const val = Number(eff.val) * (eff.forgeMult || 1.0);
+        const rawVal = eff.val || 0;
+        const val = parseFloat(rawVal) * (eff.forgeMult || 1.0);
         const target = eff.stat || eff.stats;
         if (target === '모든 능력치') {
             ['str', 'agi', 'int', 'wil'].forEach(k => statPct[k] += val);
@@ -334,38 +337,51 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects) {
 
         if (!isApplicableEffect(opData, eff.type, eff.name)) return;
 
-        const val = resolveVal(eff.val) * (eff.forgeMult || 1.0);
+        // 계산용 수치 (문자열일 수 있으므로 parseFloat)
+        const val = (parseFloat(eff.val) || 0) * (eff.forgeMult || 1.0);
+        // 표시용 수치 (입력된 값 그대로 사용, 양수면 + 붙임)
+        let valDisplay = eff.val;
+        if (typeof eff.val === 'number' && eff.val > 0) valDisplay = '+' + eff.val;
+        else if (typeof eff.val === 'string' && !eff.val.startsWith('-') && !eff.val.startsWith('+')) valDisplay = '+' + eff.val;
+
         const t = (eff.type || '').toString();
         const uid = eff.uid;
 
-        if (EFFECT_LOG_HANDLERS[t]) {
-            EFFECT_LOG_HANDLERS[t](val, uid, displayName);
-            if (!isDisabled) {
-                if (t === '공격력 증가') atkInc += val;
-                else if (t === '치명타 확률') critRate += val;
-                else if (t === '치명타 피해') critDmg += val;
-                else if (t === '오리지늄 아츠' || t === '오리지늄 아츠 강도') originiumArts += val;
-            }
+        if (t === '공격력 증가' || t === '모든 능력치') {
+            if (!isDisabled) atkInc += val;
+            logs.atkBuffs.push({ txt: `[${displayName}] ${valDisplay} (${t})`, uid });
+        } else if (t.endsWith('피해')) {
+            if (!isDisabled) dmgInc += val;
+            logs.dmgInc.push({ txt: `[${displayName}] ${valDisplay} (${t})`, uid });
+        } else if (t === '오리지늄 아츠 강도') {
+            if (!isDisabled) originiumArts += val;
+            logs.arts.push({ txt: `[${displayName}] ${valDisplay} (${t})`, uid });
+        } else if (t === '치명타 확률') {
+            if (!isDisabled) critRate += val;
+            logs.crit.push({ txt: `[${displayName}] ${valDisplay} (${t})`, uid });
+        } else if (t === '치명타 피해') {
+            if (!isDisabled) critDmg += val;
+            logs.crit.push({ txt: `[${displayName}] ${valDisplay} (${t})`, uid });
         } else if (t === '연타') {
-            if (!isDisabled) multiHit = Math.max(multiHit, eff.val || 1);
-            logs.multihit.push({ txt: `[${displayName}] x${eff.val || 1}`, uid });
+            if (!isDisabled) multiHit = Math.max(multiHit, val || 1);
+            logs.multihit.push({ txt: `[${displayName}] x${val || 1}`, uid });
         } else if (t.endsWith('증폭')) {
             if (!isDisabled) amp += val;
-            logs.amp.push({ txt: `[${displayName}] +${val.toFixed(1)}% (${t})`, uid });
+            logs.amp.push({ txt: `[${displayName}] ${valDisplay} (${t})`, uid });
         } else if (t.endsWith('취약')) {
             if (!isDisabled) vuln += val;
-            logs.vuln.push({ txt: `[${displayName}] +${val.toFixed(1)}% (${t})`, uid });
+            logs.vuln.push({ txt: `[${displayName}] ${valDisplay} (${t})`, uid });
         } else if (t === '불균형 목표에 주는 피해') {
             if (state.enemyUnbalanced) {
                 if (!isDisabled) dmgInc += val;
-                logs.dmgInc.push({ txt: `[${displayName}] +${val.toFixed(1)}% (불균형시 피해)`, uid });
+                logs.dmgInc.push({ txt: `[${displayName}] ${valDisplay} (불균형시 피해)`, uid });
             }
         } else if (t.includes('받는')) {
             if (!isDisabled) takenDmg += val;
-            logs.taken.push({ txt: `[${displayName}] +${val.toFixed(1)}% (${t})`, uid });
+            logs.taken.push({ txt: `[${displayName}] ${valDisplay} (${t})`, uid });
         } else if (t.includes('피해') || t === '주는 피해' || t === '모든 스킬 피해') {
             if (!isDisabled) dmgInc += val;
-            logs.dmgInc.push({ txt: `[${displayName}] +${val.toFixed(1)}% (${t})`, uid });
+            logs.dmgInc.push({ txt: `[${displayName}] ${valDisplay} (${t})`, uid });
         } else if (t.endsWith('저항 무시')) {
             // 이미 isApplicableEffect 통과했으므로 오퍼레이터 속성과 일치함
             if (!isDisabled) resIgnore += val;
@@ -378,6 +394,16 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects) {
     if (gamsunVal > 0 && opData.type === 'arts') {
         if (!gamsunDisabled) takenDmg += gamsunVal;
         logs.taken.push({ txt: `[감전 ${gamsunStacks}단계] 받는 아츠 피해 +${gamsunVal}%`, uid: 'debuff_gamsun' });
+    }
+
+    // 갑옷 파괴 디버프 (물리 받는 피해 증가)
+    const ARMOR_BREAK_BONUS = [0, 12, 16, 20, 24]; // 감전과 동일 수치 가정
+    const abStacks = state.debuffState.armorBreak || 0;
+    const abVal = ARMOR_BREAK_BONUS[abStacks];
+    const abDisabled = state.disabledEffects.includes('debuff_armorBreak');
+    if (abVal > 0 && opData.type === 'phys') {
+        if (!abDisabled) takenDmg += abVal;
+        logs.taken.push({ txt: `[갑옷 파괴 ${abStacks}단계] 받는 물리 피해 +${abVal}%`, uid: 'debuff_armorBreak' });
     }
 
     const statBonusPct = (stats[opData.mainStat] * 0.005) + (stats[opData.subStat] * 0.002);
