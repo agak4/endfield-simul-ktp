@@ -62,10 +62,11 @@ let state = {
      * defenseless: 방어불능, 0~4단계
      */
     debuffState: {
-        physDebuff: { defenseless: 0, armorBreak: 0 }, // 방어불능, 갑옷파괴
+        physDebuff: { defenseless: 0, armorBreak: 0, originiumSeal: 0 }, // 방어불능, 갑옷파괴, 오리지늘 봉인
         artsAttach: { type: null, stacks: 0 }, // 한 종류만 가능
         artsAbnormal: { '연소': 0, '감전': 0, '동결': 0, '부식': 0 }
-    }
+    },
+    skillCounts: { '일반공격': 0, '배틀스킬': 0, '연계스킬': 0, '궁극기': 0 }
 };
 
 // ============ 공통 상수 ============
@@ -205,7 +206,16 @@ function loadState() {
 
             // [안전장치] physDebuff 객체가 없으면 생성
             if (!state.debuffState.physDebuff) {
-                state.debuffState.physDebuff = { defenseless: 0, armorBreak: 0 };
+                state.debuffState.physDebuff = { defenseless: 0, armorBreak: 0, originiumSeal: 0 };
+            }
+            // originiumSeal 필드 누락 마이그레이션
+            if (state.debuffState.physDebuff.originiumSeal === undefined) {
+                state.debuffState.physDebuff.originiumSeal = 0;
+            }
+
+            // 구버전 호환: skillCounts 없으면 초기화
+            if (!state.skillCounts) {
+                state.skillCounts = { '일반공격': 0, '배틀스킬': 0, '연계스킬': 0, '궁극기': 0 };
             }
 
             return true;

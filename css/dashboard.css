@@ -425,7 +425,7 @@
 }
 
 .debuff-group {
-    border: 1px solid rgba(0, 217, 255, 0.12);
+    border: 1px solid rgba(0, 217, 255, 0.2);
     border-radius: 10px;
     padding: 6px;
     background: rgba(0, 0, 0, 0.18);
@@ -508,4 +508,155 @@
 /* 단계 숫자 레이블: 미표시 */
 .debuff-stack-label {
     display: none;
+}
+
+/* ============ 최종/사이클 계산값 가로 배치 ============ */
+.result-area-row {
+    display: flex;
+    gap: 12px;
+    align-items: stretch;
+    margin-bottom: 16px;
+}
+
+.total-dmg-box {
+    flex: 1;
+    position: sticky;
+    top: 20px;
+    z-index: 100;
+    overflow: visible;
+}
+
+.cycle-dmg-box {
+    flex: 3;
+    background: linear-gradient(135deg, #1a1a1a 0%, #111 100%);
+    border: 2px solid var(--accent);
+    padding: 16px 20px;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.cycle-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 8px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.04);
+    transition: background 0.15s;
+}
+
+.cycle-row:hover {
+    background: rgba(255, 180, 0, 0.07);
+}
+
+.cycle-label {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.cycle-val {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    font-variant-numeric: tabular-nums;
+}
+
+.cycle-total-row {
+    margin-top: 4px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 8px;
+    background: transparent;
+}
+
+.cycle-total-val {
+    font-size: 1.1rem;
+    color: var(--accent);
+}
+
+/* ============ 스킬 횟수 입력 타일 ============ */
+.skill-count-tile {
+    background: linear-gradient(135deg, #1a1a1a 0%, #111 100%);
+    border: 1px solid rgba(0, 217, 255, 0.2);
+    padding: 14px 18px;
+    border-radius: 12px;
+    margin-bottom: 16px;
+}
+
+.skill-count-tile h4 {
+    margin: 0 0 12px;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.skill-count-subtitle {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.35);
+    font-weight: 400;
+}
+
+.skill-count-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+}
+
+.skill-count-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.skill-count-item label {
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+    text-align: center;
+}
+
+.skill-count-controls {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.skill-count-btn {
+    width: 26px;
+    height: 100%;
+    border: 1px solid rgba(0, 217, 255, 0.3);
+    background: rgba(0, 0, 0, 0.4);
+    color: white;
+    border-radius: 6px;
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.skill-count-input {
+    width: 42px;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: var(--text-primary);
+    border-radius: 6px;
+    text-align: center;
+    font-size: 0.9rem;
+    padding: 3px 2px;
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+.skill-count-input::-webkit-outer-spin-button,
+.skill-count-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.skill-count-input:focus {
+    border-color: var(--accent);
+    outline: none;
 }

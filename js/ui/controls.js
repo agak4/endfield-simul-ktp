@@ -343,6 +343,23 @@ function cycleDebuff(el) {
 }
 
 /**
+ * ON/OFF 토글 디버프(오리지늄 봉인 등) 아이콘 클릭: 0↔1 토글.
+ * data-debuff 속성을 읽어 state.debuffState.physDebuff[type]을 0 또는 1로 갱신한다.
+ * @param {HTMLElement} el
+ */
+function cycleDebuffToggle(el) {
+    const type = el.dataset.debuff;
+    if (!state.debuffState.physDebuff) state.debuffState.physDebuff = {};
+    const cur = state.debuffState.physDebuff[type] || 0;
+    const next = cur === 0 ? 1 : 0;
+    state.debuffState.physDebuff[type] = next;
+    el.dataset.stacks = next;
+    applyDebuffIconState(el, next);
+    saveState();
+    updateState();
+}
+
+/**
  * 아츠 부착 아이콘 클릭: 한 종류만 활성 가능.
  * - 다른 종류가 활성화된 상태에서 클릭하면 해당 종류로 전환 (스택 1부터 시작).
  * - 같은 종류 클릭: 0→1→2→3→4→0 순환. 0이 되면 type도 null.
@@ -412,6 +429,14 @@ function applyDebuffStateToUI() {
     const abEl = document.getElementById('debuff-icon-armorBreak');
     if (abEl) applyDebuffIconState(abEl, ds.physDebuff?.armorBreak || 0);
 
+    // 오리지늘 봉인 (ON/OFF)
+    const osEl = document.getElementById('debuff-icon-originiumSeal');
+    if (osEl) {
+        const v = ds.physDebuff?.originiumSeal || 0;
+        osEl.dataset.stacks = v;
+        applyDebuffIconState(osEl, v);
+    }
+
     // 아츠 부착
     const ATTACH_TYPES = ['열기 부착', '전기 부착', '냉기 부착', '자연 부착'];
     ATTACH_TYPES.forEach(t => {
@@ -429,5 +454,35 @@ function applyDebuffStateToUI() {
     ABNORMAL_TYPES.forEach(t => {
         const wrap = document.getElementById(`debuff-icon-${t}`);
         if (wrap) applyDebuffIconState(wrap, ds.artsAbnormal?.[t] || 0);
+    });
+}
+
+// ============ 스킬 횟수 제어 ============
+
+function adjustSkillCount(skillType, delta) {
+    if (!state.skillCounts) state.skillCounts = {};
+    const cur = state.skillCounts[skillType] || 0;
+    const next = Math.max(0, Math.min(99, cur + delta));
+    state.skillCounts[skillType] = next;
+    const input = document.getElementById(`skill-count-${skillType}`);
+    if (input) input.value = next;
+    saveState();
+    updateState();
+}
+
+function onSkillCountChange(skillType, rawVal) {
+    if (!state.skillCounts) state.skillCounts = {};
+    const val = Math.max(0, Math.min(99, parseInt(rawVal, 10) || 0));
+    state.skillCounts[skillType] = val;
+    saveState();
+    updateState();
+}
+
+/** 저장된 skillCounts를 UI 입력란에 반영한다 */
+function applySkillCountsToUI() {
+    const sc = state.skillCounts || {};
+    ['일반공격', '배틀스킬', '연계스킬', '궁극기'].forEach(t => {
+        const input = document.getElementById(`skill-count-${t}`);
+        if (input) input.value = sc[t] || 0;
     });
 }

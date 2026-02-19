@@ -316,21 +316,47 @@
             </div>
         </section>
 
-        <!-- [오른쪽 패널] 대시보드 -->
         <section class="panel right-panel">
             <h2>전투 분석 대시보드</h2>
-            <div class="result-box total-dmg-box">
-                <div class="total-dmg-header">
-                    <h3>최종 계산값</h3>
-                    <span class="info-icon" id="formula-info-btn">ⓘ</span>
-                    <div id="formula-tooltip" class="formula-tooltip">
-                        <div class="formula-title">데미지 계산 공식</div>
-                        <div class="formula-content">
-                            공격력*치명타 기대값*주는 피해*증폭*적이 받는 피해*취약*불균형*연타
+            <div class="result-area-row">
+                <!-- 최종 계산값 (1) -->
+                <div class="result-box total-dmg-box">
+                    <div class="total-dmg-header">
+                        <h3>최종 계산값</h3>
+                        <span class="info-icon" id="formula-info-btn">ⓘ</span>
+                        <div id="formula-tooltip" class="formula-tooltip">
+                            <div class="formula-title">데미지 계산 공식</div>
+                            <div class="formula-content">
+                                공격력*치명타 기대값*주는 피해*증폭*적이 받는 피해*취약*불균형*연타
+                            </div>
                         </div>
                     </div>
+                    <span id="final-damage">0</span>
                 </div>
-                <span id="final-damage">0</span>
+                <!-- 사이클 계산값 (3) -->
+                <div class="result-box cycle-dmg-box">
+                    <h3>사이클 계산값</h3>
+                    <div class="cycle-row">
+                        <span class="cycle-label">일반공격</span>
+                        <span id="cycle-dmg-일반공격" class="cycle-val">0</span>
+                    </div>
+                    <div class="cycle-row">
+                        <span class="cycle-label">배틀스킬</span>
+                        <span id="cycle-dmg-배틀스킬" class="cycle-val">0</span>
+                    </div>
+                    <div class="cycle-row">
+                        <span class="cycle-label">연계스킬</span>
+                        <span id="cycle-dmg-연계스킬" class="cycle-val">0</span>
+                    </div>
+                    <div class="cycle-row">
+                        <span class="cycle-label">궁극기</span>
+                        <span id="cycle-dmg-궁극기" class="cycle-val">0</span>
+                    </div>
+                    <div class="cycle-row cycle-total-row">
+                        <span class="cycle-label">총합</span>
+                        <span id="cycle-dmg-total" class="cycle-val cycle-total-val">0</span>
+                    </div>
+                </div>
             </div>
 
             <!-- 디버프 상태 아이콘 (방어불능 / 아츠부착 / 아츠이상) -->
@@ -363,6 +389,18 @@
                             </svg>
                             <div class="debuff-icon-img-wrap">
                                 <img src="images/debuff/갑옷 파괴.png" alt="갑옷 파괴">
+                            </div>
+                            <span class="debuff-stack-label">0</span>
+                        </div>
+
+                        <!-- 오리지늄 봉인: ON/OFF 토글 -->
+                        <div class="debuff-icon-wrap debuff-icon-toggle" id="debuff-icon-originiumSeal"
+                            data-debuff="originiumSeal" data-stacks="0" onclick="cycleDebuffToggle(this)">
+                            <svg class="debuff-ring-svg" viewBox="0 0 100 100">
+                                <circle class="ring-seg seg-0" cx="50" cy="50" r="42" fill="none" />
+                            </svg>
+                            <div class="debuff-icon-img-wrap">
+                                <img src="images/debuff/오리지늄 봉인.png" alt="오리지늄 봉인">
                             </div>
                             <span class="debuff-stack-label">0</span>
                         </div>
@@ -486,6 +524,53 @@
                 </div>
             </div>
 
+            <!-- 스킬 사용 횟수 입력 타일 -->
+            <div class="skill-count-tile">
+                <h4>사이클 설정 <span class="skill-count-subtitle">(스킬 사용 횟수)</span></h4>
+                <div class="skill-count-grid">
+                    <div class="skill-count-item">
+                        <label for="skill-count-일반공격">일반공격</label>
+                        <div class="skill-count-controls">
+                            <button class="skill-count-btn" onclick="adjustSkillCount('일반공격', -1)">−</button>
+                            <input type="number" id="skill-count-일반공격" class="skill-count-input" min="0" max="99"
+                                value="0" onchange="onSkillCountChange('일반공격', this.value)"
+                                oninput="onSkillCountChange('일반공격', this.value)">
+                            <button class="skill-count-btn" onclick="adjustSkillCount('일반공격', 1)">+</button>
+                        </div>
+                    </div>
+                    <div class="skill-count-item">
+                        <label for="skill-count-배틀스킬">배틀스킬</label>
+                        <div class="skill-count-controls">
+                            <button class="skill-count-btn" onclick="adjustSkillCount('배틀스킬', -1)">−</button>
+                            <input type="number" id="skill-count-배틀스킬" class="skill-count-input" min="0" max="99"
+                                value="0" onchange="onSkillCountChange('배틀스킬', this.value)"
+                                oninput="onSkillCountChange('배틀스킬', this.value)">
+                            <button class="skill-count-btn" onclick="adjustSkillCount('배틀스킬', 1)">+</button>
+                        </div>
+                    </div>
+                    <div class="skill-count-item">
+                        <label for="skill-count-연계스킬">연계스킬</label>
+                        <div class="skill-count-controls">
+                            <button class="skill-count-btn" onclick="adjustSkillCount('연계스킬', -1)">−</button>
+                            <input type="number" id="skill-count-연계스킬" class="skill-count-input" min="0" max="99"
+                                value="0" onchange="onSkillCountChange('연계스킬', this.value)"
+                                oninput="onSkillCountChange('연계스킬', this.value)">
+                            <button class="skill-count-btn" onclick="adjustSkillCount('연계스킬', 1)">+</button>
+                        </div>
+                    </div>
+                    <div class="skill-count-item">
+                        <label for="skill-count-궁극기">궁극기</label>
+                        <div class="skill-count-controls">
+                            <button class="skill-count-btn" onclick="adjustSkillCount('궁극기', -1)">−</button>
+                            <input type="number" id="skill-count-궁극기" class="skill-count-input" min="0" max="99"
+                                value="0" onchange="onSkillCountChange('궁극기', this.value)"
+                                oninput="onSkillCountChange('궁극기', this.value)">
+                            <button class="skill-count-btn" onclick="adjustSkillCount('궁극기', 1)">+</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="dashboard-grid">
 
                 <div class="tile">
@@ -548,7 +633,7 @@
                 </div>
                 <div class="tile">
                     <div class="tile-header-row">
-                        <h4>불균형 목표에 주는 피해</h4>
+                        <h4>불균형 피해</h4>
                         <div class="tile-ctrl-group">
                             <input type="checkbox" id="enemy-unbalanced" class="hidden-checkbox">
                             <button id="enemy-unbalanced-toggle" class="toggle-btn enemy-toggle-btn">OFF</button>

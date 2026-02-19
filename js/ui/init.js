@@ -320,6 +320,7 @@ function applyStateToUI() {
     }
 
     applyDebuffStateToUI();
+    applySkillCountsToUI();
     updateState();
 }
 

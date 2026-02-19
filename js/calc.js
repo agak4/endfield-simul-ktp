@@ -554,3 +554,115 @@ function checkSetViability(setId, opData) {
     if (cond.length === 0) return true;
     return cond.some(eff => eff.triggers.some(matchTrigger));
 }
+
+/**
+ * 스킬 bonus.trigger 조건을 평가한다.
+ * 각 trigger 이름은 state.debuffState 또는 기타 state와 매핑된다.
+ *
+ * [확장 방법]
+ * - 새 트리거를 추가할 때 아래 TRIGGER_MAP에만 항목을 추가하면 된다.
+ * - 트리거 이름(data_operators.js의 bonus.trigger 값)을 key로,
+ *   평가 함수(currentState → boolean)를 value로 등록한다.
+ *
+ * @param {string|undefined} trigger
+ * @param {object} currentState
+ * @returns {boolean}
+ */
+function evaluateTrigger(trigger, currentState) {
+    if (!trigger) return true; // trigger 없으면 항상 발동
+
+    const physDebuff = currentState.debuffState?.physDebuff || {};
+
+    const TRIGGER_MAP = {
+        '방어 불능': () => (physDebuff.defenseless || 0) > 0,
+        '오리지늄 봉인': () => (physDebuff.originiumSeal || 0) > 0,
+        // 향후 추가될 트리거 예시:
+        // '갑옷 파괴': () => (physDebuff.armorBreak || 0) > 0,
+        // '부식': () => (currentState.debuffState?.artsAbnormal?.['corrosion'] || 0) > 0,
+    };
+
+    const evalFn = TRIGGER_MAP[trigger];
+    if (evalFn) return evalFn();
+
+    // 등록되지 않은 트리거는 항상 발동으로 간주
+    return true;
+}
+
+/**
+ * 사이클 데미지를 계산한다.
+ * 각 스킬의 dmg(배율%)와 스킬 사용 회수를 곱해 최종 데미지를 구한다.
+ * bonus가 있고 trigger 조건을 만족하면 bonus.val도 추가 적용된다.
+ *
+ * @param {object} currentState
+ * @param {object} baseRes - calculateDamage 반환값 (null 허용)
+ * @returns {{perSkill: object, total: number}|null}
+ */
+function calculateCycleDamage(currentState, baseRes) {
+    if (!baseRes) return null;
+    const opData = DATA_OPERATORS.find(o => o.id === currentState.mainOp.id);
+    if (!opData?.skill) return null;
+
+    const sc = currentState.skillCounts || {};
+    const { finalAtk, critExp, dmgInc, amp, takenDmg, vuln, unbalanceDmg, resMult } = baseRes.stats;
+
+    // 스킬 타입별 dmg 모음: 배열 스킬은 첫 번째 항목 기준
+    const skillMap = {};
+    opData.skill.forEach(s => {
+        const entry = Array.isArray(s) ? s[0] : s;
+        if (!entry?.skilltype) return;
+        skillMap[entry.skilltype] = entry;
+    });
+
+    const SKILL_TYPES = ['일반공격', '배틀스킬', '연계스킬', '궁극기'];
+    const perSkill = {};
+    let total = 0;
+
+    SKILL_TYPES.forEach(type => {
+        const count = sc[type] || 0;
+        if (count === 0) { perSkill[type] = 0; return; }
+
+        const skillDef = skillMap[type];
+        if (!skillDef) { perSkill[type] = 0; return; }
+
+        // dmg 파싱 (예: '348%' → 3.48, 0이면 0)
+        const parseDmgPct = (v) => {
+            if (!v || v === 0) return 0;
+            const str = String(v);
+            const m = str.match(/([\d.]+)%/);
+            return m ? parseFloat(m[1]) / 100 : 0;
+        };
+
+        let dmgMult = parseDmgPct(skillDef.dmg);
+
+        // bonus 트리거 검사
+        if (skillDef.bonus) {
+            const bonus = skillDef.bonus;
+            const triggerMet = evaluateTrigger(bonus.trigger, currentState);
+
+            if (triggerMet && bonus) {
+                const parsePct = (v) => v ? parseFloat(String(v)) / 100 : 0;
+
+                if (bonus.base !== undefined || bonus.perStack !== undefined) {
+                    // 구조화된 형식: base + perStack * n
+                    const n = currentState.debuffState?.physDebuff?.defenseless || 0;
+                    dmgMult += parsePct(bonus.base) + parsePct(bonus.perStack) * n;
+                } else if (bonus.val) {
+                    // 단순 고정 배율: '1000%'
+                    dmgMult += parsePct(bonus.val);
+                }
+            }
+        }
+
+        // 기본 공식과 동일하게 multiplier 적용
+        const singleHitDmg = finalAtk * dmgMult * critExp
+            * (1 + dmgInc / 100) * (1 + amp / 100)
+            * (1 + takenDmg / 100) * (1 + vuln / 100)
+            * (1 + unbalanceDmg / 100) * resMult;
+
+        const skillTotal = Math.floor(singleHitDmg * count);
+        perSkill[type] = skillTotal;
+        total += skillTotal;
+    });
+
+    return { perSkill, total };
+}

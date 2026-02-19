@@ -90,11 +90,11 @@ body {
 }
 
 /* ============ 스크롤바 ============ */
-/* ::-webkit-scrollbar-track {
-    background: var(--sidebar-bg);
+::-webkit-scrollbar {
+    display: none;
 }
 
-::-webkit-scrollbar-thumb {
+/* ::-webkit-scrollbar-thumb {
     background: var(--accent);
     border-radius: 10px;
 } */
@@ -161,7 +161,6 @@ input[type="number"] {
     color: var(--text-primary);
     padding: 10px 14px;
     border-radius: 6px;
-    width: 100%;
     font-size: 0.9rem;
     transition: all var(--transition-speed);
 }

@@ -89,6 +89,9 @@ function renderResult(res) {
     }
 
     updateActiveSetUI();
+
+    // 사이클 계산
+    renderCycleDamage(calculateCycleDamage(state, res));
 }
 
 /**
@@ -161,6 +164,20 @@ function renderLog(id, list) {
         }
         ul.appendChild(li);
     });
+}
+
+/**
+ * 사이클 계산 결과를 DOM에 업데이트한다.
+ * @param {{perSkill: object, total: number}|null} cycleRes
+ */
+function renderCycleDamage(cycleRes) {
+    const SKILL_TYPES = ['일반공격', '배틀스킬', '연계스킬', '궁극기'];
+    SKILL_TYPES.forEach(t => {
+        const el = document.getElementById(`cycle-dmg-${t}`);
+        if (el) el.innerText = cycleRes ? (cycleRes.perSkill[t] || 0).toLocaleString() : '0';
+    });
+    const totalEl = document.getElementById('cycle-dmg-total');
+    if (totalEl) totalEl.innerText = cycleRes ? Math.floor(cycleRes.total).toLocaleString() : '0';
 }
 
 /**

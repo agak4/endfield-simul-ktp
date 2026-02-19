@@ -40,6 +40,28 @@ const DATA_OPERATORS = [
     // target (선택사항):
     //   - '팀': 팀 전체에 적용
     //   - '적': 적에 적용
+
+    // skill 작성 규칙:
+    //   skilltype : '일반공격' | '배틀스킬' | '연계스킬' | '궁극기'
+    //   dmg       : 기본 배율 문자열, 예) '348%'
+    //   type      : (선택) 스킬 효과 설명 문자열, 예) '방어 불능 부여'
+    //   target    : (선택) '팀' | '적'
+    //
+    //   bonus     : (선택) 특정 조건이 충족될 때 추가되는 보너스 데미지
+    //     .trigger  : 조건 이름 — calc.js의 evaluateTrigger() TRIGGER_MAP에 등록된 키
+    //                 현재 지원: '방어 불능', '오리지늄 봉인'
+    //                 (새 트리거 추가 시 evaluateTrigger의 TRIGGER_MAP에만 항목을 추가)
+    //
+    //     보너스 값 형식 (둘 중 하나 선택):
+    //     ① 스택 의존 보너스 — base + perStack × (트리거 스택 수)
+    //        .base      : 조건 충족 시 고정으로 더해지는 배율, 예) '150%'
+    //        .perStack  : 스택 1개당 추가되는 배율, 예) '150%'
+    //        예) base:'150%', perStack:'150%' → 방어불능 2스택이면 +150% + 150%×2 = +450%
+    //
+    //     ② 단순 고정 보너스 — 조건 충족 시 고정 배율 추가
+    //        .val       : 고정 추가 배율, 예) '1000%'
+    //        예) val:'1000%' → 오리지늄 봉인 ON이면 +1000%
+
     {
         id: 'Endministrator',
         name: '관리자',
@@ -54,17 +76,17 @@ const DATA_OPERATORS = [
         usableWeapons: ['sword'],
         skill: [
             { skilltype: '일반공격', dmg: '348%' },
-            { skilltype: '배틀스킬', dmg: '350%', type: '방어 불능 부여', target: '적', bonus: { trigger: '방어 불능', val: '150% + 150% * n' } },
+            { skilltype: '배틀스킬', dmg: '350%', type: '방어 불능 부여', target: '적', bonus: { trigger: '방어 불능', base: '150%', perStack: '150%' } },
             { skilltype: '연계스킬', dmg: '100%' },
             { skilltype: '궁극기', dmg: '800%', bonus: { trigger: '오리지늄 봉인', val: '1000%' } }
         ],
         talents: [
-            { type: '공격력 증가', val: 30 },
-            { type: '받는 물리 피해', val: 20, target: '적', trigger: '오리지늄 봉인' }
+            { type: '공격력 증가', val: '30%' },
+            { type: '받는 물리 피해', val: '20%', target: '적', trigger: '오리지늄 봉인' }
         ],
         potential: [
             {},
-            { type: '공격력 증가', val: 15, target: '팀' },
+            { type: '공격력 증가', val: '15%', target: '팀' },
             {},
             {},
             {}
