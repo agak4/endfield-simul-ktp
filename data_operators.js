@@ -15,6 +15,9 @@ const DATA_OPERATORS = [
     //          | '받는 냉기 피해' (적이 받는 냉기 피해 증가)
     //          | '받는 자연 피해' (적이 받는 자연 피해 증가)
 
+    //          | '스킬 배율 증가' (배틀/연계/궁극기 dmg 계수 ×(1+val%) - 사이클 계산에서 곱연산 적용)
+    //            - skilltype: '배틀스킬' | '연계스킬' | '궁극기' (선택 시 해당 스킬만 적용, 미지정 시 3종 모두 적용)
+
     //          | '물리 증폭' (물리 피해 증가 - 피해증가와 곱연산)
 
     //          | '아츠 취약' (적이 아츠 피해에 취약해지는 효과)
@@ -40,11 +43,15 @@ const DATA_OPERATORS = [
     // target (선택사항):
     //   - '팀': 팀 전체에 적용
     //   - '적': 적에 적용
+    //   type이 배열일 때는 각 항목에 target을 개별 지정 (외부 target 생략)
+    //   예) type: [{ type: '물리 취약', val: '12%', target: '적' }, { type: '연타', target: '팀' }]
 
     // skill 작성 규칙:
     //   skilltype : '일반공격' | '배틀스킬' | '연계스킬' | '궁극기'
     //   dmg       : 기본 배율 문자열, 예) '348%'
-    //   type      : (선택) 스킬 효과 설명 문자열, 예) '방어 불능 부여'
+    //   type      : (선택) 단일 효과: string, 예) '방어 불능 부여'
+    //              복합 효과: [{type, val?}, ...], 예) [{type: '물리 취약', val: '12%'}, {type: '방어 불능 부여'}]
+    //              (val 없는 효과는 val 생략)
     //   target    : (선택) '팀' | '적'
     //
     //   bonus     : (선택) 특정 조건이 충족될 때 추가되는 보너스 데미지
@@ -95,6 +102,7 @@ const DATA_OPERATORS = [
     {
         id: 'Lifeng',
         name: '여풍',
+        class: 'guard',
         rarity: 6,
         baseAtk: 312,
         mainStat: 'agi',
@@ -104,17 +112,17 @@ const DATA_OPERATORS = [
         stats: { str: 123, agi: 192, int: 115, wil: 117 },
         usableWeapons: ['polearm'],
         skill: [
-            { skilltype: '일반공격', dmg: 0 },
-            [{ skilltype: '배틀스킬', dmg: '%', type: '물리 취약', val: 12, target: '적' }, { skilltype: '배틀스킬', dmg: '%', type: '방어 불능 부여' }],
-            { skilltype: '연계스킬', dmg: '%', type: '연타', target: '팀' },
-            { skilltype: '궁극기', dmg: '%', type: '방어 불능 부여', target: '적' }
+            { skilltype: '일반공격', dmg: '351%', desc: '적에게 최대 4단 공격을 하여 물리 피해를 줍니다.' },
+            { skilltype: '배틀스킬', dmg: '440%', type: [{ type: '물리 취약', val: '12%', target: '적' }, { type: '방어 불능 부여' }, { type: '넘어뜨리기', target: '적' }], desc: '전방으로 창을 여러 번 휘둘러 2회의 물리 피해를 줍니다. 이후 힘차게 지면을 내리쳐 전방 모든 적에게 다시 물리 피해를 주고 넘어뜨리기 상태로 만듭니다. 마지막 공격에 명중한 적이 방어 불능 상태가 아닐 경우, 추가로 대상에게 12초간 물리 취약 상태를 부여합니다.' },
+            { skilltype: '연계스킬', dmg: '480%', type: '연타', target: '팀', desc: '물리 취약 또는 갑옷 파괴 상태의 적이 메인 컨트롤 오퍼레이터의 강력한 일격을 받았을 때 사용할 수 있습니다. 화신을 내세워 장창으로 찌르며, 물리 피해를 주고 20초간 연타를 획득합니다.' },
+            { skilltype: '궁극기', dmg: '800%', type: [{ type: '방어 불능 부여', target: '적' }, { type: '넘어뜨리기', target: '적' }], desc: '화신을 내세워 부동저로 지면을 힘껏 내리칩니다. 넓은 범위 내의 모든 적에게 물리 피해를 주고 넘어뜨리기 상태로 만들며, 모든 적을 중심으로 향해 끌어당깁니다. 일정 시간 후, 여전히 타격 범위 내에 남아 있는 모든 적에게는 다시 대량의 물리 피해를 주고 넘어뜨리기 상태로 만듭니다. 해당 스킬이 연타를 소모했다면, 대량의 추가 물리 피해를 줍니다.', bonus: { trigger: '연타', val: '600%' } }
         ],
         talents: [
             { type: '공격력 증가', val: '지능, 의지 1포인트당 0.15% 증가' },
             {}
         ],
         potential: [
-            { type: '물리 취약', val: 5, target: '적' },
+            { type: '물리 취약', val: '5%', target: '적' },
             { type: '스탯', stats: '모든 능력치', val: 15 },
             { type: '공격력 증가', val: '지능, 의지 1포인트당 0.05% 증가' },
             {},
@@ -124,6 +132,7 @@ const DATA_OPERATORS = [
     {
         id: 'Chen Qianyu',
         name: '진천우',
+        class: 'guard',
         rarity: 5,
         baseAtk: 297,
         mainStat: 'agi',
@@ -133,19 +142,19 @@ const DATA_OPERATORS = [
         stats: { str: 106, agi: 231, int: 85, wil: 93 },
         usableWeapons: ['sword'],
         skill: [
-            { skilltype: '일반공격', dmg: 0 },
-            [{ skilltype: '배틀스킬', dmg: '%', type: '방어 불능 부여', target: '적' }],
-            { skilltype: '연계스킬', dmg: '%', type: '방어 불능 부여', target: '적' },
-            { skilltype: '궁극기', dmg: '%' }
+            { skilltype: '일반공격', dmg: '317%', desc: '적에게 최대 5단 공격을 하여 물리 피해를 줍니다.' },
+            { skilltype: '배틀스킬', dmg: '380%', type: [{ type: '방어 불능 부여', target: '적' }, { type: '띄우기', target: '적' }], desc: '목표한 적을 올려 칩니다. 물리 피해를 주고 띄우기 상태로 만듭니다.' },
+            { skilltype: '연계스킬', dmg: '270%', type: [{ type: '방어 불능 부여', target: '적' }, { type: '띄우기', target: '적' }], desc: '적이 방어 불능 상태일 때 사용할 수 있습니다. 적을 관통하고 돌진 베기를 사용합니다. 경로 상의 모든 적에게 물리 피해를 주고, 띄우기 상태로 만듭니다.' },
+            { skilltype: '궁극기', dmg: '1509%', desc: '목표한 적에게 7단 베기를 사용합니다. 공격할 때마다 물리 피해를 주며, 마지막 베기 공격은 더 큰 피해를 줍니다.' }
         ],
         talents: [
-            { type: '공격력 증가', val: 40 },
+            { type: '공격력 증가', val: '40%' },
             {}
         ],
         potential: [
-            { type: '주는 피해', val: 20 },
-            [{ type: '스탯', stats: '민첩', val: 15 }, { type: '물리 피해', val: 8 }],
-            {},
+            { type: '주는 피해', val: '20%' },
+            [{ type: '스탯', stats: '민첩', val: 15 }, { type: '물리 피해', val: '8%' }],
+            [{ type: '스킬 배율 증가', val: '10%', skilltype: '배틀스킬' }, { type: '스킬 배율 증가', val: '10%', skilltype: '연계스킬' }, { type: '스킬 배율 증가', val: '10%', skilltype: '궁극기' }],
             {},
             {}
         ]
@@ -162,7 +171,7 @@ const DATA_OPERATORS = [
         stats: { str: 104, agi: 97, int: 110, wil: 211 },
         usableWeapons: ['polearm'],
         skill: [
-            { skilltype: '일반공격', dmg: 0 },
+            { skilltype: '일반공격', dmg: '%' },
             { skilltype: '배틀스킬', dmg: '%', type: '냉기 부착', target: '적' },
             [{ skilltype: '연계스킬', dmg: '%', type: '물리 취약', val: 15, target: '적' }, { skilltype: '연계스킬', dmg: '%', type: '방어 불능 부여' }],
             { skilltype: '궁극기', dmg: '%', type: '방어 불능 부여', target: '적' }
@@ -191,7 +200,7 @@ const DATA_OPERATORS = [
         stats: { str: 236, agi: 96, int: 86, wil: 120 },
         usableWeapons: ['great_sword'],
         skill: [
-            { skilltype: '일반공격', dmg: 0 },
+            { skilltype: '일반공격', dmg: '%' },
             { skilltype: '배틀스킬', dmg: '%', type: '방어 불능 부여', target: '적' },
             [{ skilltype: '연계스킬', dmg: '%', type: '치유' }, { skilltype: '연계스킬', dmg: '%', type: '방어 불능 부여', target: '적' }],
             { skilltype: '궁극기', dmg: '%', type: '보호' }
@@ -220,7 +229,7 @@ const DATA_OPERATORS = [
         stats: { str: 214, agi: 104, int: 93, wil: 108 },
         usableWeapons: ['great_sword'],
         skill: [
-            { skilltype: '일반공격', dmg: 0 },
+            { skilltype: '일반공격', dmg: '%' },
             [{ skilltype: '배틀스킬', dmg: '%', type: '비호' }, { skilltype: '배틀스킬', dmg: '%', type: '냉기 부착', target: '적' }],
             [{ skilltype: '연계스킬', dmg: '%', type: '치유' }],
             { skilltype: '궁극기', dmg: '%', type: '동결 부여', target: '적' }
@@ -249,7 +258,7 @@ const DATA_OPERATORS = [
         stats: { str: 236, agi: 96, int: 86, wil: 106 },
         usableWeapons: ['great_sword'],
         skill: [
-            { skilltype: '일반공격', dmg: 0 },
+            { skilltype: '일반공격', dmg: '%' },
             [{ skilltype: '배틀스킬', dmg: '%', type: '비호' }, { skilltype: '배틀스킬', dmg: '%', type: '방어 불능 부여', target: '적' }],
             { skilltype: '연계스킬', dmg: '%', type: '보호' },
             [{ skilltype: '궁극기', dmg: '%', type: '허약' }, { skilltype: '궁극기', dmg: '%', type: '방어 불능 부여', target: '적' }]
@@ -278,7 +287,7 @@ const DATA_OPERATORS = [
         stats: { str: 89, agi: 92, int: 127, wil: 231 },
         usableWeapons: ['arts_unit'],
         skill: [
-            { skilltype: '일반공격', dmg: 0 },
+            { skilltype: '일반공격', dmg: '%' },
             { skilltype: '배틀스킬', dmg: '%', type: '자연 부착', target: '적' },
             { skilltype: '연계스킬', dmg: '%', type: '방어 불능 부여', target: '적' },
             [{ skilltype: '궁극기', dmg: '%', type: '자연 부착' }, { skilltype: '궁극기', dmg: '%', type: '아츠 취약', val: 33, target: '적' }, { skilltype: '궁극기', dmg: '%', type: '감속' }]
@@ -307,7 +316,7 @@ const DATA_OPERATORS = [
         stats: { str: 112, agi: 93, int: 205, wil: 118 },
         usableWeapons: ['arts_unit'],
         skill: [
-            { skilltype: '일반공격', dmg: 0 },
+            { skilltype: '일반공격', dmg: '%' },
             [{ skilltype: '배틀스킬', dmg: '%', type: '물리 취약', val: 20, target: '적' }, { skilltype: '배틀스킬', dmg: '%', type: '아츠 취약', val: 20, target: '적' }],
             { skilltype: '연계스킬', dmg: '%', type: '부식 부여', target: '적' },
             { skilltype: '궁극기', dmg: '%' }
@@ -336,7 +345,7 @@ const DATA_OPERATORS = [
         stats: { str: 89, agi: 91, int: 127, wil: 210 },
         usableWeapons: ['arts_unit'],
         skill: [
-            { skilltype: '일반공격', dmg: 0 },
+            { skilltype: '일반공격', dmg: '%' },
             [{ skilltype: '배틀스킬', dmg: '%', type: '치유' }, { skilltype: '배틀스킬', dmg: '%', type: '아츠 증폭', val: 15, target: '팀' }],
             { skilltype: '연계스킬', dmg: '%', type: '냉기 부착', target: '적' },
             [{ skilltype: '궁극기', dmg: '%', type: '냉기 증폭', val: 36, target: '팀' }, { skilltype: '궁극기', dmg: '%', type: '자연 증폭', val: 36, target: '팀' }]
@@ -365,7 +374,7 @@ const DATA_OPERATORS = [
         stats: { str: 129, agi: 86, int: 225, wil: 82 },
         usableWeapons: ['arts_unit'],
         skill: [
-            { skilltype: '일반공격', dmg: 0 },
+            { skilltype: '일반공격', dmg: '%' },
             [{ skilltype: '배틀스킬', dmg: '%', type: '전기 취약', val: 10, target: '적' }, { skilltype: '배틀스킬', dmg: '%', type: '열기 취약', val: 10, target: '적' }],
             [{ skilltype: '연계스킬', dmg: '%', type: '방어 불능 부여' }, { skilltype: '연계스킬', dmg: '%', type: '아츠 부착', target: '적' }],
             [{ skilltype: '궁극기', dmg: '%', type: '전기 증폭', val: 20, target: '팀' }, { skilltype: '궁극기', dmg: '%', type: '열기 증폭', val: 20, target: '팀' }]
@@ -394,7 +403,7 @@ const DATA_OPERATORS = [
         stats: { str: 91, agi: 93, int: 221, wil: 113 },
         usableWeapons: ['arts_unit'],
         skill: [
-            { skilltype: '일반공격', dmg: 0 },
+            { skilltype: '일반공격', dmg: '%' },
             { skilltype: '배틀스킬', dmg: '%', type: '전기 부착', target: '적' },
             { skilltype: '연계스킬', dmg: '%', type: '감전 부여', target: '적' },
             { skilltype: '궁극기', dmg: '%' }
@@ -423,7 +432,7 @@ const DATA_OPERATORS = [
         stats: { str: 221, agi: 95, int: 92, wil: 111 },
         usableWeapons: ['handcannon'],
         skill: [
-            { skilltype: '일반공격', dmg: 0 },
+            { skilltype: '일반공격', dmg: '%' },
             { skilltype: '배틀스킬', dmg: '%', type: '열기 부착', target: '적' },
             { skilltype: '연계스킬', dmg: '%', type: '열기 부착', target: '적' },
             { skilltype: '궁극기', dmg: '%', type: '연소 부여', target: '적' }
@@ -452,7 +461,7 @@ const DATA_OPERATORS = [
         stats: { str: 90, agi: 228, int: 114, wil: 91 },
         usableWeapons: ['handcannon'],
         skill: [
-            { skilltype: '일반공격', dmg: 0 },
+            { skilltype: '일반공격', dmg: '%' },
             [{ skilltype: '배틀스킬', dmg: '%', type: '자연 부착' }, { skilltype: '배틀스킬', dmg: '%', type: '감속', target: '적' }],
             [{ skilltype: '연계스킬', dmg: '%', type: '냉기 부착' }, { skilltype: '연계스킬', dmg: '%', type: '자연 부착', target: '적' }],
             [{ skilltype: '궁극기', dmg: '%', type: '자연 부착' }, { skilltype: '궁극기', dmg: '%', type: '냉기 부착', target: '적' }]
@@ -481,7 +490,7 @@ const DATA_OPERATORS = [
         stats: { str: 121, agi: 99, int: 237, wil: 89 },
         usableWeapons: ['sword'],
         skill: [
-            { skilltype: '일반공격', dmg: 0 },
+            { skilltype: '일반공격', dmg: '%' },
             { skilltype: '배틀스킬', dmg: '%', type: '연소 부여', target: '적' },
             { skilltype: '연계스킬', dmg: '%' },
             { skilltype: '궁극기', dmg: '%', type: '열기 부착', target: '적' }
@@ -510,7 +519,7 @@ const DATA_OPERATORS = [
         stats: { str: 215, agi: 104, int: 93, wil: 109 },
         usableWeapons: ['great_sword'],
         skill: [
-            { skilltype: '일반공격', dmg: 0 },
+            { skilltype: '일반공격', dmg: '%' },
             { skilltype: '배틀스킬', dmg: '%', type: '냉기 부착', target: '적' },
             { skilltype: '연계스킬', dmg: '%', type: '냉기 부착 소모' },
             { skilltype: '궁극기', dmg: '%' }
@@ -539,7 +548,7 @@ const DATA_OPERATORS = [
         stats: { str: 82, agi: 128, int: 236, wil: 105 },
         usableWeapons: ['handcannon'],
         skill: [
-            { skilltype: '일반공격', dmg: 0 },
+            { skilltype: '일반공격', dmg: '%' },
             { skilltype: '배틀스킬', dmg: '%', type: '동결 부여', target: '적' },
             { skilltype: '연계스킬', dmg: '%', type: '동결 부여', target: '적' },
             [{ skilltype: '궁극기', dmg: '%', type: '치명타 확률', val: 30 }, { skilltype: '궁극기', dmg: '%', type: '치명타 피해', val: 60 }]
@@ -568,7 +577,7 @@ const DATA_OPERATORS = [
         stats: { str: 107, agi: 106, int: 110, wil: 228 },
         usableWeapons: ['polearm'],
         skill: [
-            { skilltype: '일반공격', dmg: 0 },
+            { skilltype: '일반공격', dmg: '%' },
             { skilltype: '배틀스킬', dmg: '%', type: '전기 부착', target: '적' },
             { skilltype: '연계스킬', dmg: '%' },
             { skilltype: '궁극기', dmg: '%' }
@@ -597,7 +606,7 @@ const DATA_OPERATORS = [
         stats: { str: 235, agi: 96, int: 94, wil: 102 },
         usableWeapons: ['great_sword'],
         skill: [
-            { skilltype: '일반공격', dmg: 0 },
+            { skilltype: '일반공격', dmg: '%' },
             { skilltype: '배틀스킬', dmg: '%', type: '방어 불능 부여', target: '적' },
             { skilltype: '연계스킬', dmg: '%', type: '방어 불능 부여', target: '적' },
             { skilltype: '궁극기', dmg: '%', type: '방어 불능 부여', target: '적' }
@@ -626,7 +635,7 @@ const DATA_OPERATORS = [
         stats: { str: 101, agi: 110, int: 97, wil: 233 },
         usableWeapons: ['sword'],
         skill: [
-            { skilltype: '일반공격', dmg: 0 },
+            { skilltype: '일반공격', dmg: '%' },
             [{ skilltype: '배틀스킬', dmg: '%', type: '방어 불능 부여' }, { skilltype: '배틀스킬', dmg: '%', type: '스킬 게이지 회복', target: '적' }],
             { skilltype: '연계스킬', dmg: '%', type: '스킬 게이지 회복' },
             { skilltype: '궁극기', dmg: '%', type: '스킬 게이지 회복' }
@@ -655,7 +664,7 @@ const DATA_OPERATORS = [
         stats: { str: 107, agi: 205, int: 123, wil: 100 },
         usableWeapons: ['sword'],
         skill: [
-            { skilltype: '일반공격', dmg: 0 },
+            { skilltype: '일반공격', dmg: '%' },
             { skilltype: '배틀스킬', dmg: '%', type: '스킬 게이지 회복' },
             { skilltype: '연계스킬', dmg: '%', type: '스킬 게이지 회복' },
             [{ skilltype: '궁극기', dmg: '%', type: '전기 부착' }, { skilltype: '궁극기', dmg: '%', type: '감전 부여', target: '적' }]
@@ -684,7 +693,7 @@ const DATA_OPERATORS = [
         stats: { str: 218, agi: 95, int: 125, wil: 89 },
         usableWeapons: ['sword'],
         skill: [
-            { skilltype: '일반공격', dmg: 0 },
+            { skilltype: '일반공격', dmg: '%' },
             [{ skilltype: '배틀스킬', dmg: '%', type: '스킬 게이지 회복' }, { skilltype: '배틀스킬', dmg: '%', type: '동결 부여', target: '적' }],
             { skilltype: '연계스킬', dmg: '%', type: '스킬 게이지 회복' },
             [{ skilltype: '궁극기', dmg: '%', type: '스킬 게이지 회복' }, { skilltype: '궁극기', dmg: '%', type: '냉기 부착', target: '적' }]
@@ -713,7 +722,7 @@ const DATA_OPERATORS = [
         stats: { str: 110, agi: 200, int: 106, wil: 108 },
         usableWeapons: ['sword'],
         skill: [
-            { skilltype: '일반공격', dmg: 0 },
+            { skilltype: '일반공격', dmg: '%' },
             { skilltype: '배틀스킬', dmg: '%', type: '열기 부착', target: '적' },
             { skilltype: '연계스킬', dmg: '%', type: '스킬 게이지 회복' },
             { skilltype: '궁극기', dmg: '%', type: '스킬 게이지 회복' }

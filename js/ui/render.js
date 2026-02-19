@@ -141,8 +141,12 @@ function renderLog(id, list) {
         const li = document.createElement('li');
         const txt = typeof item === 'string' ? item : item.txt;
         const uid = typeof item === 'string' ? null : item.uid;
+        const isUnbalancedOff = typeof item === 'object' && item.unbalancedOff;
 
         li.innerText = txt;
+        if (isUnbalancedOff) {
+            li.classList.add('unbalanced-off');
+        }
 
         if (uid) {
             li.dataset.uid = uid;
@@ -154,8 +158,8 @@ function renderLog(id, list) {
                 li.onclick = () => {
                     if (!state.disabledEffects) state.disabledEffects = [];
                     const idx = state.disabledEffects.indexOf(uid);
-                    if (idx > -1) state.disabledEffects.splice(idx, 1); // 비활성화 해제
-                    else state.disabledEffects.push(uid);       // 비활성화 추가
+                    if (idx > -1) state.disabledEffects.splice(idx, 1);
+                    else state.disabledEffects.push(uid);
                     updateState();
                 };
             } else {
@@ -171,13 +175,71 @@ function renderLog(id, list) {
  * @param {{perSkill: object, total: number}|null} cycleRes
  */
 function renderCycleDamage(cycleRes) {
+    const list = document.getElementById('cycle-dmg-list');
+    const totalEl = document.getElementById('cycle-dmg-total');
+
+    // 초기화
+    if (list) list.innerHTML = '';
+    if (totalEl) totalEl.innerText = cycleRes ? Math.floor(cycleRes.total).toLocaleString() : '0';
+
+    if (!cycleRes || !list) return;
+
+    // 클릭 비활성화 보호 대상 (renderLog와 동일)
+    const PROTECTED_UIDS = ['base_op_atk', 'base_wep_atk', 'stat_bonus_atk', 'unbalance_base'];
+
     const SKILL_TYPES = ['일반공격', '배틀스킬', '연계스킬', '궁극기'];
     SKILL_TYPES.forEach(t => {
-        const el = document.getElementById(`cycle-dmg-${t}`);
-        if (el) el.innerText = cycleRes ? (cycleRes.perSkill[t] || 0).toLocaleString() : '0';
+        const data = cycleRes.perSkill[t]; // { dmg, logs }
+        const dmgVal = data ? data.dmg : 0;
+        const logs = data ? data.logs : [];
+
+        const card = document.createElement('div');
+        card.className = 'skill-card';
+
+        // 카드 헤더
+        const header = document.createElement('div');
+        header.className = 'skill-card-header';
+        header.innerHTML = `<span class="skill-name">${t}</span><span class="skill-dmg">${dmgVal.toLocaleString()}</span>`;
+        card.appendChild(header);
+
+        // 상세 로그 (타일 속의 타일)
+        if (logs.length > 0) {
+            const ul = document.createElement('ul');
+            ul.className = 'skill-logs detail-list'; // detail-list 스타일 재사용
+
+            logs.forEach(log => {
+                const li = document.createElement('li');
+                li.innerText = log.txt;
+
+                // 클릭 비활성화 로직
+                const uid = log.uid;
+                if (uid) {
+                    li.dataset.uid = uid;
+                    const isProtected = PROTECTED_UIDS.includes(uid);
+
+                    if (!isProtected) {
+                        li.style.cursor = 'pointer';
+                        // 이미 비활성화된 효과는 취소선 클래스 적용
+                        if (state.disabledEffects?.includes(uid)) li.classList.add('disabled-effect');
+
+                        li.onclick = () => {
+                            if (!state.disabledEffects) state.disabledEffects = [];
+                            const idx = state.disabledEffects.indexOf(uid);
+                            if (idx > -1) state.disabledEffects.splice(idx, 1);
+                            else state.disabledEffects.push(uid);
+                            updateState(); // 재계산 및 렌더링
+                        };
+                    } else {
+                        li.style.cursor = 'default';
+                    }
+                }
+                ul.appendChild(li);
+            });
+            card.appendChild(ul);
+        }
+
+        list.appendChild(card);
     });
-    const totalEl = document.getElementById('cycle-dmg-total');
-    if (totalEl) totalEl.innerText = cycleRes ? Math.floor(cycleRes.total).toLocaleString() : '0';
 }
 
 /**

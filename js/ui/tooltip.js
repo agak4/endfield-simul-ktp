@@ -160,14 +160,26 @@ const AppTooltip = {
 
         const processSingle = (t, source, potLevel) => {
             if (!t?.type) return;
+
+            // type 정규화: string → [{type, val}], object[] → 그대로
+            const rawType = t.type;
+            const typeArr = Array.isArray(rawType)
+                ? rawType.map(item => typeof item === 'string' ? { type: item } : item)
+                : [{ type: rawType, val: t.val }];
+
+            const typeIncludes = (keyword) => typeArr.some(e => e.type.includes(keyword));
+            // 표시 문자열: '물리 취약 +12% / 방어 불능 부여'
+            const typeStr = typeArr.map(e => e.val !== undefined ? `${e.type} +${e.val}` : e.type).join(' / ');
+
             // 툴팁 표시 제외 타입 필터링
-            if (this.EXCLUDE_TYPES.some(ex => t.type.includes(ex)) || t.type === '스탯') return;
+            if (this.EXCLUDE_TYPES.some(ex => typeIncludes(ex)) || typeArr.some(e => e.type === '스탯')) return;
             const isPotential = potLevel !== null;
             const isActive = isPotential ? (currentPot >= potLevel) : true;
-            const item = { ...t, sourceLabel: isPotential ? `${potLevel}잠재` : source, active: isActive, isPotential };
-            const isSynergy = this.SYNERGY_TYPES.some(syn => t.type.includes(syn)) || t.target === '팀' || t.target === '적';
+            const isUnbalanced = typeIncludes('불균형 목표에 주는 피해');
+            const item = { ...t, _typeStr: typeStr, _isUnbalanced: isUnbalanced, sourceLabel: isPotential ? `${potLevel}잠재` : source, active: isActive, isPotential };
+            const isSynergy = this.SYNERGY_TYPES.some(syn => typeIncludes(syn)) || t.target === '팀' || t.target === '적';
             if (isSynergy) synergyItems.push(item);
-            else if (this.TRAIT_TYPES.some(tr => t.type.includes(tr))) traitItems.push(item);
+            else if (this.TRAIT_TYPES.some(tr => typeIncludes(tr))) traitItems.push(item);
         };
 
         const processData = (data, source, potLevel = null) => {
@@ -179,16 +191,22 @@ const AppTooltip = {
         };
 
         processData(op.talents, '재능');
-        if (op.skill) op.skill.forEach(s => processData(s, s.skilltype || '스킬'));
+        if (op.skill) op.skill.forEach(s => {
+            const entry = Array.isArray(s) ? s[0] : s;
+            processData(s, entry?.skilltype || '스킬');
+        });
         if (op.potential) op.potential.forEach((p, i) => processData(p, '잠재', i + 1));
 
         const renderList = (list, isSynergy = false) => {
             return [...list].sort((a, b) => a.isPotential !== b.isPotential ? (a.isPotential ? 1 : -1) : 0)
                 .map(t => {
-                    const valStr = t.val !== undefined ? ` +${t.val}` : '';
+                    const valStr = !t._typeStr && t.val !== undefined ? ` +${t.val}` : '';
                     const color = isSynergy ? '#FFFA00' : 'var(--accent)';
-                    const style = t.active === false ? 'color:rgba(255,255,255,0.3);font-weight:normal;' : `color:${color};font-weight:bold;`;
-                    return `<div style="margin-bottom:2px;${style}"><span style="color:inherit">•</span> [${t.sourceLabel}] ${t.type}${valStr}</div>`;
+                    // 비활성(OFF 잠재/불균형 OFF): color:inherit 로 표시
+                    const style = t.active === false
+                        ? 'color:inherit;font-weight:normal;'
+                        : `color:${color};font-weight:bold;`;
+                    return `<div style="margin-bottom:2px;${style}"><span style="color:inherit">•</span> [${t.sourceLabel}] ${t._typeStr ?? t.type}${valStr}</div>`;
                 }).join('');
         };
 
@@ -243,8 +261,9 @@ const AppTooltip = {
             }
 
             const isSynergy = (t.target === '팀' || t.target === '적' || this.SYNERGY_TYPES.some(syn => t.type.includes(syn)));
-            const bulletColor = isSynergy ? '#FFFA00' : 'var(--accent)';
-            const html = `<div style="margin-bottom:2px;"><span style="color:${bulletColor}">•</span> ${rangeStr}</div>`;
+            const isUnbalanced = t.type === '불균형 목표에 주는 피해' && !state?.enemyUnbalanced;
+            const bulletColor = isUnbalanced ? 'inherit' : isSynergy ? '#FFFA00' : 'var(--accent)';
+            const html = `<div style="margin-bottom:2px;${isUnbalanced ? 'color:inherit;' : ''}"><span style="color:${bulletColor}">•</span> ${rangeStr}</div>`;
             if (isSynergy) synergyItems.push(html); else traitItems.push(html);
         });
 
@@ -306,9 +325,11 @@ const AppTooltip = {
                     }
                 }
 
-                const spanStyle = forged ? `style="color:var(--accent);font-weight:bold;"` : '';
+                const isUnbalanced = t.type === '불균형 목표에 주는 피해' && !state?.enemyUnbalanced;
+                const accentColor = isUnbalanced ? 'inherit' : 'var(--accent)';
+                const spanStyle = (!isUnbalanced && forged) ? `style="color:var(--accent);font-weight:bold;"` : '';
                 const label = isStatTrait ? getStatName(t.stat) : t.type;
-                return `<div style="margin-bottom:2px;"><span style="color:var(--accent)">•</span> ${label}<span ${spanStyle}>${valStr}</span></div>`;
+                return `<div style="margin-bottom:2px;${isUnbalanced ? 'color:inherit;' : ''}"><span style="color:${accentColor}">•</span> ${label}<span ${spanStyle}>${valStr}</span></div>`;
             }).join('');
             traitHtml = `<div class="tooltip-section"><div class="tooltip-label">장비 특성</div><div class="tooltip-desc">${traitLines}</div></div>`;
         }

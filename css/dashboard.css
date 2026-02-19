@@ -2,7 +2,7 @@
 .total-dmg-box {
     background: linear-gradient(135deg, #1e1e1e 0%, #121212 100%);
     border: 2px solid var(--accent);
-    padding: 30px;
+    padding: 10px;
     border-radius: 12px;
     text-align: center;
     position: sticky;
@@ -97,7 +97,7 @@
 .dashboard-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 15px;
+    gap: 7px;
 }
 
 .tile {
@@ -201,12 +201,22 @@
     color: #888 !important;
 }
 
+.detail-list li.unbalanced-off {
+    color: var(--text-muted) !important;
+    opacity: 0.45;
+    font-weight: normal !important;
+}
+
 .detail-list li::before {
     content: '▸ ';
     color: var(--accent);
     opacity: 0.8;
     margin-right: 6px;
     font-size: 0.7rem;
+}
+
+.detail-list li.unbalanced-off::before {
+    color: var(--text-muted);
 }
 
 /* ============ 무기 비교 ============ */
@@ -421,7 +431,7 @@
     display: flex;
     align-items: flex-start;
     justify-content: center;
-    gap: 18px;
+    gap: 7px;
 }
 
 .debuff-group {
@@ -470,7 +480,7 @@
 .ring-seg {
     fill: none;
     stroke: rgba(255, 255, 255, 0.15);
-    stroke-width: 6;
+    stroke-width: 4;
     stroke-linecap: round;
     transition: stroke 0.18s ease;
 }
@@ -529,18 +539,18 @@
     flex: 3;
     background: linear-gradient(135deg, #1a1a1a 0%, #111 100%);
     border: 2px solid var(--accent);
-    padding: 16px 20px;
+    padding: 10px;
     border-radius: 12px;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 3px;
 }
 
 .cycle-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 5px 8px;
+    padding: 5px;
     border-radius: 6px;
     background: rgba(255, 255, 255, 0.04);
     transition: background 0.15s;
@@ -564,8 +574,11 @@
 .cycle-total-row {
     margin-top: 4px;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
-    padding-top: 8px;
     background: transparent;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 10px;
 }
 
 .cycle-total-val {
@@ -655,4 +668,67 @@
 .skill-count-input:focus {
     border-color: var(--accent);
     outline: none;
+}
+
+/* ============ 사이클 데미지 UI 개편 (Flex Layout) ============ */
+.cycle-dmg-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+}
+
+.skill-card {
+    flex: 1;
+    min-width: 140px;
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+}
+
+.skill-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 8px;
+    margin-bottom: 8px;
+}
+
+.skill-name {
+    font-size: 0.85rem;
+    color: var(--text-gold);
+    font-weight: 600;
+}
+
+.skill-dmg {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--accent);
+}
+
+.skill-logs {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    font-size: 0.75rem;
+}
+
+.skill-logs li {
+    color: var(--text-muted);
+    margin-bottom: 4px;
+    line-height: 1.3;
+    padding-left: 8px;
+    border-left: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+/* 총합 행 스타일 조정 */
+.cycle-total-row {}
+
+.cycle-total-val {
+    font-size: 1.4rem;
+    color: var(--accent);
+    font-weight: 700;
 }
