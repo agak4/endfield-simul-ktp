@@ -256,6 +256,7 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects) {
         atk: [], atkBuffs: [], dmgInc: [], amp: [], vuln: [],
         taken: [], unbal: [], multihit: [], crit: [], arts: [], res: []
     };
+    let resIgnore = 0;
 
     // ---- 저항 (적 속성별, 0 시작 / 낮을수록 피해 증가) ----
     const ALL_RES_KEYS = ['물리', '열기', '전기', '냉기', '자연'];
@@ -365,6 +366,10 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects) {
         } else if (t.includes('피해') || t === '주는 피해' || t === '모든 스킬 피해') {
             if (!isDisabled) dmgInc += val;
             logs.dmgInc.push({ txt: `[${displayName}] +${val.toFixed(1)}% (${t})`, uid });
+        } else if (t.endsWith('저항 무시')) {
+            // 이미 isApplicableEffect 통과했으므로 오퍼레이터 속성과 일치함
+            if (!isDisabled) resIgnore += val;
+            logs.res.push({ txt: `[${displayName}] ${t} ${val.toFixed(1)}`, uid });
         }
     });
 
@@ -394,7 +399,8 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects) {
     // 적용할 저항 (오퍼레이터 속성에 매핑)
     const resKeyMap = { heat: '열기', elec: '전기', cryo: '냉기', nature: '자연' };
     const activeResKey = opData.type === 'phys' ? '물리' : (resKeyMap[opData.element] || null);
-    const activeResVal = activeResKey ? resistance[activeResKey] : 0;
+    const baseResVal = activeResKey ? resistance[activeResKey] : 0;
+    const activeResVal = baseResVal - resIgnore;
     // 저항 0 기준, 음수 = 저항 감소 = 피해 배율 1 이상
     const resMult = 1 - activeResVal / 100;
 
@@ -464,6 +470,9 @@ function isApplicableEffect(opData, effectType, effectName) {
     if (type.includes('받는') || type.endsWith('취약')) {
         const prefix = type.replace('받는 ', '').replace(' 피해', '').replace(' 취약', '');
         return checkElement(prefix);
+    }
+    if (type.endsWith('저항 무시')) {
+        return checkElement(type.replace(' 저항 무시', ''));
     }
     return checkElement(type.replace(' 피해', ''));
 }
