@@ -269,21 +269,29 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects) {
     const ALL_RES_KEYS = ['물리', '열기', '전기', '냉기', '자연'];
     const resistance = { '물리': 0, '열기': 0, '전기': 0, '냉기': 0, '자연': 0 };
 
+    // 갑옷 파괴 디버프 (물리 받는 피해 증가)
+    const ARMOR_BREAK_BONUS = [0, 15, 30, 45, 60]; // 15% 씩 증가
+    const abStacks = state.debuffState.physDebuff?.armorBreak || 0;
+    const abVal = ARMOR_BREAK_BONUS[abStacks];
+    const abDisabled = state.disabledEffects.includes('debuff_armorBreak');
+    if (abVal > 0 && opData.type === 'phys') {
+        if (!abDisabled) takenDmg += abVal;
+        logs.taken.push({ txt: `[갑옷 파괴 ${abStacks}단계] 받는 물리 피해 +${abVal}%`, uid: 'debuff_armorBreak' });
+    }
 
     // 부식 디버프: 모든 저항 감소
     const BUSIK_RED = [0, 12, 16, 20, 24];
-    const busikStacks = state.debuffState?.artsAbnormal?.['\ubd80\uc2dd'] || 0;
+    const busikStacks = state.debuffState.artsAbnormal['부식'] || 0;
     const busikVal = BUSIK_RED[busikStacks];
-    // [디버프 직접 적용 규칙] 로그는 항상 push, 수치 반영은 !isDisabled 시에만
     const busikDisabled = state.disabledEffects.includes('debuff_busik');
     if (busikVal > 0) {
         if (!busikDisabled) ALL_RES_KEYS.forEach(k => resistance[k] -= busikVal);
         logs.res.push({ txt: `[부식 ${busikStacks}단계] 모든 저항 -${busikVal}`, uid: 'debuff_busik' });
     }
 
-    // 감전 디버프: 받는 아츠 피해 증가 (아츠형 열미는 피해)
+    // 감전 디버프: 받는 아츠 피해 증가
     const GAMSUN_BONUS = [0, 12, 16, 20, 24];
-    const gamsunStacks = state.debuffState?.artsAbnormal?.['\uac10\uc804'] || 0;
+    const gamsunStacks = state.debuffState.artsAbnormal['감전'] || 0;
     const gamsunVal = GAMSUN_BONUS[gamsunStacks];
 
     const atkBaseLogs = [
@@ -303,9 +311,6 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects) {
     };
 
     const statLogs = [];
-
-    // 효과 타입별 로그 핸들러 (사용되지 않음)
-    const EFFECT_LOG_HANDLERS = {};
 
     allEffects.forEach(eff => {
         const isDisabled = state.disabledEffects.includes(eff.uid);
@@ -390,16 +395,6 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects) {
     if (gamsunVal > 0 && opData.type === 'arts') {
         if (!gamsunDisabled) takenDmg += gamsunVal;
         logs.taken.push({ txt: `[감전 ${gamsunStacks}단계] 받는 아츠 피해 +${gamsunVal}%`, uid: 'debuff_gamsun' });
-    }
-
-    // 갑옷 파괴 디버프 (물리 받는 피해 증가)
-    const ARMOR_BREAK_BONUS = [0, 12, 16, 20, 24]; // 감전과 동일 수치 가정
-    const abStacks = state.debuffState.armorBreak || 0;
-    const abVal = ARMOR_BREAK_BONUS[abStacks];
-    const abDisabled = state.disabledEffects.includes('debuff_armorBreak');
-    if (abVal > 0 && opData.type === 'phys') {
-        if (!abDisabled) takenDmg += abVal;
-        logs.taken.push({ txt: `[갑옷 파괴 ${abStacks}단계] 받는 물리 피해 +${abVal}%`, uid: 'debuff_armorBreak' });
     }
 
     const statBonusPct = (stats[opData.mainStat] * 0.005) + (stats[opData.subStat] * 0.002);

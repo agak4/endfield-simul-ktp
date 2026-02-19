@@ -62,12 +62,9 @@ let state = {
      * defenseless: 방어불능, 0~4단계
      */
     debuffState: {
-        debuffState: {
-            defenseless: 0, // 방어 불능
-            armorBreak: 0, // 갑옷 파괴 (물리 받는 피해 증가)
-            artsAttach: { type: null, stacks: 0 }, // 한 종류만 가능
-            artsAbnormal: { '연소': 0, '감전': 0, '동결': 0, '부식': 0 }
-        }
+        physDebuff: { defenseless: 0, armorBreak: 0 }, // 방어불능, 갑옷파괴
+        artsAttach: { type: null, stacks: 0 }, // 한 종류만 가능
+        artsAbnormal: { '연소': 0, '감전': 0, '동결': 0, '부식': 0 }
     }
 };
 
@@ -167,14 +164,50 @@ function loadState() {
         if (saved) {
             const parsed = JSON.parse(saved);
             state = { ...state, ...parsed };
+
             // 구버전 저장 데이터 호환: disabledEffects 필드가 없는 경우 초기화
             if (!state.disabledEffects) state.disabledEffects = [];
+
             // 구버전 저장 데이터 호환: debuffState 필드 없으면 기본값
-            if (!state.debuffState) state.debuffState = {
-                defenseless: 0,
-                artsAttach: { type: null, stacks: 0 },
-                artsAbnormal: { '연소': 0, '감전': 0, '동결': 0, '부식': 0 }
-            };
+            if (!state.debuffState) {
+                state.debuffState = {
+                    physDebuff: { defenseless: 0, armorBreak: 0 },
+                    artsAttach: { type: null, stacks: 0 },
+                    artsAbnormal: { '연소': 0, '감전': 0, '동결': 0, '부식': 0 }
+                };
+            }
+
+            // [마이그레이션] 잘못된 중첩 구조(debuffState.debuffState) 복구
+            if (state.debuffState.debuffState) {
+                console.warn('Fixing nested debuffState structure...');
+                const old = state.debuffState.debuffState;
+                state.debuffState = {
+                    physDebuff: {
+                        defenseless: old.defenseless || 0,
+                        armorBreak: old.armorBreak || 0
+                    },
+                    artsAttach: old.artsAttach || { type: null, stacks: 0 },
+                    artsAbnormal: old.artsAbnormal || { '연소': 0, '감전': 0, '동결': 0, '부식': 0 }
+                };
+            }
+
+            // [마이그레이션] 평탄화된 옛 구조(defenseless 직접 존재)를 physDebuff로 이동
+            if (state.debuffState.defenseless !== undefined || state.debuffState.armorBreak !== undefined) {
+                if (!state.debuffState.physDebuff) {
+                    state.debuffState.physDebuff = {
+                        defenseless: state.debuffState.defenseless || 0,
+                        armorBreak: state.debuffState.armorBreak || 0
+                    };
+                }
+                delete state.debuffState.defenseless;
+                delete state.debuffState.armorBreak;
+            }
+
+            // [안전장치] physDebuff 객체가 없으면 생성
+            if (!state.debuffState.physDebuff) {
+                state.debuffState.physDebuff = { defenseless: 0, armorBreak: 0 };
+            }
+
             return true;
         }
     } catch (e) {

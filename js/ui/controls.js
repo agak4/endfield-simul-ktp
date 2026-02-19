@@ -330,7 +330,10 @@ function cycleDebuff(el) {
     const cur = parseInt(el.dataset.stacks, 10) || 0;
     const next = (cur + 1) % 5;
 
-    if (state.debuffState && state.debuffState[type] !== undefined) {
+    if (state.debuffState.physDebuff && state.debuffState.physDebuff[type] !== undefined) {
+        state.debuffState.physDebuff[type] = next;
+    } else if (state.debuffState && state.debuffState[type] !== undefined) {
+        // 구버전 호환
         state.debuffState[type] = next;
     }
 
@@ -403,11 +406,11 @@ function applyDebuffStateToUI() {
 
     // 방어불능
     const defEl = document.getElementById('debuff-icon-defenseless');
-    if (defEl) applyDebuffIconState(defEl, ds.defenseless || 0);
+    if (defEl) applyDebuffIconState(defEl, ds.physDebuff?.defenseless || 0);
 
     // 갑옷 파괴
     const abEl = document.getElementById('debuff-icon-armorBreak');
-    if (abEl) applyDebuffIconState(abEl, ds.armorBreak || 0);
+    if (abEl) applyDebuffIconState(abEl, ds.physDebuff?.armorBreak || 0);
 
     // 아츠 부착
     const ATTACH_TYPES = ['열기 부착', '전기 부착', '냉기 부착', '자연 부착'];

@@ -54,22 +54,13 @@ const DATA_OPERATORS = [
         usableWeapons: ['sword'],
         skill: [
             { skilltype: '일반공격', dmg: '348%' },
-            {
-                skilltype: '배틀스킬',
-                dmg: '350%',
-                type: '방어 불능 부여',
-                target: '적',
-                bonus: {
-                    trigger: 'defenseless', // 방어 불능
-                    val: '150% + 150% * n'
-                }
-            },
-            { skilltype: '연계스킬', dmg: '800%', bonus: { trigger: 'originium_sealed', val: '600%' } },
-            { skilltype: '궁극기', dmg: '%', bonus: { trigger: 'originium_sealed', val: '600%' } }
+            { skilltype: '배틀스킬', dmg: '350%', type: '방어 불능 부여', target: '적', bonus: { trigger: '방어 불능', val: '150% + 150% * n' } },
+            { skilltype: '연계스킬', dmg: '100%' },
+            { skilltype: '궁극기', dmg: '800%', bonus: { trigger: '오리지늄 봉인', val: '1000%' } }
         ],
         talents: [
             { type: '공격력 증가', val: 30 },
-            { type: '받는 물리 피해', val: 20, target: '적' }
+            { type: '받는 물리 피해', val: 20, target: '적', trigger: '오리지늄 봉인' }
         ],
         potential: [
             {},
