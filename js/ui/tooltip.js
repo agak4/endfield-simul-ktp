@@ -31,7 +31,8 @@ const AppTooltip = {
         '공격력 증가', '물리 피해', '아츠 피해', '열기 피해', '전기 피해', '냉기 피해', '자연 피해',
         '불균형 목표에 주는 피해', '일반 공격 피해', '배틀 스킬 피해', '연계 스킬 피해', '궁극기 피해',
         '모든 스킬 피해', '주는 피해', '오리지늄 아츠 강도', '치명타 확률', '치명타 피해',
-        '물리 저항 무시', '열기 저항 무시', '전기 저항 무시', '냉기 저항 무시', '자연 저항 무시'
+        '물리 저항 무시', '열기 저항 무시', '전기 저항 무시', '냉기 저항 무시', '자연 저항 무시',
+        '스킬 치명타 확률', '스킬 치명타 피해'
     ],
     /** 파티원(팀/적 대상) 시너지 효과 타입 목록 */
     // [규칙] 새로운 시너지/디버프 타입(예: 저항 감소)이 추가되면 반드시 이 배열에 포함시켜야 툴팁에 표시됩니다.
@@ -181,7 +182,14 @@ const AppTooltip = {
 
             const typeIncludes = (keyword) => typeArr.some(e => e.type.includes(keyword));
             // 표시 문자열: '물리 취약 +12% / 방어 불능 부여'
-            const typeStr = typeArr.map(e => e.val !== undefined ? `${e.type} +${e.val}` : e.type).join(' / ');
+            const typeStr = typeArr.map(e => {
+                let suffix = '';
+                const st = e.skilltype || t.skilltype;
+                if ((e.type === '스킬 치명타 확률' || e.type === '스킬 치명타 피해' || e.type === '스킬 배율 증가') && st) {
+                    suffix = ` (${Array.isArray(st) ? st.join(', ') : st})`;
+                }
+                return e.val !== undefined ? `${e.type}${suffix} +${e.val}` : `${e.type}${suffix}`;
+            }).join(' / ');
 
             // 툴팁 표시 제외 타입 필터링
             if (this.EXCLUDE_TYPES.some(ex => typeIncludes(ex)) || typeArr.some(e => e.type === '스탯')) return;

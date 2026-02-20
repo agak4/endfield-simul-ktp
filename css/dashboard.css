@@ -254,7 +254,6 @@
 
 /* ============ 사이클 데미지 UI 개편 (Flex Layout) ============ */
 .cycle-dmg-box {
-    flex: 2;
     display: flex;
     flex-direction: column;
     gap: 3px;

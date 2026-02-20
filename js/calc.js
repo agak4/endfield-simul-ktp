@@ -296,6 +296,7 @@ function applyPercentStats(effects, stats) {
 function computeFinalDamageOutput(state, opData, wepData, stats, allEffects) {
     const baseAtk = opData.baseAtk + wepData.baseAtk;
     let atkInc = 0, critRate = 5, critDmg = 50, dmgInc = 0, amp = 0, vuln = 0, takenDmg = 0, multiHit = 1.0, unbalanceDmg = 0, originiumArts = 0, skillMults = { all: 0 }, dmgIncMap = { all: 0, skill: 0, normal: 0, battle: 0, combo: 0, ult: 0 };
+    const skillCritData = { rate: { all: 0 }, dmg: { all: 0 } };
     const logs = {
         atk: [], atkBuffs: [], dmgInc: [], amp: [], vuln: [],
         taken: [], unbal: [], multihit: [], crit: [], arts: [], res: []
@@ -422,14 +423,38 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects) {
         } else if (t.includes('받는')) {
             if (!isDisabled) takenDmg += val;
             logs.taken.push({ txt: `[${displayName}] ${valDisplay} (${t})`, uid });
+        } else if (t === '스킬 치명타 확률' || t === '스킬 치명타 피해') {
+            const isRate = (t === '스킬 치명타 확률');
+            const targetObj = isRate ? skillCritData.rate : skillCritData.dmg;
+            if (!isDisabled) {
+                if (eff.skilltype) {
+                    const skTypes = Array.isArray(eff.skilltype) ? eff.skilltype : [eff.skilltype];
+                    skTypes.forEach(st => {
+                        targetObj[st] = (targetObj[st] || 0) + val;
+                    });
+                } else {
+                    targetObj.all += val;
+                }
+            }
+            let typeLabel = t;
+            if (eff.skilltype) {
+                const skStrs = Array.isArray(eff.skilltype) ? eff.skilltype.join(', ') : eff.skilltype;
+                typeLabel += ` (${skStrs})`;
+            }
+            logs.crit.push({ txt: `[${displayName}] ${valDisplay} (${typeLabel})`, uid, tag: 'skillCrit', skillType: eff.skilltype });
         } else if (t === '스킬 배율 증가') {
             // 배틀/연계/궁극기 dmg 계수에 곱연산 (사이클 계산에서 반영)
             if (!isDisabled) {
                 if (eff.skilltype) skillMults[eff.skilltype] = (skillMults[eff.skilltype] || 0) + val;
                 else skillMults.all += val;
             }
-            // 스킬 타입 표기 제거 (UI 상에서 이미 구분됨)
-            logs.dmgInc.push({ txt: `[${displayName}] ${valDisplay} (${t})`, uid, tag: 'skillMult', skillType: eff.skilltype });
+            // 스킬 타입 표기 추가 (로그 상에서 명시적 표출)
+            let typeLabel = t;
+            if (eff.skilltype) {
+                const skStrs = Array.isArray(eff.skilltype) ? eff.skilltype.join(', ') : eff.skilltype;
+                typeLabel += ` (${skStrs})`;
+            }
+            logs.dmgInc.push({ txt: `[${displayName}] ${valDisplay} (${typeLabel})`, uid, tag: 'skillMult', skillType: eff.skilltype });
         } else if (t.endsWith('피해') || t.includes('피해') || t === '주는 피해' || t === '모든 스킬 피해') {
             let tag = 'all';
             if (t === '일반 공격 피해') tag = 'normal';
@@ -497,7 +522,7 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects) {
             mainStatName: STAT_NAME_MAP[opData.mainStat], mainStatVal: stats[opData.mainStat],
             subStatName: STAT_NAME_MAP[opData.subStat], subStatVal: stats[opData.subStat],
             critExp, finalCritRate, critDmg, dmgInc, amp, vuln, takenDmg, unbalanceDmg: finalUnbal, originiumArts, skillMults, dmgIncData: dmgIncMap,
-            resistance: activeResVal, resMult
+            skillCritData, resistance: activeResVal, resMult
         },
         logs
     };
@@ -528,7 +553,8 @@ function isApplicableEffect(opData, effectType, effectName) {
     const ALWAYS_ON = [
         '공격력 증가', '치명타 확률', '치명타 피해', '최대 체력', '궁극기 충전', '치유 효율', '연타',
         '주는 피해', '스탯', '스탯%', '스킬 피해', '궁극기 피해', '연계 스킬 피해', '배틀 스킬 피해',
-        '일반 공격 피해', '오리지늄 아츠', '오리지늄 아츠 강도', '모든 스킬 피해', '스킬 배율 증가'
+        '일반 공격 피해', '오리지늄 아츠', '오리지늄 아츠 강도', '모든 스킬 피해', '스킬 배율 증가',
+        '스킬 치명타 확률', '스킬 치명타 피해'
     ];
     if (ALWAYS_ON.includes(type) || type === '불균형 목표에 주는 피해') return true;
 
@@ -659,7 +685,7 @@ function calcSingleSkillDamage(type, st, bRes) {
     const skillDef = skillMap[type];
     if (!skillDef) return null;
 
-    const { finalAtk, critExp, amp, takenDmg, vuln, unbalanceDmg, resMult, skillMults = { all: 0 }, dmgIncData = { all: 0, skill: 0, normal: 0, battle: 0, combo: 0, ult: 0 } } = bRes.stats;
+    const { finalAtk, critExp, finalCritRate, critDmg, amp, takenDmg, vuln, unbalanceDmg, resMult, skillMults = { all: 0 }, dmgIncData = { all: 0, skill: 0, normal: 0, battle: 0, combo: 0, ult: 0 }, skillCritData = { rate: { all: 0 }, dmg: { all: 0 } } } = bRes.stats;
 
     // dmg 파싱
     const parseDmgPct = (v) => {
@@ -693,8 +719,14 @@ function calcSingleSkillDamage(type, st, bRes) {
     let typeInc = dmgIncData.all;
     if (type === '일반 공격') typeInc += dmgIncData.normal;
     else typeInc += dmgIncData.skill + (dmgIncData[typeMap[type]] || 0);
+    // 스킬 전용 치명타 확률/피해 합산 및 기댓값 재계산
+    let sCritRateBoost = (skillCritData.rate.all || 0) + (skillCritData.rate[type] || 0);
+    let sCritDmgBoost = (skillCritData.dmg.all || 0) + (skillCritData.dmg[type] || 0);
+    let adjCritRate = Math.min(Math.max(finalCritRate + sCritRateBoost, 0), 100);
+    let adjCritDmg = critDmg + sCritDmgBoost;
+    let adjCritExp = ((adjCritRate / 100) * (adjCritDmg / 100)) + 1;
 
-    const singleHitDmg = finalAtk * adjDmgMult * critExp
+    const singleHitDmg = finalAtk * adjDmgMult * adjCritExp
         * (1 + typeInc / 100) * (1 + amp / 100)
         * (1 + takenDmg / 100) * (1 + vuln / 100)
         * (1 + unbalanceDmg / 100) * resMult;
@@ -702,13 +734,24 @@ function calcSingleSkillDamage(type, st, bRes) {
     const myLogs = (bRes.logs.dmgInc || []).filter(l => {
         if (l.tag === 'all') return false;
         if (l.tag === 'skillMult') {
-            if (!l.skillType) return SKILL_MULT_TYPES.has(type);
-            return l.skillType === type;
+            const arr = Array.isArray(l.skillType) ? l.skillType : (l.skillType ? [l.skillType] : []);
+            if (arr.length === 0) return SKILL_MULT_TYPES.has(type);
+            return arr.includes(type);
         }
         if (type === '일반 공격' && l.tag === 'normal') return true;
         if (type !== '일반 공격' && (l.tag === 'skill' || l.tag === typeMap[type])) return true;
         return false;
     });
+
+    const critLogs = (bRes.logs.crit || []).filter(l => {
+        if (l.tag === 'skillCrit') {
+            const arr = Array.isArray(l.skillType) ? l.skillType : (l.skillType ? [l.skillType] : []);
+            if (arr.length === 0) return true; // all
+            return arr.includes(type);
+        }
+        return false;
+    });
+    myLogs.push(...critLogs);
 
     return {
         unitDmg: Math.floor(singleHitDmg),

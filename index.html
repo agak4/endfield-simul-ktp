@@ -123,22 +123,11 @@
                     <input type="checkbox" id="main-gear-forge" class="hidden-checkbox">
                 </div>
             </div>
-        </section>
 
-        <!-- 장비 선택 사이드바 (Hidden) -->
-        <div id="gear-sidebar" class="sidebar">
-            <div class="sidebar-header">
-                <h3>장비 선택</h3>
-                <button class="sidebar-close" onclick="closeGearSidebar()">&times;</button>
+            <!-- 서브 오퍼레이터 (지원) -->
+            <div style="margin-top: 20px;">
+                <h2>서브 오퍼레이터 (지원)</h2>
             </div>
-            <div class="sidebar-content">
-                <div id="gear-sidebar-grid" class="gear-sidebar-grid"></div>
-            </div>
-        </div>
-
-        <!-- [중앙 패널] 서브 오퍼레이터 -->
-        <section class="panel center-panel">
-            <h2>서브 오퍼레이터 (지원)</h2>
             <div id="sub-ops-container">
                 <!-- Sub Op 1~3은 JS로 제어되나 HTML 구조는 유지 -->
                 <div class="sub-op-card" id="sub-op-card-0">
@@ -147,7 +136,7 @@
                         <span id="sub-0-summary" class="sub-op-summary-text"></span>
                         <span class="toggle-icon">▼</span>
                     </div>
-                    <div class="sub-op-content" id="sub-op-content-0">
+                    <div class="sub-op-content collapsed" id="sub-op-content-0">
                         <div class="sub-char-row">
                             <div class="sub-char-left">
                                 <div class="op-image-container"
@@ -390,18 +379,6 @@
                     </div>
                 </div>
 
-                <!-- 사이클 계산값 (3) -->
-                <div class="result-box cycle-dmg-box">
-                    <h3>사이클 상세 합산</h3>
-
-
-
-                    <div id="cycle-dmg-list" class="cycle-dmg-list"></div>
-                    <div class="cycle-total-row">
-                        <span class="cycle-label">총합</span>
-                        <span id="cycle-dmg-total" class="cycle-val cycle-total-val">0</span>
-                    </div>
-                </div>
             </div>
 
             <!-- 디버프 상태 아이콘 (방어불능 / 아츠부착 / 아츠이상) -->
@@ -674,6 +651,20 @@
                     <ul id="list-res" class="detail-list"></ul>
                 </div>
             </div>
+        </section>
+
+        <section class="panel analysis-panel">
+            <h2>분석 패널</h2>
+
+            <!-- 사이클 계산값 (3) -->
+            <div class="result-box cycle-dmg-box" style="margin-bottom: 20px;">
+                <h3>사이클 상세 합산</h3>
+                <div id="cycle-dmg-list" class="cycle-dmg-list"></div>
+                <div class="cycle-total-row">
+                    <span class="cycle-label">총합</span>
+                    <span id="cycle-dmg-total" class="cycle-val cycle-total-val">0</span>
+                </div>
+            </div>
 
             <h3>무기 비교</h3>
             <div class="comparison-settings comp-settings-panel">
@@ -718,6 +709,17 @@
                     onclick="document.getElementById('wep-selector-modal').classList.remove('open')">&times;</button>
             </div>
             <div class="modal-grid" id="wep-modal-grid"></div>
+        </div>
+    </div>
+
+    <!-- 장비 선택 사이드바 (Hidden) -->
+    <div id="gear-sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <h3>장비 선택</h3>
+            <button class="sidebar-close" onclick="closeGearSidebar()">&times;</button>
+        </div>
+        <div class="sidebar-content">
+            <div id="gear-sidebar-grid" class="gear-sidebar-grid"></div>
         </div>
     </div>
 
