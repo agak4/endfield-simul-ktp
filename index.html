@@ -333,12 +333,56 @@
                     </div>
                     <span id="final-damage">0</span>
                 </div>
-                <!-- 스킬 사용 횟수 입력 타일 (이동됨) -->
+                <!-- 스킬 사이클 입력 및 순서 (통합) -->
+                <div class="result-box cycle-board-box">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <h3 style="margin: 0;">스킬 사이클 구성</h3>
+                        <button id="clear-cycle-btn" class="btn-select"
+                            style="padding: 4px 10px; font-size: 0.75rem;">전체 초기화</button>
+                    </div>
+                    <!-- SVG 아이콘 버튼 그룹 -->
+                    <div class="cycle-add-buttons">
+                        <div class="cycle-btn" data-type="일반공격" title="일반공격">
+                            <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor">
+                                <path
+                                    d="M14 2L20 8V20C20 21.1 19.1 22 18 22H6C4.9 22 4 21.1 4 20V4C4 2.9 4.9 2 6 2H14ZM13 9V3.5L18.5 9H13Z" />
+                            </svg>
+                            <span>일반</span>
+                        </div>
+                        <div class="cycle-btn" data-type="배틀스킬" title="배틀스킬">
+                            <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor">
+                                <path d="M11 21H7V13H3V9L11 21ZM21 11V15H17V23L9 11H13V3L21 15V11Z" />
+                            </svg>
+                            <span>배틀</span>
+                        </div>
+                        <div class="cycle-btn" data-type="연계스킬" title="연계스킬">
+                            <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor">
+                                <path d="M16 4L22 10L16 16V11H8V17L2 11L8 5V9H16V4Z" />
+                            </svg>
+                            <span>연계</span>
+                        </div>
+                        <div class="cycle-btn cycle-btn-ult" data-type="궁극기" title="궁극기">
+                            <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor">
+                                <path
+                                    d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
+                            </svg>
+                            <span>궁극기</span>
+                        </div>
+                    </div>
 
+                    <!-- 클릭한 순서대로 보여주는 디스플레이 영역 (가로 스크롤) -->
+                    <div class="cycle-sequence-container" style="margin-top: 15px;">
+                        <h4 style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 8px;">현재 사이클 순서</h4>
+                        <div id="cycle-sequence-display" class="cycle-sequence-display">
+                            <!-- JS에서 동적으로 아이템 채움 -->
+                        </div>
+                    </div>
+                </div>
 
                 <!-- 사이클 계산값 (3) -->
                 <div class="result-box cycle-dmg-box">
-                    <h3>사이클 계산값</h3>
+                    <h3>사이클 상세 합산</h3>
 
 
 
@@ -515,9 +559,7 @@
                 </div>
             </div>
 
-            <!-- 스킬 사용 횟수 입력 타일 -->
-
-
+            <!-- 이전 횟수 입력 타일 자리 (삭제됨) -->
             <div class="dashboard-grid">
 
                 <div class="tile">

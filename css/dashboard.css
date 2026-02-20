@@ -59,97 +59,192 @@
     color: #000;
 }
 
-/* ============ 스킬 횟수 입력 타일 ============ */
-.skill-count-tile {
-    flex: 1;
+/* ============ 사이클 데미지 UI 개편 (Flex Layout) ============ */
+.cycle-board-box,
+.cycle-sequence-box {
+    flex: 2;
     background: linear-gradient(135deg, #1a1a1a 0%, #111 100%);
     border: 1px solid rgba(0, 217, 255, 0.2);
-    padding: 14px 18px;
+    padding: 10px;
     border-radius: 12px;
 }
 
-.skill-count-tile h4 {
+.cycle-input-box h3,
+.cycle-sequence-box h3 {
     margin: 0 0 12px;
     font-size: 0.85rem;
+    color: var(--text-primary);
 }
 
-.skill-count-subtitle {
-    font-size: 0.75rem;
-    color: rgba(255, 255, 255, 0.35);
-    font-weight: 400;
-}
-
-.skill-count-grid {
+.cycle-add-buttons {
     display: flex;
-    flex-direction: row;
-    justify-content: space-around;
     gap: 10px;
-    flex-wrap: wrap;
+    justify-content: space-between;
 }
 
-.skill-count-item {
+.cycle-btn {
+    flex: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
     gap: 6px;
+    padding: 10px 5px;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    user-select: none;
 }
 
-.skill-count-item label {
-    font-size: 0.72rem;
+.cycle-btn:hover {
+    background: rgba(0, 217, 255, 0.1);
+    border-color: rgba(0, 217, 255, 0.5);
+    transform: translateY(-2px);
+}
+
+.cycle-btn svg {
+    color: var(--text-muted);
+    transition: color 0.2s;
+}
+
+.cycle-btn:hover svg {
+    color: var(--accent);
+}
+
+.cycle-btn-ult:hover svg {
+    color: var(--text-gold);
+}
+
+.cycle-btn span {
+    font-size: 0.75rem;
     color: var(--text-secondary);
-    text-align: center;
 }
 
-.skill-count-controls {
+.cycle-sequence-display {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 5px;
+    min-height: 40px;
+}
+
+.seq-arrow {
     display: flex;
     align-items: center;
-    gap: 4px;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    opacity: 0.6;
 }
 
-.skill-count-btn {
-    width: 26px;
-    height: 32px;
-    /* 고정 높이 지정 */
-    border: 1px solid rgba(0, 217, 255, 0.3);
-    background: rgba(0, 0, 0, 0.4);
-    color: white;
+.cycle-sequence-display::-webkit-scrollbar {
+    height: 6px;
+}
+
+.cycle-sequence-display::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+}
+
+.cycle-sequence-item {
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 6px;
-    font-size: 1rem;
-    line-height: 1;
-    cursor: pointer;
+    padding: 5px;
+    gap: 6px;
+    cursor: grab;
+    transition: background 0.2s, opacity 0.2s, transform 0.2s;
+    flex-shrink: 0;
+}
+
+.cycle-sequence-item:active {
+    cursor: grabbing;
+}
+
+.cycle-sequence-item.dragging {
+    opacity: 0.5;
+    background: rgba(0, 217, 255, 0.2);
+}
+
+.cycle-sequence-item.drag-over-left {
+    border-left: 2px solid var(--accent);
+    transform: translateX(2px);
+}
+
+.cycle-sequence-item.drag-over-right {
+    border-right: 2px solid var(--accent);
+    transform: translateX(-2px);
+}
+
+.seq-icon {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 0;
 }
 
-.skill-count-input {
-    width: 42px;
-    background: rgba(0, 0, 0, 0.4);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+.seq-icon-normal svg {
+    color: #a0a0a0;
+}
+
+.seq-icon-battle svg {
+    color: #4db8ff;
+}
+
+.seq-icon-combo svg {
+    color: #ff8c00;
+}
+
+.seq-icon-ult svg {
+    color: #ffca28;
+}
+
+.seq-info {
+    flex: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+}
+
+.seq-name {
+    font-size: 0.85rem;
     color: var(--text-primary);
-    border-radius: 6px;
-    text-align: center;
-    font-size: 0.9rem;
-    padding: 3px 2px;
-    -moz-appearance: textfield;
-    appearance: textfield;
 }
 
-.skill-count-input::-webkit-outer-spin-button,
-.skill-count-input::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
+.seq-dmg {
+    font-size: 0.95rem;
+    font-weight: bold;
+    color: var(--accent);
 }
 
-.skill-count-input:focus {
-    border-color: var(--accent);
-    outline: none;
+.seq-share {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    min-width: 40px;
+    text-align: right;
+}
+
+.seq-delete-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1.2rem;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0 4px;
+    transition: color 0.15s;
+}
+
+.seq-delete-btn:hover {
+    color: #ff4d4d;
 }
 
 /* ============ 사이클 데미지 UI 개편 (Flex Layout) ============ */
 .cycle-dmg-box {
-    flex: 1;
+    flex: 2;
     background: linear-gradient(135deg, #1a1a1a 0%, #111 100%);
     border: 2px solid var(--accent);
     padding: 10px;

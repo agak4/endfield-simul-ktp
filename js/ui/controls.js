@@ -457,32 +457,108 @@ function applyDebuffStateToUI() {
     });
 }
 
-// ============ 스킬 횟수 제어 ============
+// ============ 스킬 사이클 보드 제어 및 드래그 앤 드롭 ============
 
-function adjustSkillCount(skillType, delta) {
-    if (!state.skillCounts) state.skillCounts = {};
-    const cur = state.skillCounts[skillType] || 0;
-    const next = Math.max(0, Math.min(99, cur + delta));
-    state.skillCounts[skillType] = next;
-    const input = document.getElementById(`skill-count-${skillType}`);
-    if (input) input.value = next;
+/**
+ * 스킬 아이콘 클릭 시 사이클 배열 마지막에 추가
+ */
+function addCycleItem(skillType) {
+    if (!state.skillSequence) state.skillSequence = [];
+    state.skillSequence.push(skillType);
     saveState();
     updateState();
 }
 
-function onSkillCountChange(skillType, rawVal) {
-    if (!state.skillCounts) state.skillCounts = {};
-    const val = Math.max(0, Math.min(99, parseInt(rawVal, 10) || 0));
-    state.skillCounts[skillType] = val;
+/**
+ * 디스플레이 보드 내 특정 위치의 아이템 삭제
+ */
+function removeCycleItem(index) {
+    if (!state.skillSequence) return;
+    state.skillSequence.splice(index, 1);
     saveState();
     updateState();
 }
 
-/** 저장된 skillCounts를 UI 입력란에 반영한다 */
+/**
+ * 전체 사이클 초기화
+ */
+function clearCycleItems() {
+    state.skillSequence = [];
+    saveState();
+    updateState();
+}
+
+let dragStartIndex = -1;
+
+function handleDragStart(e) {
+    dragStartIndex = +this.dataset.index;
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', dragStartIndex); // Firefox 호환용
+    this.classList.add('dragging');
+    if (typeof AppTooltip !== 'undefined') AppTooltip.hide();
+}
+
+function handleDragOver(e) {
+    e.preventDefault(); // 드롭 허용
+    e.dataTransfer.dropEffect = 'move';
+
+    // 기준점(가운데)을 기준으로 왼쪽/오른쪽 판단
+    const rect = this.getBoundingClientRect();
+    const relX = e.clientX - rect.left;
+
+    this.classList.remove('drag-over-left', 'drag-over-right');
+    if (relX < rect.width / 2) {
+        this.classList.add('drag-over-left');
+    } else {
+        this.classList.add('drag-over-right');
+    }
+    return false;
+}
+
+function handleDragEnter(e) {
+    e.preventDefault();
+}
+
+function handleDragLeave(e) {
+    this.classList.remove('drag-over-left', 'drag-over-right');
+}
+
+function handleDrop(e) {
+    e.stopPropagation();
+
+    const isRight = this.classList.contains('drag-over-right');
+    this.classList.remove('drag-over-left', 'drag-over-right');
+
+    let dragEndIndex = +this.dataset.index;
+
+    if (dragStartIndex !== dragEndIndex && dragStartIndex >= 0) {
+        // 오른쪽 절반에 드롭했다면 삽입 위치를 뒤로 한 칸 밀어줌
+        if (isRight) {
+            dragEndIndex++;
+        }
+
+        // 아이템을 빼면 배열이 당겨지므로, 뒤로 보낼 때 인덱스 보정
+        if (dragStartIndex < dragEndIndex) {
+            dragEndIndex--;
+        }
+
+        const item = state.skillSequence.splice(dragStartIndex, 1)[0];
+        state.skillSequence.splice(dragEndIndex, 0, item);
+
+        saveState();
+        updateState();
+    }
+    return false;
+}
+
+function handleDragEnd(e) {
+    this.classList.remove('dragging');
+    const items = document.querySelectorAll('.cycle-sequence-item');
+    items.forEach(item => item.classList.remove('drag-over-left', 'drag-over-right'));
+    dragStartIndex = -1;
+}
+
+// 초기화 시 기존 skill-count-x 요소가 없으므로 applySkillCountsToUI 역할 대체 (빈 함수로 두거나 삭제)
 function applySkillCountsToUI() {
-    const sc = state.skillCounts || {};
-    ['일반공격', '배틀스킬', '연계스킬', '궁극기'].forEach(t => {
-        const input = document.getElementById(`skill-count-${t}`);
-        if (input) input.value = sc[t] || 0;
-    });
+    // legacy
 }

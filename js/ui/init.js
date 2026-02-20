@@ -44,6 +44,7 @@ window.onload = function () {
         if (opData) {
             document.getElementById('main-op-select-btn').innerText = opData.name;
             updateMainWeaponList(DEFAULT_OP_ID);
+            applyOpSettingsToUI(DEFAULT_OP_ID, 'main');
             updateEntityImage(DEFAULT_OP_ID, 'main-op-image', 'operators');
         }
     }
@@ -150,6 +151,41 @@ function initUI() {
     if (formulaBtn && formulaTooltip) {
         formulaBtn.onclick = (e) => { e.stopPropagation(); formulaTooltip.classList.toggle('open'); };
         document.addEventListener('click', () => formulaTooltip.classList.remove('open'));
+    }
+
+    // 스킬 사이클 입력 버튼 이벤트 (.cycle-btn)
+    const cycleBtns = document.querySelectorAll('.cycle-btn');
+    cycleBtns.forEach(btn => {
+        btn.onclick = () => {
+            const type = btn.getAttribute('data-type');
+            if (type) addCycleItem(type);
+        };
+
+        btn.onmouseenter = (e) => {
+            const type = btn.getAttribute('data-type');
+            const opData = DATA_OPERATORS.find(o => o.id === state.mainOp.id);
+            if (!opData || !opData.skill) return;
+
+            const skillDef = opData.skill.find(s => {
+                const entry = Array.isArray(s) ? s[0] : s;
+                return entry?.skilltype === type;
+            });
+            const entry = Array.isArray(skillDef) ? skillDef[0] : skillDef;
+            const desc = entry?.desc || '설명 없음';
+
+            const content = `
+                <div class="tooltip-title">${type}</div> 
+                <div class="tooltip-desc">${desc}</div>
+            `;
+            AppTooltip.showCustom(content, e, { width: '220px' });
+        };
+
+        btn.onmouseleave = () => AppTooltip.hide();
+    });
+
+    const clearCycleBtn = document.getElementById('clear-cycle-btn');
+    if (clearCycleBtn) {
+        clearCycleBtn.onclick = () => clearCycleItems();
     }
 
     AppTooltip.init();
@@ -524,10 +560,11 @@ function applyOpSettingsToUI(opId, type, subIdx) {
             }
         }
 
-        // 스킬 횟수
-        if (settings?.skillCounts) {
-            state.skillCounts = settings.skillCounts;
-            if (typeof applySkillCountsToUI === 'function') applySkillCountsToUI();
+        // 스킬 시퀀스 복원
+        if (settings && Array.isArray(settings.skillSequence)) {
+            state.skillSequence = settings.skillSequence;
+        } else {
+            state.skillSequence = ["일반공격", "배틀스킬", "연계스킬", "궁극기"];
         }
 
     } else {

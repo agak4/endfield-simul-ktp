@@ -185,70 +185,137 @@ function renderLog(id, list) {
 
 /**
  * 사이클 계산 결과를 DOM에 업데이트한다.
- * @param {{perSkill: object, total: number}|null} cycleRes
+ * @param {{sequence: Array, perSkill: object, total: number}|null} cycleRes
  */
 function renderCycleDamage(cycleRes) {
+    renderCycleSequence(cycleRes);
+    renderCyclePerSkill(cycleRes);
+}
+
+function renderCycleSequence(cycleRes) {
+    const list = document.getElementById('cycle-sequence-display');
+    if (list) list.innerHTML = '';
+    if (!cycleRes || !list) return;
+
+    const sequence = cycleRes.sequence || [];
+    sequence.forEach((item, index) => {
+        const { type, desc } = item;
+
+        const cardContainer = document.createElement('div');
+        cardContainer.className = 'cycle-sequence-item';
+        cardContainer.draggable = true;
+        cardContainer.dataset.index = index;
+
+        const svgMap = {
+            '일반공격': '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M14 2L20 8V20C20 21.1 19.1 22 18 22H6C4.9 22 4 21.1 4 20V4C4 2.9 4.9 2 6 2H14ZM13 9V3.5L18.5 9H13Z"/></svg>',
+            '배틀스킬': '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M11 21H7V13H3V9L11 21ZM21 11V15H17V23L9 11H13V3L21 15V11Z"/></svg>',
+            '연계스킬': '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M16 4L22 10L16 16V11H8V17L2 11L8 5V9H16V4Z"/></svg>',
+            '궁극기': '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>'
+        };
+
+        const iconHtml = svgMap[type] || '';
+        const iconWrapper = document.createElement('div');
+        iconWrapper.className = `seq-icon seq-icon-${type === '궁극기' ? 'ult' : type === '연계스킬' ? 'combo' : type === '배틀스킬' ? 'battle' : 'normal'}`;
+        iconWrapper.innerHTML = iconHtml;        // 삭제 버튼
+        const delBtn = document.createElement('button');
+        delBtn.className = 'seq-delete-btn';
+        delBtn.innerHTML = '&times;';
+        delBtn.onclick = (e) => {
+            e.stopPropagation();
+            removeCycleItem(index);
+        };
+
+        // 우클릭 삭제 기능
+        cardContainer.oncontextmenu = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            removeCycleItem(index);
+            AppTooltip.hide();
+        };
+
+        cardContainer.appendChild(iconWrapper);
+        cardContainer.appendChild(delBtn);
+
+        cardContainer.onmouseenter = (e) => {
+            const content = `
+                <div class="tooltip-title">${type}</div> 
+                <div class="tooltip-desc">${desc ? desc : '설명 없음'}</div>
+            `;
+            AppTooltip.showCustom(content, e, { width: '220px' });
+        };
+        cardContainer.onmouseleave = () => AppTooltip.hide();
+
+        cardContainer.addEventListener('dragstart', handleDragStart);
+        cardContainer.addEventListener('dragover', handleDragOver);
+        cardContainer.addEventListener('drop', handleDrop);
+        cardContainer.addEventListener('dragenter', handleDragEnter);
+        cardContainer.addEventListener('dragleave', handleDragLeave);
+        cardContainer.addEventListener('dragend', handleDragEnd);
+
+        list.appendChild(cardContainer);
+
+        // 마지막 요소가 아니면 화살표 추가
+        if (index < sequence.length - 1) {
+            const arrow = document.createElement('div');
+            arrow.className = 'seq-arrow';
+            arrow.innerHTML = '&#10140;'; // 우측 화살표
+            list.appendChild(arrow);
+        }
+    });
+}
+
+function renderCyclePerSkill(cycleRes) {
     const list = document.getElementById('cycle-dmg-list');
     const totalEl = document.getElementById('cycle-dmg-total');
 
-    // 초기화
     if (list) list.innerHTML = '';
     if (totalEl) totalEl.innerText = cycleRes ? Math.floor(cycleRes.total).toLocaleString() : '0';
 
     if (!cycleRes || !list) return;
 
-    // 클릭 비활성화 보호 대상 (renderLog와 동일)
-    const PROTECTED_UIDS = ['base_op_atk', 'base_wep_atk', 'stat_bonus_atk', 'unbalance_base'];
-
     const SKILL_TYPES = ['일반공격', '배틀스킬', '연계스킬', '궁극기'];
     SKILL_TYPES.forEach(t => {
-        const data = cycleRes.perSkill[t]; // { dmg, logs }
-        const dmgVal = data ? data.dmg : 0;
-        const logs = data ? data.logs : [];
+        const data = cycleRes.perSkill[t];
+        if (!data) return;
+        const dmgVal = data.dmg || 0;
+        const count = data.count || 0;
+        const dmgRate = data.dmgRate || '0%';
 
-        // 통합 행 (Row)
         const row = document.createElement('div');
         row.className = 'cycle-dmg-row';
-        // flex 스타일은 dashboard.css에서 정의하거나 인라인으로 간단히 적용
         row.style.display = 'flex';
         row.style.alignItems = 'center';
         row.style.gap = '8px';
 
-        // 1. 스킬 컨트롤 (왼쪽)
-        const controlDiv = document.createElement('div');
-        controlDiv.className = 'skill-count-item-mini';
-        const currentCount = state.skillCounts ? (state.skillCounts[t] || 0) : 0;
+        // 1. 횟수 표시 뱃지
+        const countDiv = document.createElement('div');
+        countDiv.className = 'skill-count-badge';
+        countDiv.innerText = `${count}회`;
+        countDiv.style.minWidth = '40px';
+        countDiv.style.textAlign = 'center';
+        countDiv.style.color = 'var(--text-secondary)';
+        countDiv.style.fontSize = '0.8rem';
+        countDiv.style.background = 'rgba(255, 255, 255, 0.05)';
+        countDiv.style.padding = '4px';
+        countDiv.style.borderRadius = '4px';
 
-        // HTML 문자열로 컨트롤 생성 (기존 skill-count-item 구조 축소)
-        controlDiv.innerHTML = `
-            <div class="skill-count-controls">
-                <button class="skill-count-btn" onclick="adjustSkillCount('${t}', -1)">−</button>
-                <input type="number" class="skill-count-input" min="0" max="99"
-                    value="${currentCount}" onchange="onSkillCountChange('${t}', this.value)"
-                    oninput="onSkillCountChange('${t}', this.value)">
-                <button class="skill-count-btn" onclick="adjustSkillCount('${t}', 1)">+</button>
-            </div>
-        `;
-
-        // 2. 스킬 카드 (가운데) -> flex: 1
+        // 2. 스킬 카드 (가운데)
         const card = document.createElement('div');
         card.className = 'skill-card';
         card.style.flex = '1';
 
-        // 카드 헤더
         const header = document.createElement('div');
         header.className = 'skill-card-header';
-        // 사용자 요청: 툴팁에 있던 dmgRate를 이름 오른쪽으로 이동
-        const rateText = data && data.dmgRate ? `<span class="skill-rate" style="color:var(--text-muted); margin-left:4px;">(${data.dmgRate})</span>` : '';
+        const rateText = dmgRate ? `<span class="skill-rate" style="color:var(--text-muted); margin-left:4px;">(${dmgRate})</span>` : '';
         header.innerHTML = `<span class="skill-name">${t}${rateText}</span><span class="skill-dmg">${dmgVal.toLocaleString()}</span>`;
 
-        // 툴팁 이벤트
+        // 툴팁에는 1회 데미지를 추가로 표시
         header.onmouseenter = (e) => {
-            // 사용자 요청: 툴팁의 dmg(dmgRate) 삭제
-            // tooltip-title에는 이름만 남김
+            const unitDmgStr = data.unitDmg ? data.unitDmg.toLocaleString() + ' / 회' : '';
             const content = `
                 <div class="tooltip-title">${t}</div> 
-                <div class="tooltip-desc">${data && data.desc ? data.desc : '설명 없음'}</div>
+                <div class="tooltip-desc" style="color: var(--accent); margin-bottom: 5px;">${unitDmgStr}</div>
+                <div class="tooltip-desc">${data.desc ? data.desc : '설명 없음'}</div>
             `;
             AppTooltip.showCustom(content, e, { width: '220px' });
         };
@@ -256,17 +323,16 @@ function renderCycleDamage(cycleRes) {
 
         card.appendChild(header);
 
-        // 3. 지분율 표시 (오른쪽)
+        // 3. 지분율 표시
         const shareDiv = document.createElement('div');
         shareDiv.className = 'skill-dmg-share';
         const total = cycleRes.total || 0;
         const share = total > 0 ? (dmgVal / total * 100) : 0;
         shareDiv.innerText = share.toFixed(1) + '%';
 
-        // Row에 추가
-        row.appendChild(controlDiv);
+        row.appendChild(countDiv);
         row.appendChild(card);
-        row.appendChild(shareDiv); // 지분율 추가
+        row.appendChild(shareDiv);
 
         list.appendChild(row);
     });

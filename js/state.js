@@ -66,7 +66,7 @@ let state = {
         artsAttach: { type: null, stacks: 0 }, // 한 종류만 가능
         artsAbnormal: { '연소': 0, '감전': 0, '동결': 0, '부식': 0 }
     },
-    skillCounts: { '일반공격': 0, '배틀스킬': 0, '연계스킬': 0, '궁극기': 0 }
+    skillSequence: [] // 일반공격, 배틀스킬, 연계스킬, 궁극기를 보관하는 문자열 배열
 };
 
 // ============ 공통 상수 ============
@@ -147,7 +147,7 @@ function updateState() {
         gears: state.mainOp.gears,
         gearForged: state.mainOp.gearForged,
         gearForge: state.mainOp.gearForge,
-        skillCounts: state.skillCounts // 스킬 횟수도 오퍼레이터별 저장
+        skillSequence: state.skillSequence || [] // 스킬 시퀀스 오퍼레이터별 저장
     });
 
     for (let i = 0; i < 3; i++) {
@@ -262,9 +262,21 @@ function loadState() {
                 state.debuffState.physDebuff.originiumSeal = 0;
             }
 
-            // 구버전 호환: skillCounts 없으면 초기화
-            if (!state.skillCounts) {
-                state.skillCounts = { '일반공격': 0, '배틀스킬': 0, '연계스킬': 0, '궁극기': 0 };
+            // 구버전 호환: skillCounts -> skillSequence로 마이그레이션
+            if (parsed.skillCounts && !parsed.skillSequence) {
+                const seq = [];
+                const counts = parsed.skillCounts;
+                // 기존 횟수만큼 일반->배틀->연계->궁극기 순으로 배열에 우겨넣기
+                ['일반공격', '배틀스킬', '연계스킬', '궁극기'].forEach(type => {
+                    const c = counts[type] || 0;
+                    for (let n = 0; n < c; n++) {
+                        seq.push(type);
+                    }
+                });
+                state.skillSequence = seq;
+                delete state.skillCounts;
+            } else if (!state.skillSequence) {
+                state.skillSequence = [];
             }
 
             return true;
