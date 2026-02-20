@@ -9,12 +9,15 @@
     z-index: 100;
 }
 
+.result-box {
+    border: 2px solid var(--accent);
+    background: linear-gradient(135deg, #1a1a1a 0%, #111 100%);
+    border-radius: 12px;
+    padding: 10px;
+}
+
 .total-dmg-box {
     flex: 1;
-    background: linear-gradient(135deg, #1e1e1e 0%, #121212 100%);
-    border: 2px solid var(--accent);
-    padding: 10px;
-    border-radius: 12px;
     text-align: center;
     position: sticky;
     top: 20px;
@@ -63,10 +66,6 @@
 .cycle-board-box,
 .cycle-sequence-box {
     flex: 2;
-    background: linear-gradient(135deg, #1a1a1a 0%, #111 100%);
-    border: 1px solid rgba(0, 217, 255, 0.2);
-    padding: 10px;
-    border-radius: 12px;
 }
 
 .cycle-input-box h3,
@@ -256,10 +255,6 @@
 /* ============ 사이클 데미지 UI 개편 (Flex Layout) ============ */
 .cycle-dmg-box {
     flex: 2;
-    background: linear-gradient(135deg, #1a1a1a 0%, #111 100%);
-    border: 2px solid var(--accent);
-    padding: 10px;
-    border-radius: 12px;
     display: flex;
     flex-direction: column;
     gap: 3px;

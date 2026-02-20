@@ -231,7 +231,7 @@ function renderCycleSequence(cycleRes) {
         };
 
         const svgMap = {
-            '일반공격': '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M14 2L20 8V20C20 21.1 19.1 22 18 22H6C4.9 22 4 21.1 4 20V4C4 2.9 4.9 2 6 2H14ZM13 9V3.5L18.5 9H13Z"/></svg>',
+            '기본공격': '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M14 2L20 8V20C20 21.1 19.1 22 18 22H6C4.9 22 4 21.1 4 20V4C4 2.9 4.9 2 6 2H14ZM13 9V3.5L18.5 9H13Z"/></svg>',
             '배틀스킬': '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M11 21H7V13H3V9L11 21ZM21 11V15H17V23L9 11H13V3L21 15V11Z"/></svg>',
             '연계스킬': '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M16 4L22 10L16 16V11H8V17L2 11L8 5V9H16V4Z"/></svg>',
             '궁극기': '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>'
@@ -308,7 +308,7 @@ function renderCyclePerSkill(cycleRes) {
 
     if (!cycleRes || !list) return;
 
-    const SKILL_TYPES = ['일반공격', '배틀스킬', '연계스킬', '궁극기'];
+    const SKILL_TYPES = ['기본공격', '배틀스킬', '연계스킬', '궁극기'];
     SKILL_TYPES.forEach(t => {
         const data = cycleRes.perSkill[t];
         if (!data) return;
@@ -492,7 +492,7 @@ function renderDmgInc(res, cycleRes) {
     // 5개 카테고리 정의
     const categories = [
         { id: 'common', title: '공통', filter: (t) => t === 'all' },
-        { id: 'normal', title: '일반 공격', type: '일반공격' },
+        { id: 'normal', title: '기본 공격', type: '기본공격' },
         { id: 'battle', title: '배틀 스킬', type: '배틀스킬' },
         { id: 'combo', title: '연계 스킬', type: '연계스킬' },
         { id: 'ult', title: '궁극기', type: '궁극기' }

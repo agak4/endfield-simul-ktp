@@ -68,7 +68,7 @@ let state = {
     },
     cycleMode: 'batch',    // 'batch' (일괄) | 'individual' (개별)
     selectedSeqId: null,   // 개별 설정 모드에서 현재 선택된 사이클 아이템의 id를 보관
-    skillSequence: []      // { id: 'seq_...', type: '일반공격', customState: null | {...} } 객체 배열
+    skillSequence: []      // { id: 'seq_...', type: '기본공격', customState: null | {...} } 객체 배열
 };
 
 // ============ 공통 상수 ============
@@ -309,8 +309,8 @@ function loadState() {
             if (parsed.skillCounts && !parsed.skillSequence) {
                 const seq = [];
                 const counts = parsed.skillCounts;
-                // 기존 횟수만큼 일반->배틀->연계->궁극기 순으로 배열에 우겨넣기
-                ['일반공격', '배틀스킬', '연계스킬', '궁극기'].forEach(type => {
+                // 기존 횟수만큼 기본->배틀->연계->궁극기 순으로 배열에 우겨넣기
+                ['기본공격', '배틀스킬', '연계스킬', '궁극기'].forEach(type => {
                     const c = counts[type] || 0;
                     for (let n = 0; n < c; n++) {
                         seq.push({ id: 'seq_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5) + '_' + n, type, customState: null });
