@@ -63,7 +63,7 @@ function testBasicCalculation() {
 
     assert(result !== null, '계산 결과가 반환되어야 함');
     if (result) {
-        // 엔드미니스트레이터 기본 공격력 + 무기 공격력 확인
+        // 엔드미니스트레이터 일반 공격력 + 무기 공격력 확인
         assert(result.finalDmg > 1000, '최종 데미지가 합리적인 범위 내여야 함 (>1000)');
         console.log('최종 데미지:', result.finalDmg);
     }

@@ -198,7 +198,7 @@ function collectAllEffects(state, opData, wepData, stats, allEffects) {
     });
 
     // 3. 메인 오퍼레이터
-    const skillNames = ['배틀스킬', '연계스킬', '궁극기'];
+    const skillNames = ['배틀 스킬', '연계 스킬', '궁극기'];
     if (opData.skill) opData.skill.forEach((s, i) => addEffect(s, `${opData.name} ${skillNames[i] || `스킬${i + 1}`}`));
     if (opData.talents) opData.talents.forEach((t, i) => addEffect(t, `${opData.name} 재능${i + 1}`));
 
@@ -215,7 +215,7 @@ function collectAllEffects(state, opData, wepData, stats, allEffects) {
         const prefix = subOpData.name;
 
         if (subOpData.skill) {
-            const skNames = ['배틀스킬', '연계스킬', '궁극기'];
+            const skNames = ['배틀 스킬', '연계 스킬', '궁극기'];
             subOpData.skill.forEach((s, i) => addEffect(s, `${prefix} ${skNames[i]}`, 1.0, true));
         }
         subOpData.talents.forEach((t, ti) => addEffect(t, `${prefix} 재능${ti + 1}`, 1.0, true));
@@ -432,7 +432,7 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects) {
             logs.dmgInc.push({ txt: `[${displayName}] ${valDisplay} (${t})`, uid, tag: 'skillMult', skillType: eff.skilltype });
         } else if (t.endsWith('피해') || t.includes('피해') || t === '주는 피해' || t === '모든 스킬 피해') {
             let tag = 'all';
-            if (t === '기본 공격 피해') tag = 'normal';
+            if (t === '일반 공격 피해') tag = 'normal';
             else if (t === '배틀 스킬 피해') tag = 'battle';
             else if (t === '연계 스킬 피해') tag = 'combo';
             else if (t === '궁극기 피해') tag = 'ult';
@@ -528,7 +528,7 @@ function isApplicableEffect(opData, effectType, effectName) {
     const ALWAYS_ON = [
         '공격력 증가', '치명타 확률', '치명타 피해', '최대 체력', '궁극기 충전', '치유 효율', '연타',
         '주는 피해', '스탯', '스탯%', '스킬 피해', '궁극기 피해', '연계 스킬 피해', '배틀 스킬 피해',
-        '기본 공격 피해', '오리지늄 아츠', '오리지늄 아츠 강도', '모든 스킬 피해', '스킬 배율 증가'
+        '일반 공격 피해', '오리지늄 아츠', '오리지늄 아츠 강도', '모든 스킬 피해', '스킬 배율 증가'
     ];
     if (ALWAYS_ON.includes(type) || type === '불균형 목표에 주는 피해') return true;
 
@@ -683,15 +683,15 @@ function calcSingleSkillDamage(type, st, bRes) {
         }
     }
 
-    const SKILL_MULT_TYPES = new Set(['배틀스킬', '연계스킬', '궁극기']);
+    const SKILL_MULT_TYPES = new Set(['배틀 스킬', '연계 스킬', '궁극기']);
     let sMult = 0;
     if (typeof skillMults === 'number') sMult = skillMults;
     else sMult = (skillMults.all || 0) + (skillMults[type] || 0);
     const adjDmgMult = SKILL_MULT_TYPES.has(type) ? dmgMult * (1 + sMult / 100) : dmgMult;
 
-    const typeMap = { '배틀스킬': 'battle', '연계스킬': 'combo', '궁극기': 'ult', '기본공격': 'normal' };
+    const typeMap = { '배틀 스킬': 'battle', '연계 스킬': 'combo', '궁극기': 'ult', '일반 공격': 'normal' };
     let typeInc = dmgIncData.all;
-    if (type === '기본공격') typeInc += dmgIncData.normal;
+    if (type === '일반 공격') typeInc += dmgIncData.normal;
     else typeInc += dmgIncData.skill + (dmgIncData[typeMap[type]] || 0);
 
     const singleHitDmg = finalAtk * adjDmgMult * critExp
@@ -705,8 +705,8 @@ function calcSingleSkillDamage(type, st, bRes) {
             if (!l.skillType) return SKILL_MULT_TYPES.has(type);
             return l.skillType === type;
         }
-        if (type === '기본공격' && l.tag === 'normal') return true;
-        if (type !== '기본공격' && (l.tag === 'skill' || l.tag === typeMap[type])) return true;
+        if (type === '일반 공격' && l.tag === 'normal') return true;
+        if (type !== '일반 공격' && (l.tag === 'skill' || l.tag === typeMap[type])) return true;
         return false;
     });
 
@@ -737,14 +737,14 @@ function calculateCycleDamage(currentState, baseRes) {
     }
 
     const perSkill = {
-        '기본공격': { dmg: 0, count: 0, unitDmg: 0, logs: [], dmgRate: '0%', desc: '' },
-        '배틀스킬': { dmg: 0, count: 0, unitDmg: 0, logs: [], dmgRate: '0%', desc: '' },
-        '연계스킬': { dmg: 0, count: 0, unitDmg: 0, logs: [], dmgRate: '0%', desc: '' },
+        '일반 공격': { dmg: 0, count: 0, unitDmg: 0, logs: [], dmgRate: '0%', desc: '' },
+        '배틀 스킬': { dmg: 0, count: 0, unitDmg: 0, logs: [], dmgRate: '0%', desc: '' },
+        '연계 스킬': { dmg: 0, count: 0, unitDmg: 0, logs: [], dmgRate: '0%', desc: '' },
         '궁극기': { dmg: 0, count: 0, unitDmg: 0, logs: [], dmgRate: '0%', desc: '' }
     };
 
     // 1. 모든 스킬 타입(4종류)의 기본 데미지
-    ['기본공격', '배틀스킬', '연계스킬', '궁극기'].forEach(type => {
+    ['일반 공격', '배틀 스킬', '연계 스킬', '궁극기'].forEach(type => {
         const skillDef = skillMap[type];
         if (!skillDef) return;
 

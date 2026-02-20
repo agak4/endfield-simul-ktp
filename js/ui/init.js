@@ -577,7 +577,7 @@ function applyOpSettingsToUI(opId, type, subIdx) {
         if (settings && Array.isArray(settings.skillSequence)) {
             state.skillSequence = settings.skillSequence;
         } else {
-            state.skillSequence = ["기본공격", "배틀스킬", "연계스킬", "궁극기"];
+            state.skillSequence = ["일반 공격", "배틀 스킬", "연계 스킬", "궁극기"];
         }
 
     } else {
