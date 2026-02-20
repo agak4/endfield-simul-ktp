@@ -368,5 +368,79 @@ const AppTooltip = {
             </div>
             ${traitHtml}
         `;
+    },
+
+    /**
+     * 스킬 툴팁 HTML을 렌더링한다.
+     * @param {string} skilltype - 스킬의 종류 이름 (예: '강화 일반 공격', '궁극기')
+     * @param {object} skillData - 스킬 데이터 객체
+     * @param {object} opData - 해당 오퍼레이터의 기본 데이터 (속성 등 참조용)
+     * @param {string} [extraHtml=''] - 타이틀 아래에 추가할 커스텀 HTML
+     * @returns {string} HTML 문자열
+     */
+    renderSkillTooltip(skilltype, skillData, opData, extraHtml = '') {
+        if (!skillData) return '';
+        const entry = Array.isArray(skillData) ? skillData[0] : skillData;
+        const attrLines = [];
+
+        const element = this.getElementName(opData);
+        if (element) {
+            attrLines.push(`<div style="margin-bottom:2px;"><span style="color:var(--accent)">•</span> 공격 속성: ${element}</div>`);
+        }
+
+        if (skilltype === '궁극기' && entry.cost !== undefined) {
+            attrLines.push(`<div style="margin-bottom:2px;"><span style="color:inherit">•</span> 궁극기 게이지: ${entry.cost}</div>`);
+        }
+
+        if (entry.type) {
+            const typeArray = Array.isArray(entry.type) ? entry.type : [entry.type];
+            const typeStrs = typeArray.map(t => {
+                if (typeof t === 'string') return t;
+                if (typeof t === 'object' && t !== null && t.type) {
+                    return t.val ? `${t.type} +${t.val}` : t.type;
+                }
+                return '';
+            }).filter(Boolean);
+            if (typeStrs.length > 0) {
+                attrLines.push(`<div style="margin-bottom:2px;"><span style="color:inherit">•</span> ${typeStrs.join(' / ')}</div>`);
+            }
+        }
+
+        if (entry.dmg) {
+            const rawDmgNum = parseInt(entry.dmg, 10);
+            if (rawDmgNum > 0) {
+                let dmgStr = `기본 데미지: <strong style="color:var(--accent);">${entry.dmg}</strong>`;
+                if (entry.bonus) {
+                    const bonusList = Array.isArray(entry.bonus) ? entry.bonus : [entry.bonus];
+                    const bonusStr = bonusList.map(b => {
+                        const triggerStr = Array.isArray(b.trigger) ? b.trigger.join(', ') : b.trigger;
+                        let bValStr = '';
+                        if (b.val !== undefined) {
+                            bValStr = '+' + b.val;
+                        } else if (b.perStack !== undefined) {
+                            if (b.base && b.base !== '0%') bValStr = `+${b.base} + ${b.perStack}/스택`;
+                            else bValStr = `+${b.perStack}/스택`;
+                        } else if (b.base !== undefined) {
+                            bValStr = '+' + b.base;
+                        }
+                        return `<span style="color:var(--text-muted);">(${triggerStr} <strong style="color:var(--accent);">${bValStr}</strong>)</span>`;
+                    }).join(' ');
+                    dmgStr += ` ${bonusStr}`;
+                }
+                attrLines.push(`<div style="margin-bottom:2px;"><span style="color:inherit">•</span> ${dmgStr}</div>`);
+            }
+        }
+
+        const attrHtml = attrLines.length > 0
+            ? `<div class="tooltip-section" style="margin-bottom:8px;">${attrLines.join('')}</div>`
+            : '';
+
+        return `
+            <div class="tooltip-title" style="color:var(--accent); margin-bottom:6px; font-size:1.05rem; font-weight:bold;">${skilltype}</div> 
+            ${extraHtml ? `<div style="margin-bottom:8px;">${extraHtml}</div>` : ''}
+            ${attrHtml}
+            <div class="tooltip-desc" style="color:var(--text-secondary); line-height:1.4;">${entry.desc || '설명 없음'}</div>
+        `;
     }
 };
+

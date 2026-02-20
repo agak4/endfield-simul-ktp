@@ -174,14 +174,11 @@ function initUI() {
                 const entry = Array.isArray(s) ? s[0] : s;
                 return entry?.skilltype === type;
             });
-            const entry = Array.isArray(skillDef) ? skillDef[0] : skillDef;
-            const desc = entry?.desc || '설명 없음';
 
-            const content = `
-                <div class="tooltip-title">${type}</div> 
-                <div class="tooltip-desc">${desc}</div>
-            `;
-            AppTooltip.showCustom(content, e, { width: '220px' });
+            if (skillDef) {
+                const content = AppTooltip.renderSkillTooltip(type, skillDef, opData);
+                AppTooltip.showCustom(content, e, { width: '260px' });
+            }
         };
 
         btn.onmouseleave = () => AppTooltip.hide();

@@ -311,12 +311,21 @@ function renderCycleSequence(cycleRes) {
                     </div>
                 `;
             } else {
-                content = `
-                    <div class="tooltip-title">${type}</div> 
-                    <div class="tooltip-desc">${desc ? desc : '설명 없음'}</div>
-                `;
+                const opData = DATA_OPERATORS.find(o => o.id === state.mainOp.id);
+                const skillDef = opData?.skill?.find(s => {
+                    const entry = Array.isArray(s) ? s[0] : s;
+                    return entry?.skilltype === type;
+                });
+                if (skillDef) {
+                    content = AppTooltip.renderSkillTooltip(type, skillDef, opData);
+                } else {
+                    content = `
+                        <div class="tooltip-title">${type}</div> 
+                        <div class="tooltip-desc">${desc ? desc : '설명 없음'}</div>
+                    `;
+                }
             }
-            AppTooltip.showCustom(content, e, { width: '220px' });
+            AppTooltip.showCustom(content, e, { width: '260px' });
         };
         cardContainer.onmouseleave = () => AppTooltip.hide();
 
@@ -388,12 +397,24 @@ function renderCyclePerSkill(cycleRes) {
         // 툴팁에는 1회 데미지를 추가로 표시
         header.onmouseenter = (e) => {
             const unitDmgStr = data.unitDmg ? data.unitDmg.toLocaleString() + ' / 회' : '';
-            const content = `
-                <div class="tooltip-title">${t}</div> 
-                <div class="tooltip-desc" style="color: var(--accent); margin-bottom: 5px;">${unitDmgStr}</div>
-                <div class="tooltip-desc">${data.desc ? data.desc : '설명 없음'}</div>
-            `;
-            AppTooltip.showCustom(content, e, { width: '220px' });
+            const opData = DATA_OPERATORS.find(o => o.id === state.mainOp.id);
+            const skillDef = opData?.skill?.find(s => {
+                const entry = Array.isArray(s) ? s[0] : s;
+                return entry?.skilltype === t;
+            });
+
+            let content;
+            if (skillDef) {
+                const extraHtml = unitDmgStr ? `<div class="tooltip-desc" style="color: var(--accent);">1회 데미지: ${unitDmgStr}</div>` : '';
+                content = AppTooltip.renderSkillTooltip(t, skillDef, opData, extraHtml);
+            } else {
+                content = `
+                    <div class="tooltip-title">${t}</div> 
+                    <div class="tooltip-desc" style="color: var(--accent); margin-bottom: 5px;">${unitDmgStr}</div>
+                    <div class="tooltip-desc">${data.desc ? data.desc : '설명 없음'}</div>
+                `;
+            }
+            AppTooltip.showCustom(content, e, { width: '260px' });
         };
         header.onmouseleave = () => AppTooltip.hide();
 
@@ -697,12 +718,9 @@ function updateEnhancedSkillButtons(opId) {
         };
 
         btn.onmouseenter = (e) => {
-            const desc = es.desc || '설명 없음';
-            const content = `
-                <div class="tooltip-title" style="color:var(--accent);">${type}</div> 
-                <div class="tooltip-desc">${desc}</div>
-            `;
-            AppTooltip.showCustom(content, e, { width: '220px' });
+            const opData = DATA_OPERATORS.find(o => o.id === opId);
+            const content = AppTooltip.renderSkillTooltip(type, es, opData);
+            AppTooltip.showCustom(content, e, { width: '260px' });
         };
         btn.onmouseleave = () => AppTooltip.hide();
 

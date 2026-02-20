@@ -564,12 +564,12 @@ const DATA_OPERATORS = [
         ],
         talents: [
             {},
-            { type: '치명타 피해', val: '40%' }
+            { type: '치명타 피해', val: '20%', trigger: '냉기 부착', bonus: { type: '치명타 피해', val: '20%', trigger: '동결' } }
         ],
         potential: [
             { type: '스킬 배율 증가', dmg: '200%', skilltype: '배틀 스킬' },
             [{ type: '스탯', stats: '지능', val: 20 }, { type: '치명타 확률', val: '7%' }],
-            { type: '치명타 피해', val: '20%' },
+            { type: '치명타 피해', val: '10%', trigger: '냉기 부착', bonus: { type: '치명타 피해', val: '10%', trigger: '동결' } },
             {},
             [{ type: '공격력 증가', val: '10%', skilltype: '강화 일반 공격' }, { type: '치명타 피해', val: '30%', skilltype: '강화 일반 공격' }]
         ]
