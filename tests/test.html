@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>엔드필드 계산기 유닛 테스트</title>
+    <style>
+        body {
+            font-family: 'Malgun Gothic', monospace;
+            background: #121212;
+            color: #ddd;
+            padding: 20px;
+        }
+
+        .pass {
+            color: #4eff88;
+        }
+
+        .fail {
+            color: #ff4e4e;
+        }
+
+        .summary {
+            margin-top: 20px;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>유닛 테스트 실행 중...</h1>
+    <div id="results"></div>
+
+    <!-- 의존성 스크립트 -->
+    <script src="../data_operators.js"></script>
+    <script src="../data_weapons.js"></script>
+    <script src="../data_gears.js"></script>
+    <script src="../js/state.js"></script>
+    <script src="../js/calc.js"></script>
+
+    <!-- 테스트 스크립트 -->
+    <script src="calc.test.js"></script>
+</body>
+
+</html>
