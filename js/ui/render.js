@@ -23,6 +23,53 @@
 
 // ============ 결과 렌더링 ============
 
+const ELEMENT_COLORS = {
+    phys: 'var(--skill-element-phys)',
+    heat: 'var(--skill-element-heat)',
+    elec: 'var(--skill-element-elec)',
+    cryo: 'var(--skill-element-cryo)',
+    nature: 'var(--skill-element-nature)'
+};
+
+function getSkillElementColor(opData, skillType) {
+    if (!opData || !opData.skill) return ELEMENT_COLORS.phys;
+    
+    // skillType 문자열을 포함하는 스킬 정의 찾기 (예: '일반 공격' 검색 시 ['일반 공격'] 또는 ['강화 일반 공격'] 찾음)
+    // 정확한 매칭을 위해 skillType 배열을 순회
+    const skillDef = opData.skill.find(s => {
+        return s.skillType && s.skillType.some(st => st.includes(skillType) || skillType.includes(st));
+    });
+    
+    if (skillDef && skillDef.element) {
+        return ELEMENT_COLORS[skillDef.element] || ELEMENT_COLORS.phys;
+    }
+    
+    return ELEMENT_COLORS.phys;
+}
+
+/**
+ * 정적 사이클 버튼(일반, 배틀, 연계, 궁극기)의 테두리 색상을 오퍼레이터 속성에 맞춰 업데이트
+ * @param {string} [opId] - 오퍼레이터 ID (생략 시 state.mainOp.id 사용)
+ */
+function updateStaticCycleButtonsElementColor(opId) {
+    const targetId = opId || (state && state.mainOp && state.mainOp.id);
+    if (!targetId) return;
+    
+    const opData = DATA_OPERATORS.find(o => o.id === targetId);
+    if (!opData) return;
+
+    const buttons = document.querySelectorAll('.cycle-add-buttons .cycle-btn:not(.cycle-btn-enhanced)');
+    buttons.forEach(btn => {
+        const type = btn.dataset.type;
+        const color = getSkillElementColor(opData, type);
+        const frame = btn.querySelector('.skill-icon-frame');
+        if (frame) {
+            frame.style.borderColor = color;
+        }
+    });
+}
+window.updateStaticCycleButtonsElementColor = updateStaticCycleButtonsElementColor;
+
 /**
  * 데미지 계산 결과를 DOM에 업데이트한다.
  * res가 null이면 최종 데미지를 0으로 표시한다.
@@ -276,9 +323,12 @@ function renderCycleSequence(cycleRes) {
         else if (type.includes('배틀')) baseType = '배틀 스킬';
         else if (type.includes('일반')) baseType = '일반 공격';
 
+        const opData = DATA_OPERATORS.find(o => o.id === state.mainOp.id);
+        const color = getSkillElementColor(opData, type);
+        
         const imgSrc = imgMap[baseType] || imgMap['일반 공격'];
         const iconHtml = `
-            <div class="skill-icon-frame">
+            <div class="skill-icon-frame" style="border-color: ${color}">
                 <img src="${imgSrc}" alt="${baseType}">
             </div>
         `;
@@ -851,6 +901,8 @@ function updateEnhancedSkillButtons(opId) {
 
     enhancedSkills.forEach(es => {
         const skillName = es.skillType[0]; // 0번 인덱스가 기본 스킬명
+        const color = getSkillElementColor(opData, skillName);
+        
         const btn = document.createElement('div');
         btn.className = 'cycle-btn cycle-btn-enhanced';
         btn.dataset.type = skillName;
@@ -858,7 +910,7 @@ function updateEnhancedSkillButtons(opId) {
 
         // 버튼 디자인: 오퍼이미지 + 타이틀
         btn.innerHTML = `
-            <div class="skill-icon-frame">
+            <div class="skill-icon-frame" style="border-color: ${color}">
                 <img src="images/operators/${opData.name}.webp" alt="${skillName}">
             </div>
             <span>${skillName}</span>

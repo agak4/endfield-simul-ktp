@@ -49,6 +49,9 @@ window.onload = function () {
             if (typeof updateEnhancedSkillButtons === 'function') {
                 updateEnhancedSkillButtons(DEFAULT_OP_ID);
             }
+            if (typeof updateStaticCycleButtonsElementColor === 'function') {
+                updateStaticCycleButtonsElementColor(DEFAULT_OP_ID);
+            }
         }
     }
 
@@ -91,6 +94,9 @@ function initUI() {
         // 저장된 설정 불러오기
         applyOpSettingsToUI(opId, 'main');
         updateEntityImage(opId, 'main-op-image', 'operators');
+        if (typeof updateStaticCycleButtonsElementColor === 'function') {
+            updateStaticCycleButtonsElementColor(opId);
+        }
         updateState();
     });
 
@@ -394,6 +400,9 @@ function restoreMainOperator() {
         updateEntityImage(state.mainOp.id, 'main-op-image', 'operators');
         if (typeof updateEnhancedSkillButtons === 'function') {
             updateEnhancedSkillButtons(state.mainOp.id);
+        }
+        if (typeof updateStaticCycleButtonsElementColor === 'function') {
+            updateStaticCycleButtonsElementColor(state.mainOp.id);
         }
     }
 }
