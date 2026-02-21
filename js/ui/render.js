@@ -262,11 +262,11 @@ function renderCycleSequence(cycleRes) {
             updateState();
         };
 
-        const svgMap = {
-            '일반 공격': '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M14 2L20 8V20C20 21.1 19.1 22 18 22H6C4.9 22 4 21.1 4 20V4C4 2.9 4.9 2 6 2H14ZM13 9V3.5L18.5 9H13Z"/></svg>',
-            '배틀 스킬': '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M11 21H7V13H3V9L11 21ZM21 11V15H17V23L9 11H13V3L21 15V11Z"/></svg>',
-            '연계 스킬': '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M16 4L22 10L16 16V11H8V17L2 11L8 5V9H16V4Z"/></svg>',
-            '궁극기': '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>'
+        const imgMap = {
+            '일반 공격': 'images/skills/기본 공격.webp',
+            '배틀 스킬': 'images/skills/배틀 스킬.webp',
+            '연계 스킬': 'images/skills/연계 스킬.webp',
+            '궁극기': 'images/skills/궁극기.webp'
         };
 
         // 기본 타입을 추출 (예: '강화 일반 공격' -> '일반 공격')
@@ -276,7 +276,12 @@ function renderCycleSequence(cycleRes) {
         else if (type.includes('배틀')) baseType = '배틀 스킬';
         else if (type.includes('일반')) baseType = '일반 공격';
 
-        const iconHtml = svgMap[baseType] || svgMap['일반 공격'];
+        const imgSrc = imgMap[baseType] || imgMap['일반 공격'];
+        const iconHtml = `
+            <div class="skill-icon-frame">
+                <img src="${imgSrc}" alt="${baseType}">
+            </div>
+        `;
         const iconWrapper = document.createElement('div');
         iconWrapper.style.position = 'relative';
         iconWrapper.style.zIndex = '1';
@@ -853,8 +858,8 @@ function updateEnhancedSkillButtons(opId) {
 
         // 버튼 디자인: 오퍼이미지 + 타이틀
         btn.innerHTML = `
-            <div style="width:28px; height:28px; border-radius:50%; overflow:hidden; border:1px solid var(--accent); display:flex; justify-content:center; align-items:center; margin-bottom: 2px;">
-                <img src="images/operators/${opData.name}.webp" style="width:100%; height:100%; object-fit:cover;" alt="${skillName}">
+            <div class="skill-icon-frame">
+                <img src="images/operators/${opData.name}.webp" alt="${skillName}">
             </div>
             <span>${skillName}</span>
         `;

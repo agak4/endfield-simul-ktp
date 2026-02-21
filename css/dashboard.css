@@ -99,17 +99,37 @@
     transform: translateY(-2px);
 }
 
-.cycle-btn svg {
-    color: var(--text-muted);
-    transition: color 0.2s;
+.cycle-btn svg { display: none; }
+.cycle-btn img {
+    transition: all 0.2s;
 }
 
-.cycle-btn:hover svg {
-    color: var(--accent);
+.skill-icon-frame {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 1px solid var(--accent);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 2px;
+    background: #000;
 }
 
-.cycle-btn-ult:hover svg {
-    color: var(--text-gold);
+.skill-icon-frame img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.cycle-btn:hover .skill-icon-frame {
+    border-color: #fff;
+    box-shadow: 0 0 8px var(--accent-glow);
+}
+
+.cycle-btn-ult .skill-icon-frame {
+    border-color: var(--text-gold);
 }
 
 .cycle-btn span {
@@ -192,21 +212,17 @@
     justify-content: center;
 }
 
-.seq-icon-normal svg {
-    color: #a0a0a0;
+.seq-icon .skill-icon-frame {
+    width: 24px;
+    height: 24px;
+    margin-bottom: 0;
+    border-color: rgba(255, 255, 255, 0.3);
 }
 
-.seq-icon-battle svg {
-    color: #4db8ff;
-}
-
-.seq-icon-combo svg {
-    color: #ff8c00;
-}
-
-.seq-icon-ult svg {
-    color: #ffca28;
-}
+.seq-icon-normal .skill-icon-frame { border-color: #a0a0a0; }
+.seq-icon-battle .skill-icon-frame { border-color: #4db8ff; }
+.seq-icon-combo .skill-icon-frame { border-color: #ff8c00; }
+.seq-icon-ult .skill-icon-frame { border-color: #ffca28; }
 
 .seq-info {
     flex: 1;
