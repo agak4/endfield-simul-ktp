@@ -150,7 +150,9 @@ function initUI() {
     const mainWepSelect = document.getElementById('main-wep-select');
     if (mainWepSelect) {
         mainWepSelect.onchange = (e) => {
-            updateEntityImage(e.target.value, 'main-wep-image', 'weapons');
+            const wepId = e.target.value;
+            updateEntityImage(wepId, 'main-wep-image', 'weapons');
+            applyWepSettingsToUI(wepId);
             updateState();
         };
     }
@@ -347,6 +349,7 @@ function updateMainWeaponList(opId) {
         mainWepSelect.value = validWeps[0].id;
         if (mainWepBtn) mainWepBtn.innerText = validWeps[0].name;
         updateEntityImage(validWeps[0].id, 'main-wep-image', 'weapons');
+        applyWepSettingsToUI(validWeps[0].id);
     } else {
         if (mainWepBtn) mainWepBtn.innerText = '선택 불가';
         updateEntityImage(null, 'main-wep-image', 'weapons');
@@ -542,11 +545,13 @@ function applyOpSettingsToUI(opId, type, subIdx) {
             const wepData = DATA_WEAPONS.find(w => w.id === wepId);
             if (wepData) document.getElementById('main-wep-select-btn').innerText = wepData.name;
             updateEntityImage(wepId, 'main-wep-image', 'weapons');
+            applyWepSettingsToUI(wepId);
         } else if (!settings) {
             // 저장된 설정이 없으면 기본 무기 자동 선택됨 (updateMainWeaponList에서 처리)
         }
 
-        // 무기 잠재/기질
+        // 무기 잠재/기질 (이제 applyWepSettingsToUI에서 처리함)
+        /*
         document.getElementById('main-wep-pot').value = wepPotVal;
         setupPotencyButtons('main-wep-pot', 'main-wep-pot-group');
         const wepStateCb = document.getElementById('main-wep-state');
@@ -554,6 +559,7 @@ function applyOpSettingsToUI(opId, type, subIdx) {
             wepStateCb.checked = wepStateVal;
             updateToggleButton(document.getElementById('main-wep-toggle'), wepStateVal, '기질');
         }
+        */
 
         // 장비
         if (settings?.gears) {
@@ -631,5 +637,30 @@ function applyOpSettingsToUI(opId, type, subIdx) {
 
         const setSel = document.getElementById(`sub-${subIdx}-set`);
         if (setSel) setSel.value = settings?.equipSet || '';
+    }
+}
+
+/**
+ * 무기 선택 시 해당 무기의 저장된 설정(잠재, 기질)을 UI에 반영한다.
+ */
+function applyWepSettingsToUI(wepId) {
+    if (!wepId) return;
+    const settings = typeof loadWepSettings === 'function' ? loadWepSettings(wepId) : null;
+
+    if (settings) {
+        document.getElementById('main-wep-pot').value = settings.pot || 0;
+        const wepCb = document.getElementById('main-wep-state');
+        if (wepCb) wepCb.checked = settings.state || false;
+    } else {
+        document.getElementById('main-wep-pot').value = 0;
+        const wepCb = document.getElementById('main-wep-state');
+        if (wepCb) wepCb.checked = false;
+    }
+
+    setupPotencyButtons('main-wep-pot', 'main-wep-pot-group');
+    const wepCb = document.getElementById('main-wep-state');
+    if (wepCb) {
+        updateToggleButton(document.getElementById('main-wep-toggle'), wepCb.checked, '기질');
+        syncForgedToTooltip('main-wep-state', wepCb.checked);
     }
 }

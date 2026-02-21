@@ -305,6 +305,10 @@ const AppTooltip = {
                 rangeStr = `${label} ${fmt(t.val || 0)}`;
             }
 
+            if (t.stack) {
+                rangeStr += ` (최대 ${t.stack}중첩)`;
+            }
+
             const isSynergy = (t.target === '팀' || t.target === '적' || types.some(tt => this.SYNERGY_TYPES.some(syn => String(tt).includes(syn))));
             const isUnbalanced = types.includes('불균형 목표에 주는 피해') && !state?.enemyUnbalanced;
             const bulletColor = isUnbalanced ? 'inherit' : isSynergy ? '#FFFA00' : 'var(--accent)';

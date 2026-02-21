@@ -33,17 +33,17 @@ const ELEMENT_COLORS = {
 
 function getSkillElementColor(opData, skillType) {
     if (!opData || !opData.skill) return ELEMENT_COLORS.phys;
-    
+
     // skillType 문자열을 포함하는 스킬 정의 찾기 (예: '일반 공격' 검색 시 ['일반 공격'] 또는 ['강화 일반 공격'] 찾음)
     // 정확한 매칭을 위해 skillType 배열을 순회
     const skillDef = opData.skill.find(s => {
         return s.skillType && s.skillType.some(st => st.includes(skillType) || skillType.includes(st));
     });
-    
+
     if (skillDef && skillDef.element) {
         return ELEMENT_COLORS[skillDef.element] || ELEMENT_COLORS.phys;
     }
-    
+
     return ELEMENT_COLORS.phys;
 }
 
@@ -54,7 +54,7 @@ function getSkillElementColor(opData, skillType) {
 function updateStaticCycleButtonsElementColor(opId) {
     const targetId = opId || (state && state.mainOp && state.mainOp.id);
     if (!targetId) return;
-    
+
     const opData = DATA_OPERATORS.find(o => o.id === targetId);
     if (!opData) return;
 
@@ -114,7 +114,7 @@ function renderResult(res) {
         'stat-taken': displayRes.stats.takenDmg.toFixed(1) + '%',
         'stat-unbal': displayRes.stats.unbalanceDmg.toFixed(1) + '%',
         'stat-ult-recharge': (displayRes.stats.ultRecharge || 0).toFixed(1) + '%',
-        'stat-ult-cost': Math.floor(displayRes.stats.finalUltCost || 0),
+        'stat-ult-cost': Math.ceil(displayRes.stats.finalUltCost || 0),
         'stat-arts': displayRes.stats.originiumArts.toFixed(0),
         'stat-arts-bonus': '+' + displayRes.stats.originiumArts.toFixed(1) + '%',
         'stat-res': (displayRes.stats.resistance ?? 0).toFixed(0),
@@ -133,7 +133,6 @@ function renderResult(res) {
     if (subLabel) subLabel.innerText = displayRes.stats.subStatName;
 
     // 로그 목록 업데이트
-    const ultRechargeList = (displayRes.logs.ultRecharge || []).filter(log => log.tag === 'reduction');
     const logMapping = {
         'list-atk': displayRes.logs.atk,
         'list-crit': displayRes.logs.crit,
@@ -141,7 +140,11 @@ function renderResult(res) {
         'list-vuln': displayRes.logs.vuln,
         'list-taken': displayRes.logs.taken,
         'list-unbal': displayRes.logs.unbal,
-        'list-ult-recharge': ultRechargeList,
+        'list-ult-recharge': (displayRes.logs.ultRecharge || []).sort((a, b) => {
+            if (a.tag === 'reduction' && b.tag !== 'reduction') return -1;
+            if (a.tag !== 'reduction' && b.tag === 'reduction') return 1;
+            return 0;
+        }),
         'list-arts': displayRes.logs.arts,
         'list-res': displayRes.logs.res
     };
@@ -325,7 +328,7 @@ function renderCycleSequence(cycleRes) {
 
         const opData = DATA_OPERATORS.find(o => o.id === state.mainOp.id);
         const color = getSkillElementColor(opData, type);
-        
+
         const imgSrc = imgMap[baseType] || imgMap['일반 공격'];
         const iconHtml = `
             <div class="skill-icon-frame" style="border-color: ${color}">
@@ -395,17 +398,27 @@ function renderCycleSequence(cycleRes) {
             let rateHtml = '';
 
             if (rawRate !== undefined) {
-                const abnormalMultTotal = abnormalInfo.reduce((acc, a) => acc + (a.mult || 0), 0);
-                const baseMult = rawRate - abnormalMultTotal;
-                rateHtml = `${(baseMult * 100).toFixed(0)}%`;
+                const baseRate = item.baseRate !== undefined ? item.baseRate : rawRate;
+                rateHtml = `${(baseRate * 100).toFixed(0)}%`;
 
-                abnormalInfo.forEach(a => {
-                    let suffix = '';
-                    if (state.mainOp.id === 'Da Pan' && a.name === '강타') {
-                        suffix = ' <span style="color:var(--accent); font-size: 0.9em;">[판 특성] * 120%</span>';
-                    }
-                    rateHtml += ` + ${a.name} ${(a.mult * 100).toFixed(0)}%${suffix}`;
-                });
+                // 보너스 항목 (이본 등)
+                if (item.bonusList && item.bonusList.length > 0) {
+                    item.bonusList.forEach(b => {
+                        const stackStr = b.stack ? ` ${b.stack}스택` : '';
+                        rateHtml += ` + ${b.name}${stackStr} ${(b.val * 100).toFixed(0)}%`;
+                    });
+                }
+
+                // 물리 이상 항목
+                if (item.abnormalList && item.abnormalList.length > 0) {
+                    item.abnormalList.forEach(a => {
+                        let suffix = '';
+                        if (state.mainOp.id === 'Da Pan' && a.name === '강타') {
+                            suffix = ' <span style="color:var(--accent); font-size: 0.9em;">[판 특성] * 120%</span>';
+                        }
+                        rateHtml += ` + ${a.name} ${(a.mult * 100).toFixed(0)}%${suffix}`;
+                    });
+                }
             } else {
                 rateHtml = item.dmgRate || '0%';
             }
@@ -579,7 +592,22 @@ function renderCyclePerSkill(cycleRes) {
 
             const header = document.createElement('div');
             header.className = 'skill-card-header';
-            header.innerHTML = `<span class="skill-name"">${labelText}</span><span class="skill-dmg"">${dmgVal.toLocaleString()}</span>`;
+            header.innerHTML = `<span class="skill-name">${labelText}</span><span class="skill-dmg">${dmgVal.toLocaleString()}</span>`;
+
+            header.onmouseenter = (e) => {
+                if (!isProc) {
+                    const artsStrength = window.lastCalcResult?.stats?.originiumArts || 0;
+                    const content = `
+                        <div class="tooltip-title">${aName}</div>
+                        <div style="margin-top:8px; border-top: 1px solid rgba(255,255,255,0.1); padding-top:8px;"></div>
+                        <div class="tooltip-label" style="font-size:11px; color:var(--accent); margin-bottom:4px;">적용 중인 추가 효과</div>
+                        <div class="tooltip-bullet-point" style="color:var(--accent); font-size:12px;"><span class="tooltip-bullet-marker">•</span> 오리지늄 아츠 강도 +${artsStrength}%</div>
+                        <div class="tooltip-desc">기본 배율에 오리지늄 아츠 강도 보너스가 곱연산으로 적용됩니다.</div>
+                    `;
+                    AppTooltip.showCustom(content, e, { width: '260px' });
+                }
+            };
+            header.onmouseleave = () => AppTooltip.hide();
 
             card.appendChild(header);
 
@@ -902,7 +930,7 @@ function updateEnhancedSkillButtons(opId) {
     enhancedSkills.forEach(es => {
         const skillName = es.skillType[0]; // 0번 인덱스가 기본 스킬명
         const color = getSkillElementColor(opData, skillName);
-        
+
         const btn = document.createElement('div');
         btn.className = 'cycle-btn cycle-btn-enhanced';
         btn.dataset.type = skillName;

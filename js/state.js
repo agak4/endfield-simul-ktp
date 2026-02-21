@@ -156,6 +156,12 @@ function updateState() {
         skillSequence: state.skillSequence || [] // 스킬 시퀀스 오퍼레이터별 저장
     });
 
+    // 무기별 설정 자동 저장 (메인만)
+    if (state.mainOp.wepId) saveWepSettings(state.mainOp.wepId, {
+        pot: state.mainOp.wepPot,
+        state: state.mainOp.wepState
+    });
+
     for (let i = 0; i < 3; i++) {
         if (state.subOps[i].id) saveOpSettings(state.subOps[i].id, {
             pot: state.subOps[i].pot,
@@ -254,6 +260,32 @@ function loadOpSettings(opId) {
         return saved ? JSON.parse(saved) : null;
     } catch (e) {
         console.error('Failed to load op settings:', e);
+        return null;
+    }
+}
+
+/**
+ * 무기별 설정을 로컬 스토리지에 저장한다.
+ */
+function saveWepSettings(wepId, settings) {
+    if (!wepId) return;
+    try {
+        localStorage.setItem(`wepSettings_${wepId}`, JSON.stringify(settings));
+    } catch (e) {
+        console.error('Failed to save wep settings:', e);
+    }
+}
+
+/**
+ * 무기별 설정을 불러온다.
+ */
+function loadWepSettings(wepId) {
+    if (!wepId) return null;
+    try {
+        const saved = localStorage.getItem(`wepSettings_${wepId}`);
+        return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+        console.error('Failed to load wep settings:', e);
         return null;
     }
 }
