@@ -281,7 +281,10 @@ const AppTooltip = {
         const traitItems = [], synergyItems = [];
 
         wep.traits.forEach((t, i) => {
-            let label = t.type === '스탯' ? getStatName(t.stat) : t.type;
+            const typeArr = (Array.isArray(t.type) ? t.type : [t.type]).map(item => typeof item === 'string' ? { type: item } : item);
+            const types = typeArr.map(e => e.type);
+            const isStatTrait = types.includes('스탯');
+            let label = isStatTrait ? getStatName(t.stat) : types[0];
             if (t.skillType && t.skillType.length > 0) {
                 label += ` (${t.skillType.join(', ')})`;
             }
@@ -302,8 +305,8 @@ const AppTooltip = {
                 rangeStr = `${label} ${fmt(t.val || 0)}`;
             }
 
-            const isSynergy = (t.target === '팀' || t.target === '적' || this.SYNERGY_TYPES.some(syn => t.type.includes(syn)));
-            const isUnbalanced = t.type === '불균형 목표에 주는 피해' && !state?.enemyUnbalanced;
+            const isSynergy = (t.target === '팀' || t.target === '적' || types.some(tt => this.SYNERGY_TYPES.some(syn => String(tt).includes(syn))));
+            const isUnbalanced = types.includes('불균형 목표에 주는 피해') && !state?.enemyUnbalanced;
             const bulletColor = isUnbalanced ? 'inherit' : isSynergy ? '#FFFA00' : 'var(--accent)';
             const html = `<div style="margin-bottom:2px;${isUnbalanced ? 'color:inherit;' : ''}"><span style="color:${bulletColor}">•</span> ${rangeStr}</div>`;
             if (isSynergy) synergyItems.push(html); else traitItems.push(html);
@@ -353,7 +356,9 @@ const AppTooltip = {
         if (gear.trait) {
             const traits = gear.trait || [];
             const traitLines = traits.map(t => {
-                const isStatTrait = t.type === '스탯';
+                const typeArr = (Array.isArray(t.type) ? t.type : [t.type]).map(item => typeof item === 'string' ? { type: item } : item);
+                const types = typeArr.map(e => e.type);
+                const isStatTrait = types.includes('스탯');
                 const v = forged && t.val_f !== undefined ? t.val_f : t.val;
 
                 let valStr = '';
@@ -367,10 +372,10 @@ const AppTooltip = {
                     }
                 }
 
-                const isUnbalanced = t.type === '불균형 목표에 주는 피해' && !state?.enemyUnbalanced;
+                const isUnbalanced = types.includes('불균형 목표에 주는 피해') && !state?.enemyUnbalanced;
                 const accentColor = isUnbalanced ? 'inherit' : 'var(--accent)';
                 const spanStyle = (!isUnbalanced && forged) ? `style="color:var(--accent);font-weight:bold;"` : '';
-                const label = isStatTrait ? getStatName(t.stat) : t.type;
+                const label = isStatTrait ? getStatName(t.stat) : types[0];
                 return `<div style="margin-bottom:2px;${isUnbalanced ? 'color:inherit;' : ''}"><span style="color:${accentColor}">•</span> ${label}<span ${spanStyle}>${valStr}</span></div>`;
             }).join('');
             traitHtml = `<div class="tooltip-section"><div class="tooltip-label">장비 특성</div><div class="tooltip-desc">${traitLines}</div></div>`;
@@ -460,11 +465,19 @@ const AppTooltip = {
         // 적용 중인 효과 필터링
         const filteredEffects = activeEffects.filter(eff => {
             const st = eff.skillType || [];
-            // 해당 스킬 전용으로 지정된 '외부/추가' 효과인 경우 표시
-            if (eff._isExternal && st.includes(skillType)) return true;
-
-            // 카테고리별 피해 증가 및 배율 증가 필터링
             const t = Array.isArray(eff.type) ? eff.type[0] : eff.type;
+
+            // 1. 해당 스킬 전용으로 지정된 '외부/추가' 효과인 경우 (무기 특성 등)
+            if (eff._isExternal && st.includes(skillType)) {
+                // 피해 관련 속성만 표시 (강타, 치유, 증폭 등 제외)
+                const isDamageRelated = t.endsWith('피해') || t.includes('피해') ||
+                    t.includes('공격력') || t.includes('배율') ||
+                    t.includes('치명타');
+                if (isDamageRelated) return true;
+                return false;
+            }
+
+            // 2. 카테고리별 피해 증가 및 배율 증가 필터링
             const isNormal = skillType === '일반 공격' || skillType.includes('강화 일반 공격');
             const isBattle = skillType === '배틀 스킬' || skillType.includes('강화 배틀 스킬');
             const isCombo = skillType === '연계 스킬';
@@ -476,7 +489,7 @@ const AppTooltip = {
             if (isUlt && t === '궁극기 피해') return true;
 
             if ((isBattle || isCombo || isUlt) && (t === '모든 스킬 피해' || t === '스킬 배율 증가')) {
-                // 효과에 특정 스킬 타입이 지정된 경우, 현재 스킬 타입과 일치해야만 함
+                // 특정 스킬 타입이 지정된 경우, 현재 스킬 타입과 일치해야만 함
                 if (st.length > 0) return st.includes(skillType);
                 return true;
             }

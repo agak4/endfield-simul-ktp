@@ -49,6 +49,7 @@ let state = {
     enemyUnbalanced: false,
     activeSetId: null,   // collectAllEffects에서 갱신됨
     disabledEffects: [],  // uid 문자열 배열
+    effectStacks: {},     // { [uid]: count }
 
     /**
      * 디버프 상태 (이후 스킬 트리거 조건 계산에 활용)
@@ -177,6 +178,7 @@ function ensureCustomState() {
         if (item && !item.customState) {
             item.customState = {
                 disabledEffects: [...state.disabledEffects],
+                effectStacks: { ...state.effectStacks },
                 debuffState: JSON.parse(JSON.stringify(state.debuffState)),
                 enemyUnbalanced: state.enemyUnbalanced,
                 specialStack: state.mainOp.specialStack
@@ -195,6 +197,7 @@ function getTargetState() {
         if (item && item.customState) {
             return {
                 disabledEffects: item.customState.disabledEffects,
+                effectStacks: item.customState.effectStacks,
                 debuffState: item.customState.debuffState,
                 isUnbalanced: () => item.customState.enemyUnbalanced,
                 setUnbalanced: (val) => { item.customState.enemyUnbalanced = val; },
@@ -205,6 +208,7 @@ function getTargetState() {
     }
     return {
         disabledEffects: state.disabledEffects,
+        effectStacks: state.effectStacks,
         debuffState: state.debuffState,
         isUnbalanced: () => state.enemyUnbalanced,
         setUnbalanced: (val) => { state.enemyUnbalanced = val; },
@@ -269,6 +273,8 @@ function loadState() {
 
             // 구버전 저장 데이터 호환: disabledEffects 필드가 없는 경우 초기화
             if (!state.disabledEffects) state.disabledEffects = [];
+            if (!state.effectStacks) state.effectStacks = {};
+
 
             // 구버전 저장 데이터 호환: debuffState 필드 없으면 기본값
             if (!state.debuffState) {

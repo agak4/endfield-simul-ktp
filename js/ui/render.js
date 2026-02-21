@@ -177,8 +177,8 @@ function renderLog(id, list) {
         const isUnbalancedOff = typeof item === 'object' && item.unbalancedOff;
 
         li.innerText = txt;
-        if (isUnbalancedOff) {
-            li.classList.add('unbalanced-off');
+        if (isUnbalancedOff || item._triggerFailed) {
+            li.classList.add(isUnbalancedOff ? 'unbalanced-off' : 'triggerFail-effect');
         }
 
         if (uid) {
@@ -189,14 +189,31 @@ function renderLog(id, list) {
                 const targetState = getTargetState();
 
                 // 이미 비활성화된 효과는 취소선 클래스 적용
-                if (targetState.disabledEffects?.includes(uid)) li.classList.add('disabled-effect');
+                // stack이 있는 경우는 count가 0일 때 비활성화 처리
+                const stackCount = targetState.effectStacks?.[uid];
+                if (item.stack) {
+                    if (stackCount === 0) li.classList.add('disabled-effect');
+                } else {
+                    if (targetState.disabledEffects?.includes(uid)) li.classList.add('disabled-effect');
+                }
+
                 li.onclick = () => {
                     ensureCustomState();
                     const ts = getTargetState();
-                    if (!ts.disabledEffects) ts.disabledEffects = [];
-                    const idx = ts.disabledEffects.indexOf(uid);
-                    if (idx > -1) ts.disabledEffects.splice(idx, 1);
-                    else ts.disabledEffects.push(uid);
+                    if (item.stack) {
+                        // 중첩 토글: 1 -> 2 -> ... -> max -> 0 -> 1
+                        if (!ts.effectStacks) ts.effectStacks = {};
+                        let cur = ts.effectStacks[uid] !== undefined ? ts.effectStacks[uid] : 1;
+                        cur++;
+                        if (cur > item.stack) cur = 0;
+                        ts.effectStacks[uid] = cur;
+                    } else {
+                        // 일반 토글
+                        if (!ts.disabledEffects) ts.disabledEffects = [];
+                        const idx = ts.disabledEffects.indexOf(uid);
+                        if (idx > -1) ts.disabledEffects.splice(idx, 1);
+                        else ts.disabledEffects.push(uid);
+                    }
                     updateState();
                 };
             } else {
@@ -564,10 +581,10 @@ function renderWeaponComparison(currentRes, currentCycle) {
             state.mainOp.wepPot = compPot;
             state.mainOp.wepState = compState;
 
-            const res = calculateDamage(state);
+            const res = calculateDamage(state, true);
             if (!res) return null;
 
-            const cRes = typeof calculateCycleDamage === 'function' ? calculateCycleDamage(state, res) : null;
+            const cRes = typeof calculateCycleDamage === 'function' ? calculateCycleDamage(state, res, true) : null;
             const compTotal = (cRes && cRes.total > 0) ? cRes.total : res.finalDmg;
 
             const diff = compTotal - currentTotal;
@@ -663,30 +680,32 @@ function renderDmgInc(res, cycleRes) {
 
     // 1. 로그 분류
     (res.logs.dmgInc || []).forEach(log => {
-        // 정규식 개선: 부호와 숫자 사이, 숫자와 % 사이 공백 허용
         const valMatch = log.txt.match(/([+-]?\s*\d+(\.\d+)?)\s*%/);
-        // 공백 제거 후 파싱
         const val = valMatch ? parseFloat(valMatch[1].replace(/\s/g, '')) : 0;
-
         const targetState = getTargetState();
-        const isDisabled = targetState.disabledEffects && targetState.disabledEffects.includes(log.uid);
 
         // 태그 기반 분류
         if (log.tag === 'all') {
             if (log.txt.includes('스킬')) {
                 // 스킬 관련 공통 요소 -> 배틀, 연계, 궁극기에 복사
                 ['battle', 'combo', 'ult'].forEach(k => {
-                    catLogs[k].push({ ...log, txt: `(공통) ${log.txt}` });
-                    if (!isDisabled) catSums[k] += val;
+                    const uiLog = { ...log, txt: `(공통) ${log.txt}`, _uiUid: `${log.uid}#${k}` };
+                    catLogs[k].push(uiLog);
+                    const isUiDisabled = (targetState.disabledEffects && targetState.disabledEffects.includes(uiLog._uiUid)) || !!uiLog._triggerFailed;
+                    if (!isUiDisabled) catSums[k] += val;
                 });
             } else {
                 // 순수 공통
-                catLogs.common.push(log);
-                if (!isDisabled) catSums.common += val;
+                const uiLog = { ...log, _uiUid: `${log.uid}#common` };
+                catLogs.common.push(uiLog);
+                const isUiDisabled = (targetState.disabledEffects && targetState.disabledEffects.includes(uiLog._uiUid)) || !!uiLog._triggerFailed;
+                if (!isUiDisabled) catSums.common += val;
             }
         } else if (log.tag === 'normal') {
-            catLogs.normal.push(log);
-            if (!isDisabled) catSums.normal += val;
+            const uiLog = { ...log, _uiUid: `${log.uid}#normal` };
+            catLogs.normal.push(uiLog);
+            const isUiDisabled = (targetState.disabledEffects && targetState.disabledEffects.includes(uiLog._uiUid)) || !!uiLog._triggerFailed;
+            if (!isUiDisabled) catSums.normal += val;
         } else if (log.tag === 'skill' || log.tag === 'skillMult') {
             const skillTypes = Array.isArray(log.skillType) ? log.skillType : (log.skillType ? [log.skillType] : []);
 
@@ -694,21 +713,27 @@ function renderDmgInc(res, cycleRes) {
                 skillTypes.forEach(stName => {
                     const key = categories.find(c => c.type === stName)?.id;
                     if (key) {
-                        catLogs[key].push(log);
-                        if (!isDisabled) catSums[key] += val;
+                        const uiLog = { ...log, _uiUid: `${log.uid}#${key}` };
+                        catLogs[key].push(uiLog);
+                        const isUiDisabled = (targetState.disabledEffects && targetState.disabledEffects.includes(uiLog._uiUid)) || !!uiLog._triggerFailed;
+                        if (!isUiDisabled) catSums[key] += val;
                     }
                 });
             } else {
                 ['battle', 'combo', 'ult'].forEach(k => {
-                    catLogs[k].push(log);
-                    if (!isDisabled) catSums[k] += val;
+                    const uiLog = { ...log, _uiUid: `${log.uid}#${k}` };
+                    catLogs[k].push(uiLog);
+                    const isUiDisabled = (targetState.disabledEffects && targetState.disabledEffects.includes(uiLog._uiUid)) || !!uiLog._triggerFailed;
+                    if (!isUiDisabled) catSums[k] += val;
                 });
             }
         } else {
             const key = Object.keys(catLogs).find(k => k === log.tag);
             if (key) {
-                catLogs[key].push(log);
-                if (!isDisabled) catSums[key] += val;
+                const uiLog = { ...log, _uiUid: `${log.uid}#${key}` };
+                catLogs[key].push(uiLog);
+                const isUiDisabled = (targetState.disabledEffects && targetState.disabledEffects.includes(uiLog._uiUid)) || !!uiLog._triggerFailed;
+                if (!isUiDisabled) catSums[key] += val;
             }
         }
     });
@@ -721,17 +746,13 @@ function renderDmgInc(res, cycleRes) {
         statItem.className = 'sub-stat-item';
 
         if (cat.id === 'common') {
-            // "공통" 칸 -> 기존 "총 합계" 요소(totalEl)를 여기로 이동
-            // 기존 label("공통") 대신 "총 합계"라고 명시하거나, totalEl 자체만 보여줌
             statItem.innerHTML = `<label>총 합계</label>`;
             if (totalEl) {
-                // totalEl 스타일 조정 (필요시)
                 totalEl.style.fontSize = '1.1rem';
                 totalEl.style.color = 'var(--accent)';
                 statItem.appendChild(totalEl);
             }
         } else {
-            // 나머지 칸 -> 해당 카테고리 합계 표시
             statItem.innerHTML = `
                 <label>${cat.title}</label>
                 <span>${catSums[cat.id].toFixed(1)}%</span>
@@ -750,21 +771,44 @@ function renderDmgInc(res, cycleRes) {
             const li = document.createElement('li');
             li.innerText = log.txt;
 
-            if (log.uid) {
-                li.dataset.uid = log.uid;
-                const isProtected = PROTECTED_UIDS.includes(log.uid);
+            const uid = log.uid;
+            const uiUid = log._uiUid || uid;
+            if (uid) {
+                li.dataset.uid = uiUid;
+                const isProtected = PROTECTED_UIDS.includes(uid);
                 if (!isProtected) {
                     li.style.cursor = 'pointer';
-                    const targetState = getTargetState();
-                    if (targetState.disabledEffects?.includes(log.uid)) li.classList.add('disabled-effect');
+                    const ts = getTargetState();
 
-                    li.onclick = () => {
+                    const stackCount = ts.effectStacks?.[uid] !== undefined ? ts.effectStacks[uid] : 1;
+                    if (log.stack) {
+                        if (stackCount === 0) li.classList.add('disabled-effect');
+                    } else {
+                        const targetUid = log._uiUid || uid;
+                        if (ts.disabledEffects && ts.disabledEffects.includes(targetUid)) li.classList.add('disabled-effect');
+                    }
+
+                    if (log._triggerFailed) {
+                        li.classList.add('triggerFail-effect');
+                    }
+
+                    li.onclick = (e) => {
+                        e.stopPropagation();
                         ensureCustomState();
-                        const ts = getTargetState();
-                        if (!ts.disabledEffects) ts.disabledEffects = [];
-                        const idx = ts.disabledEffects.indexOf(log.uid);
-                        if (idx > -1) ts.disabledEffects.splice(idx, 1);
-                        else ts.disabledEffects.push(log.uid);
+                        const nextTs = getTargetState();
+                        const targetToggleUid = log._uiUid || uid;
+                        if (log.stack) {
+                            if (!nextTs.effectStacks) nextTs.effectStacks = {};
+                            let cur = nextTs.effectStacks[uid] !== undefined ? nextTs.effectStacks[uid] : 1;
+                            cur++;
+                            if (cur > log.stack) cur = 0;
+                            nextTs.effectStacks[uid] = cur;
+                        } else {
+                            if (!nextTs.disabledEffects) nextTs.disabledEffects = [];
+                            const idx = nextTs.disabledEffects.indexOf(targetToggleUid);
+                            if (idx > -1) nextTs.disabledEffects.splice(idx, 1);
+                            else nextTs.disabledEffects.push(targetToggleUid);
+                        }
                         updateState();
                     };
                 } else {

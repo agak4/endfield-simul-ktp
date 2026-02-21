@@ -447,6 +447,11 @@
     color: #888 !important;
 }
 
+.detail-list li.triggerFail-effect {
+    opacity: 0.4;
+    color: #888 !important;
+}
+
 .detail-list li.unbalanced-off {
     color: var(--text-muted) !important;
     opacity: 0.45;
