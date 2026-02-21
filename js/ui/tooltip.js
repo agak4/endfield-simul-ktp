@@ -23,6 +23,104 @@
 const AppTooltip = {
     el: null,
 
+    // ---- 키워드 하이라이트 설정 ----
+    HIGHLIGHTS: {
+        '공격력': 'kw-special',
+
+        '물리 피해': 'kw-phys',
+        '아츠 피해': 'kw-arts',
+        '열기 피해': 'kw-heat',
+        '전기 피해': 'kw-elec',
+        '냉기 피해': 'kw-cryo',
+        '자연 피해': 'kw-nature',
+
+        '받는 물리 피해': 'kw-phys',
+        '받는 아츠 피해': 'kw-arts',
+        '받는 열기 피해': 'kw-heat',
+        '받는 전기 피해': 'kw-elec',
+        '받는 냉기 피해': 'kw-cryo',
+        '받는 자연 피해': 'kw-nature',
+
+        '물리 취약': 'kw-special',
+        '아츠 취약': 'kw-special',
+        '열기 취약': 'kw-heat',
+        '전기 취약': 'kw-elec',
+        '냉기 취약': 'kw-cryo',
+        '자연 취약': 'kw-nature',
+
+        '열기 부착': 'kw-heat',
+        '전기 부착': 'kw-elec',
+        '냉기 부착': 'kw-cryo',
+        '자연 부착': 'kw-nature',
+
+        '연소': 'kw-heat',
+        '감전': 'kw-elec',
+        '동결': 'kw-cryo',
+        '부식': 'kw-nature',
+
+        '방어 불능': 'kw-phys',
+        '강타': 'kw-phys',
+        '띄우기': 'kw-phys',
+        '넘어뜨리기': 'kw-phys',
+        '강제 띄우기': 'kw-phys',
+        '강제 넘어뜨리기': 'kw-phys',
+        '갑옷 파괴': 'kw-phys',
+        '오리지늄 결정': 'kw-phys',
+
+        '일반 공격': 'kw-special',
+        '배틀 스킬': 'kw-special',
+        '연계 스킬': 'kw-special',
+        '궁극기': 'kw-special',
+
+        '불균형': 'kw-special',
+        '치유': 'kw-nature',
+        '보호': 'kw-nature',
+        '비호': 'kw-nature',
+        '연타': 'kw-special',
+        '스킬 게이지': 'kw-special',
+        '소모': 'kw-special',
+        '궁극기 에너지': 'kw-special',
+        '치명타 확률': 'kw-special',
+        '치명타 피해': 'kw-special',
+
+        // 오퍼레이터 전용
+        '녹아내린 불꽃': 'kw-heat',
+        '썬더랜스': 'kw-elec',
+        '강력한 썬더랜스': 'kw-elec',
+    },
+
+    /** 텍스트 내의 특정 단어에 색상을 입힌다. */
+    colorizeText(text) {
+        if (!text) return text;
+        const parts = text.split(/(<[^>]+>)/g);
+        const keys = Object.keys(this.HIGHLIGHTS).sort((a, b) => b.length - a.length);
+
+        return parts.map(part => {
+            if (part.startsWith('<')) return part;
+            let highlighted = part;
+            const tokens = [];
+            keys.forEach((key, idx) => {
+                const regex = new RegExp(key, 'g');
+                if (regex.test(highlighted)) {
+                    const token = `__KW${idx}__`;
+                    const val = this.HIGHLIGHTS[key];
+                    // val이 6자리 색상코드면 스타일로, 아니면 클래스로 입힌다.
+                    const isHex = /^[0-9A-Fa-f]{6}$/.test(val);
+                    const html = isHex
+                        ? `<span style="color:#${val}; font-weight:bold;">${key}</span>`
+                        : `<span class="${val}">${key}</span>`;
+
+                    tokens.push({ token, html });
+                    highlighted = highlighted.replace(regex, token);
+                }
+            });
+            tokens.forEach(item => {
+                highlighted = highlighted.replace(new RegExp(item.token, 'g'), item.html);
+            });
+            return highlighted;
+        }).join('');
+    },
+
     // ---- 분류 상수 (매 호출마다 재생성 방지) ----
 
     /** 오퍼레이터/무기의 자체 버프 효과 타입 목록 */
@@ -569,7 +667,7 @@ const AppTooltip = {
             <div class="tooltip-title">${skillType}</div> 
             ${extraHtml ? `<div class="tooltip-group">${extraHtml}</div>` : ''}
             ${attrHtml}
-            <div class="tooltip-desc">${entry.desc || '설명 없음'}</div>
+            <div class="tooltip-desc">${this.colorizeText(entry.desc || '설명 없음')}</div>
         `;
     }
 };

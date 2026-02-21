@@ -23,7 +23,7 @@
     --text-muted: #e0e0e0;
     --text-gold: #589bff;
 
-    --skill-element-phys: #888888;
+    --skill-element-phys: #CCAA60;
     --skill-element-heat: #FF623D;
     --skill-element-elec: #FFC001;
     --skill-element-cryo: #21C6D0;
@@ -31,6 +31,42 @@
 
     --img-size: 100px;
     --transition-speed: 0.2s;
+}
+
+/* ============ 키워드 하이라이트 ============ */
+.kw-phys {
+    color: var(--skill-element-phys);
+    font-weight: bold;
+}
+
+.kw-heat {
+    color: var(--skill-element-heat);
+    font-weight: bold;
+}
+
+.kw-elec {
+    color: var(--skill-element-elec);
+    font-weight: bold;
+}
+
+.kw-cryo {
+    color: var(--skill-element-cryo);
+    font-weight: bold;
+}
+
+.kw-nature {
+    color: var(--skill-element-nature);
+    font-weight: bold;
+}
+
+.kw-arts {
+    color: #cc77ff;
+    font-weight: bold;
+}
+
+.kw-special {
+    color: var(--accent);
+    font-weight: bold;
 }
 
 /* ============ 리셋 ============ */

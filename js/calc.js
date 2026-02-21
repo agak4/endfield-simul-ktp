@@ -142,16 +142,16 @@ function collectAllEffects(state, opData, wepData, stats, allEffects, forceMaxSt
 
             let baseTriggerMet = true;
             if (eff.trigger) {
-                baseTriggerMet = baseTriggerMet && evaluateTrigger(eff.trigger, state, effectiveOpData, eff.triggerType);
+                baseTriggerMet = baseTriggerMet && evaluateTrigger(eff.trigger, state, effectiveOpData, eff.triggerType, false, eff.target);
             }
             if (eff.triggerTarget) {
-                baseTriggerMet = baseTriggerMet && evaluateTrigger(eff.triggerTarget, state, effectiveOpData);
+                baseTriggerMet = baseTriggerMet && evaluateTrigger(eff.triggerTarget, state, effectiveOpData, null, true, eff.target);
             }
 
             const typeArr = eff.type ? (Array.isArray(eff.type) ? eff.type : [eff.type]).map(item => typeof item === 'string' ? { type: item } : item) : [];
             const bonuses = eff.bonus || [];
 
-            const activeBonuses = bonuses.filter(b => !b.trigger || evaluateTrigger(b.trigger, state, effectiveOpData));
+            const activeBonuses = bonuses.filter(b => !b.trigger || evaluateTrigger(b.trigger, state, effectiveOpData, null, false, b.target || eff.target));
 
             // [추가] 오퍼레이터 속성과 일치하는 무기 효과인지 확인 (트리거 미충족 시 표시용)
             const isMatchOpType = typeArr.some(ta => {
@@ -323,7 +323,7 @@ function collectAllEffects(state, opData, wepData, stats, allEffects, forceMaxSt
         if (!entry.data) return;
         entry.data.traits.forEach((trait, idx) => {
             if (!trait) return;
-            const traitIdx = idx >= 2 ? 3 : idx + 1;
+            const traitIdx = idx + 1;
             const finalLv = calculateWeaponTraitLevel(idx, entry.state, entry.pot);
             const val = calculateWeaponTraitValue(trait, finalLv);
             const eff = { ...trait, val, sourceId: entry.data.id };
@@ -915,31 +915,48 @@ function checkSetViability(setId, opData) {
  * @param {object} currentState
  * @returns {boolean}
  */
-function evaluateTrigger(trigger, state, opData, triggerType) {
+function evaluateTrigger(trigger, state, opData, triggerType, isTargetOnly = false, effectTarget = null) {
     if (!trigger || trigger.length === 0) return true;
 
     const triggers = Array.isArray(trigger) ? trigger : [trigger];
     return triggers.some(t => {
         // 1. 오퍼레이터 역량 확인 (OpTrigger)
-        if (opData) {
-            let skillPool = opData.skill || [];
-            if (triggerType && (Array.isArray(triggerType) ? triggerType.length > 0 : !!triggerType)) {
-                const triggerTypeArr = Array.isArray(triggerType) ? triggerType : [triggerType];
-                skillPool = skillPool.filter(s => {
-                    const skillTypes = Array.isArray(s.skillType) ? s.skillType : [s.skillType];
-                    return skillTypes.some(st => triggerTypeArr.includes(st));
-                });
-            }
-            const hasInSkill = skillPool.some(s => s.type && (Array.isArray(s.type) ? s.type.includes(t) : s.type === t));
-            if (hasInSkill) return true;
+        if (opData && !isTargetOnly) {
+            const checkOpCapability = (targetOp) => {
+                if (!targetOp) return false;
+                let skillPool = targetOp.skill || [];
+                if (triggerType && (Array.isArray(triggerType) ? triggerType.length > 0 : !!triggerType)) {
+                    const triggerTypeArr = Array.isArray(triggerType) ? triggerType : [triggerType];
+                    skillPool = skillPool.filter(s => {
+                        const skillTypes = Array.isArray(s.skillType) ? s.skillType : [s.skillType];
+                        return skillTypes.some(st => triggerTypeArr.includes(st));
+                    });
+                }
 
-            // 트리거 타입이 없으면 특성/잠재/타입/속성도 확인
-            if (!triggerType || (Array.isArray(triggerType) ? triggerType.length === 0 : !triggerType)) {
-                const talentPool = (opData.talents || []).flat();
-                const potentialPool = (opData.potential || []).flat();
-                const hasInOther = [...talentPool, ...potentialPool].some(e => e.type && (Array.isArray(e.type) ? e.type.includes(t) : e.type === t));
-                if (hasInOther) return true;
-                if (t === opData.type || t === opData.element) return true;
+                // 이름 매핑 (강제 포함)
+                const checkTypes = [t];
+                if (t === '띄우기') checkTypes.push('강제 띄우기');
+                if (t === '넘어뜨리기') checkTypes.push('강제 넘어뜨리기');
+
+                const hasInSkill = skillPool.some(s => s.type && (Array.isArray(s.type) ? s.type.some(st => checkTypes.includes(st)) : checkTypes.includes(s.type)));
+                if (hasInSkill) return true;
+
+                // 트리거 타입이 없으면 특성/잠재/타입/속성도 확인
+                if (!triggerType || (Array.isArray(triggerType) ? triggerType.length === 0 : !triggerType)) {
+                    const talentPool = (targetOp.talents || []).flat();
+                    const potentialPool = (targetOp.potential || []).flat();
+                    const hasInOther = [...talentPool, ...potentialPool].some(e => e.type && (Array.isArray(e.type) ? e.type.some(et => checkTypes.includes(et)) : checkTypes.includes(e.type)));
+                    if (hasInOther) return true;
+                    if (t === targetOp.type || t === targetOp.element) return true;
+                }
+                return false;
+            };
+
+            if (checkOpCapability(opData)) return true;
+            // 팀 버프인 경우 메인 오퍼레이터의 역량도 트리거로 보정
+            if (effectTarget === '팀') {
+                const mainOpData = DATA_OPERATORS.find(o => o.id === (state.mainOp?.id));
+                if (mainOpData && mainOpData.id !== opData.id && checkOpCapability(mainOpData)) return true;
             }
         }
 
@@ -962,6 +979,10 @@ function evaluateTrigger(trigger, state, opData, triggerType) {
             '동결': () => (artsAbnormal['동결'] || 0) > 0,
             '부식': () => (artsAbnormal['부식'] || 0) > 0,
             '연타': () => (physDebuff.combo || 0) > 0,
+            '띄우기': () => state.triggerActive?.['띄우기'] || state.triggerActive?.['강제 띄우기'],
+            '넘어뜨리기': () => state.triggerActive?.['넘어뜨리기'] || state.triggerActive?.['강제 넘어뜨리기'],
+            '강타': () => state.triggerActive?.['강타'],
+            '허약': () => state.triggerActive?.['허약'],
         };
 
         const evalFn = TRIGGER_MAP[t];
@@ -1021,7 +1042,7 @@ function calcSingleSkillDamage(type, st, bRes) {
     const bonusList = [];
     if (skillDef.bonus) {
         skillDef.bonus.forEach(b => {
-            if (evaluateTrigger(b.trigger, st, opData, b.triggerType)) {
+            if (evaluateTrigger(b.trigger, st, opData, b.triggerType, false, b.target)) {
                 const parsePct = (v) => v ? parseFloat(String(v)) / 100 : 0;
                 if (b.base !== undefined || b.perStack !== undefined) {
                     let stackCount = 0;
