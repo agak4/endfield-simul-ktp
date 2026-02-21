@@ -37,7 +37,8 @@ let state = {
         wepId: null, wepPot: 0, wepState: false,
         gearForge: false,
         gears: [null, null, null, null],
-        gearForged: [false, false, false, false]
+        gearForged: [false, false, false, false],
+        specialStack: 0
     },
     subOps: [
         { id: null, pot: 0, wepId: null, wepPot: 0, wepState: false, equipSet: null },
@@ -66,8 +67,7 @@ let state = {
         artsAttach: { type: null, stacks: 0 }, // 한 종류만 가능
         artsAbnormal: { '연소': 0, '감전': 0, '동결': 0, '부식': 0 }
     },
-    cycleMode: 'batch',    // 'batch' (일괄) | 'individual' (개별)
-    selectedSeqId: null,   // 개별 설정 모드에서 현재 선택된 사이클 아이템의 id를 보관
+    selectedSeqId: null,   // 현재 선택된 사이클 아이템의 id를 보관
     skillSequence: []      // { id: 'seq_...', type: '일반 공격', customState: null | {...} } 객체 배열
 };
 
@@ -152,6 +152,7 @@ function updateState() {
         gears: state.mainOp.gears,
         gearForged: state.mainOp.gearForged,
         gearForge: state.mainOp.gearForge,
+        specialStack: state.mainOp.specialStack,
         skillSequence: state.skillSequence || [] // 스킬 시퀀스 오퍼레이터별 저장
     });
 
@@ -169,30 +170,37 @@ function updateState() {
 // ============ 상태 접점 헬퍼 (일괄 vs 개별) ============
 
 /**
- * 개별/일괄 모드에 따라 현재 접근해야 할 상태(효과, 디버프, 적 상태)를 반환한다.
+ * 선택된 스킬이 있을 때 해당 스킬 전용 상태(customState)를 생성한다.
  */
 function ensureCustomState() {
-    if (state.cycleMode === 'individual' && state.selectedSeqId) {
+    if (state.selectedSeqId) {
         const item = state.skillSequence.find(s => s.id === state.selectedSeqId);
         if (item && !item.customState) {
             item.customState = {
                 disabledEffects: [...state.disabledEffects],
                 debuffState: JSON.parse(JSON.stringify(state.debuffState)),
-                enemyUnbalanced: state.enemyUnbalanced
+                enemyUnbalanced: state.enemyUnbalanced,
+                specialStack: state.mainOp.specialStack
             };
         }
     }
 }
 
+/**
+ * 현재 조작해야 할 상태 대상을 반환한다. 
+ * 선택된 스킬이 있으면 해당 스킬 전용 상태를, 없으면 전역 상태를 반환한다.
+ */
 function getTargetState() {
-    if (state.cycleMode === 'individual' && state.selectedSeqId) {
+    if (state.selectedSeqId) {
         const item = state.skillSequence.find(s => s.id === state.selectedSeqId);
         if (item && item.customState) {
             return {
                 disabledEffects: item.customState.disabledEffects,
                 debuffState: item.customState.debuffState,
                 isUnbalanced: () => item.customState.enemyUnbalanced,
-                setUnbalanced: (val) => { item.customState.enemyUnbalanced = val; }
+                setUnbalanced: (val) => { item.customState.enemyUnbalanced = val; },
+                getSpecialStack: () => item.customState.specialStack,
+                setSpecialStack: (val) => { item.customState.specialStack = val; }
             };
         }
     }
@@ -200,7 +208,9 @@ function getTargetState() {
         disabledEffects: state.disabledEffects,
         debuffState: state.debuffState,
         isUnbalanced: () => state.enemyUnbalanced,
-        setUnbalanced: (val) => { state.enemyUnbalanced = val; }
+        setUnbalanced: (val) => { state.enemyUnbalanced = val; },
+        getSpecialStack: () => state.mainOp.specialStack,
+        setSpecialStack: (val) => { state.mainOp.specialStack = val; }
     };
 }
 
@@ -303,6 +313,11 @@ function loadState() {
             // originiumSeal 필드 누락 마이그레이션
             if (state.debuffState.physDebuff.originiumSeal === undefined) {
                 state.debuffState.physDebuff.originiumSeal = 0;
+            }
+
+            // mainOp.specialStack 초기화
+            if (state.mainOp.specialStack === undefined) {
+                state.mainOp.specialStack = 0;
             }
 
             // 구버전 호환: skillCounts -> skillSequence로 마이그레이션

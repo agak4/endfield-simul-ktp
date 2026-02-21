@@ -171,12 +171,13 @@ function initUI() {
             if (!opData || !opData.skill) return;
 
             const skillDef = opData.skill.find(s => {
-                const entry = Array.isArray(s) ? s[0] : s;
-                return entry?.skilltype === type;
+                const entry = s;
+                return entry?.skilltype?.includes(type);
             });
 
             if (skillDef) {
-                const content = AppTooltip.renderSkillTooltip(type, skillDef, opData);
+                const activeEffects = window.lastCalcResult ? window.lastCalcResult.activeEffects : [];
+                const content = AppTooltip.renderSkillTooltip(type, skillDef, opData, '', activeEffects);
                 AppTooltip.showCustom(content, e, { width: '260px' });
             }
         };
@@ -187,18 +188,6 @@ function initUI() {
     const clearCycleBtn = document.getElementById('clear-cycle-btn');
     if (clearCycleBtn) {
         clearCycleBtn.onclick = () => clearCycleItems();
-    }
-
-    const cycleModeToggle = document.getElementById('cycle-mode-toggle');
-    if (cycleModeToggle) {
-        cycleModeToggle.onchange = (e) => {
-            state.cycleMode = e.target.checked ? 'individual' : 'batch';
-            if (state.cycleMode === 'batch') {
-                state.selectedSeqId = null; // 선택 해제
-            }
-            updateUIStateVisuals();
-            updateState();
-        };
     }
 
     AppTooltip.init();
@@ -577,7 +566,7 @@ function applyOpSettingsToUI(opId, type, subIdx) {
         }
 
         // 스킬 시퀀스 복원
-        if (settings && Array.isArray(settings.skillSequence)) {
+        if (settings && settings.skillSequence) {
             state.skillSequence = settings.skillSequence.map((item, idx) => {
                 if (typeof item === 'string') {
                     return { id: 'seq_mig_op_' + Date.now() + '_' + idx, type: item, customState: null };

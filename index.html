@@ -327,15 +327,8 @@
                     <div
                         style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                         <h3 style="margin: 0;">스킬 사이클</h3>
+                        <h3 style="margin: 0;">스킬 사이클</h3>
                         <div style="display: flex; align-items: center; gap: 15px;">
-                            <div style="display: flex; align-items: center; gap: 6px;">
-                                <span class="switch-label">일괄 설정</span>
-                                <label class="switch">
-                                    <input type="checkbox" id="cycle-mode-toggle">
-                                    <span class="slider round"></span>
-                                </label>
-                                <span class="switch-label">개별 설정</span>
-                            </div>
                             <button id="clear-cycle-btn" class="btn-select"
                                 style="padding: 4px 10px; font-size: 0.75rem;">전체 초기화</button>
                         </div>
@@ -541,6 +534,26 @@
                                 <img src="images/debuff/부식.png" alt="부식">
                             </div>
                             <span class="debuff-stack-label">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 전용 스택 (오퍼레이터 종속, 메인 오퍼레이터 전용) -->
+                <div class="debuff-group" id="special-stack-group" style="display: none;">
+                    <div class="debuff-attach-row">
+                        <div class="debuff-icon-wrap" id="debuff-icon-specialStack" data-debuff="specialStack"
+                            data-stacks="0" onclick="cycleSpecialStack(this)">
+                            <svg class="debuff-ring-svg" viewBox="0 0 100 100">
+                                <path class="ring-seg seg-0" d="M77.6,18.3 A42,42 0 0,0 22.4,18.3" />
+                                <path class="ring-seg seg-1" d="M77.6,81.7 A42,42 0 0,0 77.6,18.3" />
+                                <path class="ring-seg seg-2" d="M22.4,81.7 A42,42 0 0,0 77.6,81.7" />
+                                <path class="ring-seg seg-3" d="M18.3,77.6 A42,42 0 0,1 18.3,22.4" />
+                            </svg>
+                            <div class="debuff-icon-img-wrap special-stack-bg">
+                                <img id="special-stack-bg-img" src="" alt="전용 스택">
+                            </div>
+                            <span class="debuff-stack-label">0</span>
+                            <span id="special-stack-name" class="special-stack-name"></span>
                         </div>
                     </div>
                 </div>

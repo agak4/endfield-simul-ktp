@@ -36,6 +36,8 @@ function renderResult(res) {
         return;
     }
 
+    window.lastCalcResult = res;
+
     // 1. Calculate global cycle sums first
     const cycleRes = typeof calculateCycleDamage === 'function' ? calculateCycleDamage(state, res) : null;
 
@@ -107,6 +109,11 @@ function renderResult(res) {
 
     // 이펙트 다이얼리스트는 개별 설정 결과
     renderDmgInc(displayRes, cycleRes);
+
+    // 전용 스택 등 가시성 동기화
+    if (typeof updateUIStateVisuals === 'function') {
+        updateUIStateVisuals();
+    }
 }
 
 /**
@@ -212,7 +219,8 @@ function renderCycleSequence(cycleRes) {
 
     const sequence = cycleRes.sequence || [];
     sequence.forEach((item, index) => {
-        const { type, desc, customState, id, indivDmg, indivRate } = item;
+        let { type, desc, customState, id, indivDmg, indivRate } = item;
+        if (Array.isArray(type)) type = type[0]; // 배열인 경우 첫 번째 요소 사용
 
         const cardContainer = document.createElement('div');
         cardContainer.className = 'cycle-sequence-item';
@@ -222,13 +230,15 @@ function renderCycleSequence(cycleRes) {
         cardContainer.draggable = true;
         cardContainer.dataset.index = index;
 
-        // 클릭 시 개별 설정 모드라면 선택
+        // 클릭 시 선택/해제 토글
         cardContainer.onclick = (e) => {
-            if (state.cycleMode === 'individual') {
-                state.selectedSeqId = id;
-                updateUIStateVisuals();
-                updateState();
+            if (state.selectedSeqId === id) {
+                state.selectedSeqId = null; // 이미 선택된 경우 해제
+            } else {
+                state.selectedSeqId = id; // 새로 선택
             }
+            updateUIStateVisuals();
+            updateState();
         };
 
         const svgMap = {
@@ -313,11 +323,12 @@ function renderCycleSequence(cycleRes) {
             } else {
                 const opData = DATA_OPERATORS.find(o => o.id === state.mainOp.id);
                 const skillDef = opData?.skill?.find(s => {
-                    const entry = Array.isArray(s) ? s[0] : s;
-                    return entry?.skilltype === type;
+                    const entry = s;
+                    return entry?.skilltype?.includes(type);
                 });
                 if (skillDef) {
-                    content = AppTooltip.renderSkillTooltip(type, skillDef, opData);
+                    const activeEffects = window.lastCalcResult ? window.lastCalcResult.activeEffects : [];
+                    content = AppTooltip.renderSkillTooltip(type, skillDef, opData, '', activeEffects);
                 } else {
                     content = `
                         <div class="tooltip-title">${type}</div> 
@@ -399,14 +410,15 @@ function renderCyclePerSkill(cycleRes) {
             const unitDmgStr = data.unitDmg ? data.unitDmg.toLocaleString() + ' / 회' : '';
             const opData = DATA_OPERATORS.find(o => o.id === state.mainOp.id);
             const skillDef = opData?.skill?.find(s => {
-                const entry = Array.isArray(s) ? s[0] : s;
-                return entry?.skilltype === t;
+                const entry = s;
+                return entry?.skilltype?.includes(t);
             });
 
             let content;
             if (skillDef) {
+                const activeEffects = window.lastCalcResult ? window.lastCalcResult.activeEffects : [];
                 const extraHtml = unitDmgStr ? `<div class="tooltip-desc tooltip-highlight">1회 데미지: ${unitDmgStr}</div>` : '';
-                content = AppTooltip.renderSkillTooltip(t, skillDef, opData, extraHtml);
+                content = AppTooltip.renderSkillTooltip(t, skillDef, opData, extraHtml, activeEffects);
             } else {
                 content = `
                     <div class="tooltip-title">${t}</div> 
@@ -695,31 +707,33 @@ function updateEnhancedSkillButtons(opId) {
     if (!opData || !opData.skill) return;
 
     // '강화'가 들어간 스킬을 찾음
-    const enhancedSkills = opData.skill.flatMap(s => Array.isArray(s) ? s : [s])
-        .filter(s => s && s.skilltype && s.skilltype.trim().startsWith('강화'));
+    const enhancedSkills = opData.skill.filter(s => {
+        return s.skilltype && s.skilltype.some(st => st.startsWith('강화 '));
+    });
 
     enhancedSkills.forEach(es => {
-        const type = es.skilltype;
+        const skillName = es.skilltype[0]; // 0번 인덱스가 기본 스킬명
         const btn = document.createElement('div');
         btn.className = 'cycle-btn cycle-btn-enhanced';
-        btn.dataset.type = type;
-        btn.title = type;
+        btn.dataset.type = skillName;
+        btn.title = skillName;
 
         // 버튼 디자인: 오퍼이미지 + 타이틀
         btn.innerHTML = `
             <div style="width:28px; height:28px; border-radius:50%; overflow:hidden; border:1px solid var(--accent); display:flex; justify-content:center; align-items:center; margin-bottom: 2px;">
-                <img src="images/operators/${opData.name}.webp" style="width:100%; height:100%; object-fit:cover;" alt="${type}">
+                <img src="images/operators/${opData.name}.webp" style="width:100%; height:100%; object-fit:cover;" alt="${skillName}">
             </div>
-            <span>${type}</span>
+            <span>${skillName}</span>
         `;
 
         btn.onclick = () => {
-            if (typeof addCycleItem === 'function') addCycleItem(type);
+            if (typeof addCycleItem === 'function') addCycleItem(skillName);
         };
 
         btn.onmouseenter = (e) => {
             const opData = DATA_OPERATORS.find(o => o.id === opId);
-            const content = AppTooltip.renderSkillTooltip(type, es, opData);
+            const activeEffects = window.lastCalcResult ? window.lastCalcResult.activeEffects : [];
+            const content = AppTooltip.renderSkillTooltip(skillName, es, opData, '', activeEffects);
             AppTooltip.showCustom(content, e, { width: '260px' });
         };
         btn.onmouseleave = () => AppTooltip.hide();

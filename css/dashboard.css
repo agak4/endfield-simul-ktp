@@ -890,3 +890,38 @@
     font-weight: 700;
     color: var(--accent);
 }
+
+/* ============ 전용 스택 토글 ============ */
+.special-stack-bg {
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    opacity: 1;
+    /* 가독성을 위해 1로 설정 */
+    border: 1px solid rgba(255, 215, 0, 0.4);
+    background-color: rgba(0, 0, 0, 0.5);
+    /* 이미지 로드 전 대비 */
+}
+
+.special-stack-bg img {
+    display: none;
+    /* 배경 이미지를 사용하므로 실제 img 태그는 숨김 */
+}
+
+.special-stack-name {
+    position: absolute;
+    bottom: -16px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.65rem;
+    color: var(--text-gold);
+    white-space: nowrap;
+    text-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
+    pointer-events: none;
+    font-weight: bold;
+}
+
+.debuff-icon-wrap[data-debuff="specialStack"] .ring-seg.active {
+    stroke: var(--text-gold);
+    filter: drop-shadow(0 0 3px rgba(255, 215, 0, 0.6));
+}

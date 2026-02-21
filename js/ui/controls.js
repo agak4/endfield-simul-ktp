@@ -352,6 +352,27 @@ function updateUIStateVisuals() {
         enemyCb.checked = !!isUnbal;
         updateToggleButton(enemyBtn, enemyCb.checked, '불균형');
     }
+
+    // 전용 스택 UI 동기화
+    const mainOp = DATA_OPERATORS.find(o => o.id === state.mainOp.id);
+    const specGroup = document.getElementById('special-stack-group');
+    const specIcon = document.getElementById('debuff-icon-specialStack');
+
+    if (mainOp && mainOp.specialStack && specGroup && specIcon) {
+        specGroup.style.display = 'block';
+        const nameEl = document.getElementById('special-stack-name');
+        if (nameEl) nameEl.innerText = mainOp.specialStack.name;
+
+        const bgWrap = specIcon.querySelector('.special-stack-bg');
+        if (bgWrap) {
+            bgWrap.style.backgroundImage = `url('images/operators/${mainOp.name}.webp')`;
+        }
+
+        const val = ts.getSpecialStack ? ts.getSpecialStack() : (state.mainOp.specialStack || 0);
+        applyDebuffIconState(specIcon, val);
+    } else if (specGroup) {
+        specGroup.style.display = 'none';
+    }
 }
 
 /**
@@ -434,6 +455,30 @@ function cycleDebuffAbnormal(el) {
 }
 
 /**
+ * 전용 스택 클릭: 0 -> 1 -> ... -> max -> 0 순환.
+ */
+function cycleSpecialStack(el) {
+    ensureCustomState();
+    const op = DATA_OPERATORS.find(o => o.id === state.mainOp.id);
+    if (!op || !op.specialStack) return;
+
+    const ts = getTargetState();
+    const cur = ts.getSpecialStack ? ts.getSpecialStack() : (state.mainOp.specialStack || 0);
+    const max = op.specialStack.max || 1;
+    const next = (cur + 1) > max ? 0 : (cur + 1);
+
+    if (ts.setSpecialStack) {
+        ts.setSpecialStack(next);
+    } else {
+        state.mainOp.specialStack = next;
+    }
+
+    applyDebuffIconState(el, next);
+    saveState();
+    updateState();
+}
+
+/**
  * 저장된 state.debuffState를 UI 아이콘에 반영한다.
  * loadState() 후 applyStateToUI()에서 호출한다.
  */
@@ -475,6 +520,16 @@ function applyDebuffStateToUI() {
         const wrap = document.getElementById(`debuff-icon-${t}`);
         if (wrap) applyDebuffIconState(wrap, ds.artsAbnormal?.[t] || 0);
     });
+
+    // 전용 스택
+    const specIcon = document.getElementById('debuff-icon-specialStack');
+    if (specIcon) {
+        const ts = getTargetState();
+        const val = ts.getSpecialStack ? ts.getSpecialStack() : (state.mainOp.specialStack || 0);
+        applyDebuffIconState(specIcon, val);
+    }
+
+    updateUIStateVisuals();
 }
 
 // ============ 스킬 사이클 보드 제어 및 드래그 앤 드롭 ============

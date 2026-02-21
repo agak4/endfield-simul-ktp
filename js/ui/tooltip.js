@@ -174,19 +174,38 @@ const AppTooltip = {
         const processSingle = (t, source, potLevel) => {
             if (!t?.type) return;
 
-            // type 정규화: string → [{type, val}], object[] → 그대로
-            const rawType = t.type;
-            const typeArr = Array.isArray(rawType)
-                ? rawType.map(item => typeof item === 'string' ? { type: item } : item)
-                : [{ type: rawType, val: t.val }];
+            // type 정규화: string | string[] | object[] -> object[]
+            const typeArr = (Array.isArray(t.type) ? t.type : [t.type]).map(item => {
+                const obj = typeof item === 'string' ? { type: item } : { ...item };
+                // 개별 항목에 val이 없고 부모(t)에 val이 있다면 상속
+                if (obj.val === undefined) obj.val = t.val;
+                return obj;
+            });
 
-            const typeIncludes = (keyword) => typeArr.some(e => e.type.includes(keyword));
+            // 스킬 전용 효과 필터링 (오퍼레이터 공용 툴팁에서 제외)
+            // e.skilltype이 있거나, t.skilltype이 있는데 그것이 현재 스킬 자체 정의가 아닌 경우
+            const sLabel = Array.isArray(source) ? source.join('/') : source;
+            const filteredTypeArr = typeArr.filter(e => {
+                if (e.skilltype) return false;
+                if (t.skilltype) {
+                    // t.skilltype이 source(스킬 종류)와 다르다면 특정 스킬을 타겟팅한 보너스임
+                    const sourceArr = Array.isArray(source) ? source : [source];
+                    const isSelfSkill = t.skilltype.some(st => sourceArr.includes(st));
+                    if (!isSelfSkill) return false;
+                }
+                return true;
+            });
+
+            if (filteredTypeArr.length === 0) return;
+
+            const typeIncludes = (keyword) => filteredTypeArr.some(e => e.type.includes(keyword));
             // 표시 문자열: '물리 취약 +12% / 방어 불능 부여'
-            const typeStr = typeArr.map(e => {
+            const typeStr = filteredTypeArr.map(e => {
                 let suffix = '';
                 const st = e.skilltype || t.skilltype;
                 if ((e.type === '스킬 치명타 확률' || e.type === '스킬 치명타 피해' || e.type === '스킬 배율 증가') && st) {
-                    suffix = ` (${Array.isArray(st) ? st.join(', ') : st})`;
+                    const stStr = Array.isArray(st) ? st.join(', ') : st;
+                    suffix = ` (${stStr})`;
                 }
                 return e.val !== undefined ? `${e.type}${suffix} +${e.val}` : `${e.type}${suffix}`;
             }).join(' / ');
@@ -196,7 +215,7 @@ const AppTooltip = {
             const isPotential = potLevel !== null;
             const isActive = isPotential ? (currentPot >= potLevel) : true;
             const isUnbalanced = typeIncludes('불균형 목표에 주는 피해');
-            const item = { ...t, _typeStr: typeStr, _isUnbalanced: isUnbalanced, sourceLabel: isPotential ? `${potLevel}잠재` : source, active: isActive, isPotential };
+            const item = { ...t, _typeStr: typeStr, _isUnbalanced: isUnbalanced, sourceLabel: isPotential ? `잠재${potLevel}` : sLabel, active: isActive, isPotential };
             const isSynergy = this.SYNERGY_TYPES.some(syn => typeIncludes(syn)) || t.target === '팀' || t.target === '적';
             if (isSynergy) synergyItems.push(item);
             else if (this.TRAIT_TYPES.some(tr => typeIncludes(tr))) traitItems.push(item);
@@ -204,18 +223,18 @@ const AppTooltip = {
 
         const processData = (data, source, potLevel = null) => {
             if (!data) return;
-            (Array.isArray(data) ? data : [data]).forEach(t => {
-                if (Array.isArray(t)) t.forEach(sub => processSingle(sub, source, potLevel));
-                else processSingle(t, source, potLevel);
+            data.forEach(t => {
+                if (t) t.forEach(sub => processSingle(sub, source, potLevel));
             });
         };
 
-        processData(op.talents, '재능');
-        if (op.skill) op.skill.forEach(s => {
-            const entry = Array.isArray(s) ? s[0] : s;
-            processData(s, entry?.skilltype || '스킬');
+        if (op.talents) op.talents.forEach((t, i) => {
+            processData([t], `재능${i + 1}`);
         });
-        if (op.potential) op.potential.forEach((p, i) => processData(p, '잠재', i + 1));
+        if (op.skill) op.skill.forEach(s => {
+            processData([[s]], s?.skilltype || '스킬');
+        });
+        if (op.potential) op.potential.forEach((p, i) => processData([p], '잠재', i + 1));
 
         const renderList = (list, isSynergy = false) => {
             return [...list].sort((a, b) => a.isPotential !== b.isPotential ? (a.isPotential ? 1 : -1) : 0)
@@ -329,7 +348,7 @@ const AppTooltip = {
 
         let traitHtml = '';
         if (gear.trait) {
-            const traits = Array.isArray(gear.trait) ? gear.trait : [gear.trait];
+            const traits = gear.trait || [];
             const traitLines = traits.map(t => {
                 const isStatTrait = t.type === '스탯';
                 const v = forged && t.val_f !== undefined ? t.val_f : t.val;
@@ -376,11 +395,12 @@ const AppTooltip = {
      * @param {object} skillData - 스킬 데이터 객체
      * @param {object} opData - 해당 오퍼레이터의 기본 데이터 (속성 등 참조용)
      * @param {string} [extraHtml=''] - 타이틀 아래에 추가할 커스텀 HTML
+     * @param {Array} [activeEffects=[]] - 현재 활성화된 효과 리스트
      * @returns {string} HTML 문자열
      */
-    renderSkillTooltip(skilltype, skillData, opData, extraHtml = '') {
+    renderSkillTooltip(skilltype, skillData, opData, extraHtml = '', activeEffects = []) {
         if (!skillData) return '';
-        const entry = Array.isArray(skillData) ? skillData[0] : skillData;
+        const entry = skillData;
         const attrLines = [];
 
         const element = this.getElementName(opData);
@@ -393,11 +413,14 @@ const AppTooltip = {
         }
 
         if (entry.type) {
-            const typeArray = Array.isArray(entry.type) ? entry.type : [entry.type];
+            const typeArray = entry.type || [];
             const typeStrs = typeArray.map(t => {
                 if (typeof t === 'string') return t;
                 if (typeof t === 'object' && t !== null && t.type) {
-                    return t.val ? `${t.type} +${t.val}` : t.type;
+                    // type 각 항목에 skilltype이 명시되어 있다면, 메인 속성이 아닌 것으로 간주하여 제외
+                    if (t.skilltype) return null;
+                    const tName = Array.isArray(t.type) ? t.type[0] : t.type;
+                    return t.val ? `${tName} +${t.val}` : tName;
                 }
                 return '';
             }).filter(Boolean);
@@ -411,24 +434,56 @@ const AppTooltip = {
             if (rawDmgNum > 0) {
                 let dmgStr = `기본 데미지: <strong class="tooltip-highlight">${entry.dmg}</strong>`;
                 if (entry.bonus) {
-                    const bonusList = Array.isArray(entry.bonus) ? entry.bonus : [entry.bonus];
-                    const bonusStr = bonusList.map(b => {
-                        const triggerStr = Array.isArray(b.trigger) ? b.trigger.join(', ') : b.trigger;
+                    const bonusStr = (entry.bonus || []).map(b => {
+                        const triggerLines = (b.trigger || []).join(', ');
                         let bValStr = '';
-                        if (b.val !== undefined) {
+                        if (b.val !== undefined && b.val !== '0%') {
                             bValStr = '+' + b.val;
-                        } else if (b.perStack !== undefined) {
+                        } else if (b.perStack !== undefined && b.perStack !== '0%') {
                             if (b.base && b.base !== '0%') bValStr = `+${b.base} + ${b.perStack}/스택`;
                             else bValStr = `+${b.perStack}/스택`;
-                        } else if (b.base !== undefined) {
+                        } else if (b.base !== undefined && b.base !== '0%') {
                             bValStr = '+' + b.base;
                         }
-                        return `<span class="tooltip-muted">(${triggerStr} <strong class="tooltip-highlight">${bValStr}</strong>)</span>`;
-                    }).join(' ');
-                    dmgStr += ` ${bonusStr}`;
+                        if (bValStr === '') return '';
+                        return ` <span class="tooltip-muted">+ (${triggerLines} <strong class="tooltip-highlight">${bValStr}</strong>)</span>`;
+                    }).filter(Boolean).join('');
+                    dmgStr += bonusStr;
                 }
                 attrLines.push(`<div class="tooltip-bullet-point"><span class="tooltip-bullet-marker">•</span> ${dmgStr}</div>`);
             }
+        }
+
+        // 적용 중인 효과 필터링
+        const filteredEffects = activeEffects.filter(eff => {
+            const st = eff.skilltype || [];
+            // 해당 스킬 전용으로 지정된 '외부/추가' 효과인 경우 표시
+            if (eff._isExternal && st.includes(skilltype)) return true;
+
+            // 카테고리별 피해 증가 및 배율 증가 필터링
+            const t = Array.isArray(eff.type) ? eff.type[0] : eff.type;
+            const isNormal = skilltype === '일반 공격' || skilltype.includes('강화 일반 공격');
+            const isBattle = skilltype === '배틀 스킬' || skilltype.includes('강화 배틀 스킬');
+            const isCombo = skilltype === '연계 스킬';
+            const isUlt = skilltype === '궁극기';
+
+            if (isNormal && t === '일반 공격 피해') return true;
+            if (isBattle && t === '배틀 스킬 피해') return true;
+            if (isCombo && t === '연계 스킬 피해') return true;
+            if (isUlt && t === '궁극기 피해') return true;
+            if ((isBattle || isCombo || isUlt) && (t === '모든 스킬 피해' || t === '스킬 배율 증가')) return true;
+
+            return false;
+        });
+
+        if (filteredEffects.length > 0) {
+            attrLines.push('<div style="margin-top:8px; border-top: 1px solid rgba(255,255,255,0.1); padding-top:8px;"></div>');
+            attrLines.push('<div class="tooltip-label" style="font-size:11px; color:var(--accent); margin-bottom:4px;">적용 중인 추가 효과</div>');
+            filteredEffects.forEach(eff => {
+                const tName = Array.isArray(eff.type) ? eff.type[0] : eff.type;
+                const valStr = eff.val !== undefined ? ` +${eff.val}` : '';
+                attrLines.push(`<div class="tooltip-bullet-point" style="color:var(--accent); font-size:12px;"><span class="tooltip-bullet-marker">•</span> ${tName}${valStr}</div>`);
+            });
         }
 
         const attrHtml = attrLines.length > 0
