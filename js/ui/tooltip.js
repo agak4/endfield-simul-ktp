@@ -609,6 +609,22 @@ const AppTooltip = {
                     if (ds.physDebuff.defenseless > 0) extraEffects.push(`방어 불능 ${ds.physDebuff.defenseless}스택`);
                     if (ds.physDebuff.armorBreak > 0) extraEffects.push(`갑옷 파괴 ${ds.physDebuff.armorBreak}스택`);
                     if (ds.physDebuff.originiumSeal > 0) extraEffects.push('오리지늄 결정');
+
+                    if (ds.physDebuff.combo > 0) {
+                        const comboStacks = ds.physDebuff.combo;
+                        const isBattle = skillType === '배틀 스킬' || skillType.includes('강화 배틀 스킬');
+                        const isUlt = skillType === '궁극기';
+
+                        if (isBattle) {
+                            const mult = [0, 1.3, 1.45, 1.6, 1.75][Math.min(comboStacks, 4)];
+                            extraEffects.push(`연타 *${mult.toFixed(2)}배`);
+                        } else if (isUlt) {
+                            const mult = [0, 1.2, 1.3, 1.4, 1.5][Math.min(comboStacks, 4)];
+                            extraEffects.push(`연타 *${mult.toFixed(2)}배`);
+                        } else {
+                            extraEffects.push(`연타 ${comboStacks}스택`);
+                        }
+                    }
                 }
                 if (ds.artsAttach && ds.artsAttach.type && ds.artsAttach.stacks > 0) {
                     extraEffects.push(`${ds.artsAttach.type} ${ds.artsAttach.stacks}스택`);

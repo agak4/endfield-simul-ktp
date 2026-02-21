@@ -80,6 +80,53 @@ function resolveStatKey(target, container) {
     return target;
 }
 
+// 스택 수치 계산 보정 (방어 불능 보정 등 반영)
+function getAdjustedStackCount(triggerName, state, opData, skillTypes) {
+    let count = 0;
+    if (triggerName === '방어 불능') {
+        count = state.debuffState?.physDebuff?.defenseless || 0;
+        const mainOp = state.mainOp;
+        const op = opData || DATA_OPERATORS.find(o => o.id === mainOp.id);
+        if (op) {
+            // 잠재/재능에서 '방어 불능 보정' 수집
+            const pools = [
+                ...(op.talents || []).flat(),
+                ...((op.potential || []).slice(0, Number(mainOp.pot) || 0)).flat()
+            ];
+            pools.forEach(pEff => {
+                const pTypes = Array.isArray(pEff.type) ? pEff.type : [pEff.type];
+                if (pTypes.includes('방어 불능 보정')) {
+                    const matchSkill = !pEff.skillType || (skillTypes && skillTypes.some(st => pEff.skillType.includes(st)));
+                    if (matchSkill) count += (pEff.val || 0);
+                }
+            });
+        }
+        return Math.min(4, count);
+    }
+
+    // 스페셜 스택
+    const op = opData || DATA_OPERATORS.find(o => o.id === (state.mainOp?.id));
+    const specialStackVal = state.getSpecialStack ? state.getSpecialStack() : (state.mainOp?.specialStack || {});
+    if (op && op.specialStack) {
+        const stacks = Array.isArray(op.specialStack) ? op.specialStack : [op.specialStack];
+        const matchingStack = stacks.find(s => s.triggers && s.triggers.includes(triggerName));
+        if (matchingStack) {
+            const stackId = matchingStack.id || 'default';
+            return typeof specialStackVal === 'object' ? (specialStackVal[stackId] || 0) : specialStackVal;
+        }
+    }
+
+    // 기타 디버프 스택
+    if (triggerName === '갑옷 파괴') return state.debuffState?.physDebuff?.armorBreak || 0;
+    if (triggerName === '오리지늄 결정') return state.debuffState?.physDebuff?.originiumSeal || 0;
+    if (['열기 부착', '전기 부착', '냉기 부착', '자연 부착'].includes(triggerName)) {
+        if (state.debuffState?.artsAttach?.type === triggerName) return state.debuffState.artsAttach.stacks || 0;
+    }
+    if (['연소', '감전', '동결', '부식'].includes(triggerName)) return state.debuffState?.artsAbnormal?.[triggerName] || 0;
+
+    return count;
+}
+
 // ---- 효과 수집 ----
 function collectAllEffects(state, opData, wepData, stats, allEffects, forceMaxStack = false) {
     const activeNonStackTypes = new Set();
@@ -172,6 +219,24 @@ function collectAllEffects(state, opData, wepData, stats, allEffects, forceMaxSt
 
                     let currentVal = typeItem.val !== undefined ? typeItem.val : eff.val;
 
+                    // perStack 처리 (주 효과 아이템에 대해서도 지원)
+                    const ps = typeItem.perStack || eff.perStack;
+                    const tr = typeItem.trigger || eff.trigger;
+                    const bs = typeItem.base !== undefined ? typeItem.base : (eff.base !== undefined ? eff.base : (typeItem.val !== undefined ? typeItem.val : eff.val));
+
+                    if (ps && tr) {
+                        let maxStackForThis = 0;
+                        const triggers = Array.isArray(tr) ? tr : [tr];
+                        triggers.forEach(t => {
+                            maxStackForThis = Math.max(maxStackForThis, getAdjustedStackCount(t, state, effectiveOpData, eff.skillType));
+                        });
+                        const nPer = parseFloat(ps) || 0;
+                        const nBase = parseFloat(bs) || 0;
+                        const totalValue = parseFloat((nPer * maxStackForThis + nBase).toPrecision(12));
+                        const isPct = String(ps).includes('%') || (bs && String(bs).includes('%'));
+                        currentVal = isPct ? totalValue + '%' : totalValue;
+                    }
+
                     // stack 처리
                     const effUid = `${uidPrefix || name}_${typeItem.type}_v${i}_${j}`;
                     const targetState = getTargetState();
@@ -204,27 +269,18 @@ function collectAllEffects(state, opData, wepData, stats, allEffects, forceMaxSt
                                 currentVal = combineValues(currentVal, bVal);
                             }
                             // perStack 처리 (기존 스페셜 스택 로직)
+                            // perStack 처리 (보너스 아이템)
                             if (b.perStack && b.trigger) {
-                                const op = effectiveOpData || DATA_OPERATORS.find(o => o.id === (state.mainOp?.id));
-                                const specialStackVal = state.getSpecialStack ? state.getSpecialStack() : (state.mainOp?.specialStack || {});
-
-                                b.trigger.forEach(t => {
-                                    if (op && op.specialStack) {
-                                        const stacks = Array.isArray(op.specialStack) ? op.specialStack : [op.specialStack];
-                                        const matchingStack = stacks.find(s => s.triggers && s.triggers.includes(t));
-                                        if (matchingStack) {
-                                            const stackId = matchingStack.id || 'default';
-                                            const count = typeof specialStackVal === 'object' ? (specialStackVal[stackId] || 0) : specialStackVal;
-                                            if (count > 0) {
-                                                const rawTotal = (parseFloat(b.perStack) * count) + (parseFloat(b.base) || 0);
-                                                const totalPerStack = parseFloat(rawTotal.toPrecision(12));
-                                                const isPct = b.perStack.includes('%') || (b.base && b.base.includes('%'));
-                                                const valStr = isPct ? totalPerStack + '%' : totalPerStack;
-                                                currentVal = combineValues(currentVal, valStr);
-                                            }
-                                        }
-                                    }
+                                let maxStackForThisBonus = 0;
+                                const bTriggers = Array.isArray(b.trigger) ? b.trigger : [b.trigger];
+                                bTriggers.forEach(t => {
+                                    maxStackForThisBonus = Math.max(maxStackForThisBonus, getAdjustedStackCount(t, state, effectiveOpData, eff.skillType));
                                 });
+                                const bnPer = parseFloat(b.perStack) || 0;
+                                const bnBase = b.base !== undefined ? parseFloat(b.base) : (b.val !== undefined ? parseFloat(b.val) : 0);
+                                const bonusRawTotal = parseFloat((bnPer * maxStackForThisBonus + bnBase).toPrecision(12));
+                                const bisPct = String(b.perStack).includes('%') || (b.base && String(b.base).includes('%')) || (b.val && String(b.val).includes('%'));
+                                currentVal = combineValues(currentVal, bisPct ? bonusRawTotal + '%' : bonusRawTotal);
                             }
                             b._applied = true;
                         }
@@ -475,6 +531,7 @@ function applyPercentStats(effects, stats) {
 function computeFinalDamageOutput(state, opData, wepData, stats, allEffects, activeEffects) {
     const baseAtk = opData.baseAtk + wepData.baseAtk;
     let atkInc = 0, critRate = 5, critDmg = 50, dmgInc = 0, amp = 0, vuln = 0, takenDmg = 0, multiHit = 1.0, unbalanceDmg = 0, originiumArts = 0, ultRecharge = 0, ultCostReduction = 0, skillMults = { all: { mult: 0, add: 0 } }, dmgIncMap = { all: 0, skill: 0, normal: 0, battle: 0, combo: 0, ult: 0 };
+    let cryoVuln = 0, cryoVulnAmpUlt = 0;
     const skillCritData = { rate: { all: 0 }, dmg: { all: 0 } };
     const skillAtkIncData = { all: 0 };
     const logs = {
@@ -613,11 +670,21 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects, act
         } else if (t === '연타') {
             if (!checkDisabled('common')) multiHit = Math.max(multiHit, val || 1);
             logs.multihit.push({ txt: `[${displayName}] x${val || 1}${eff.stack ? ` (${eff._stackCount}중첩)` : ''}`, uid: eff.uid, stack: eff.stack, stackCount: eff._stackCount, _triggerFailed: eff._triggerFailed });
+        } else if (t === '냉기 취약 증폭') {
+            const skTypes = eff.skillType || [];
+            if (skTypes.includes('궁극기')) {
+                if (!checkDisabled('ult')) cryoVulnAmpUlt += val;
+            }
+            const ampFactor = (1 + val).toFixed(1);
+            logs.vuln.push({ txt: `[${displayName}] *${ampFactor} (냉기 취약)`, uid: eff.uid, target: '적', _triggerFailed: eff._triggerFailed });
         } else if (t.endsWith('증폭')) {
             if (!checkDisabled('common')) amp += val;
             logs.amp.push({ txt: `[${displayName}] ${valDisplay}${eff.stack ? ` (${eff._stackCount}중첩)` : ''} (${t})`, uid: eff.uid, stack: eff.stack, stackCount: eff._stackCount, _triggerFailed: eff._triggerFailed });
         } else if (t.endsWith('취약')) {
-            if (!checkDisabled('common')) vuln += val;
+            if (!checkDisabled('common')) {
+                vuln += val;
+                if (t === '냉기 취약') cryoVuln += val;
+            }
             logs.vuln.push({ txt: `[${displayName}] ${valDisplay}${eff.stack ? ` (${eff._stackCount}중첩)` : ''} (${t})`, uid: eff.uid, stack: eff.stack, stackCount: eff._stackCount, _triggerFailed: eff._triggerFailed });
         } else if (t === '불균형 목표에 주는 피해') {
             if (state.enemyUnbalanced && !checkDisabled('common')) {
@@ -783,7 +850,7 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects, act
             mainStatName: STAT_NAME_MAP[opData.mainStat], mainStatVal: stats[opData.mainStat],
             subStatName: STAT_NAME_MAP[opData.subStat], subStatVal: stats[opData.subStat],
             critExp, finalCritRate, critDmg, dmgInc, amp, vuln, takenDmg, unbalanceDmg: finalUnbal, originiumArts, skillMults, dmgIncData: dmgIncMap,
-            skillCritData, resistance: activeResVal, resMult, ultRecharge, finalUltCost
+            skillCritData, resistance: activeResVal, resMult, ultRecharge, finalUltCost, cryoVuln, cryoVulnAmpUlt
         },
         logs
     };
@@ -830,6 +897,7 @@ function isApplicableEffect(opData, effectType, effectName) {
         return false;
     };
 
+    if (type.endsWith('취약 증폭')) return checkElement(type.replace(' 취약 증폭', ''));
     if (type.endsWith('증폭')) return checkElement(type.replace(' 증폭', ''));
     if (type.includes('받는') || type.endsWith('취약')) {
         const prefix = type.replace('받는 ', '').replace(' 피해', '').replace(' 취약', '');
@@ -967,18 +1035,18 @@ function evaluateTrigger(trigger, state, opData, triggerType, isTargetOnly = fal
         const specialStackVal = state.getSpecialStack ? state.getSpecialStack() : (state.mainOp?.specialStack || 0);
 
         const TRIGGER_MAP = {
-            '방어 불능': () => (physDebuff.defenseless || 0) > 0,
-            '오리지늄 결정': () => (physDebuff.originiumSeal || 0) > 0,
-            '갑옷 파괴': () => (physDebuff.armorBreak || 0) > 0,
-            '열기 부착': () => artsAttach.type === '열기 부착',
-            '냉기 부착': () => artsAttach.type === '냉기 부착',
-            '전기 부착': () => artsAttach.type === '전기 부착',
-            '자연 부착': () => artsAttach.type === '자연 부착',
-            '연소': () => (artsAbnormal['연소'] || 0) > 0,
-            '감전': () => (artsAbnormal['감전'] || 0) > 0,
-            '동결': () => (artsAbnormal['동결'] || 0) > 0,
-            '부식': () => (artsAbnormal['부식'] || 0) > 0,
-            '연타': () => (physDebuff.combo || 0) > 0,
+            '방어 불능': () => getAdjustedStackCount('방어 불능', state, opData, triggerType) > 0,
+            '오리지늄 결정': () => getAdjustedStackCount('오리지늄 결정', state, opData, triggerType) > 0,
+            '갑옷 파괴': () => getAdjustedStackCount('갑옷 파괴', state, opData, triggerType) > 0,
+            '열기 부착': () => state.debuffState?.artsAttach?.type === '열기 부착',
+            '냉기 부착': () => state.debuffState?.artsAttach?.type === '냉기 부착',
+            '전기 부착': () => state.debuffState?.artsAttach?.type === '전기 부착',
+            '자연 부착': () => state.debuffState?.artsAttach?.type === '자연 부착',
+            '연소': () => getAdjustedStackCount('연소', state, opData, triggerType) > 0,
+            '감전': () => getAdjustedStackCount('감전', state, opData, triggerType) > 0,
+            '동결': () => getAdjustedStackCount('동결', state, opData, triggerType) > 0,
+            '부식': () => getAdjustedStackCount('부식', state, opData, triggerType) > 0,
+            '연타': () => (state.debuffState?.physDebuff?.combo || 0) > 0,
             '띄우기': () => state.triggerActive?.['띄우기'] || state.triggerActive?.['강제 띄우기'],
             '넘어뜨리기': () => state.triggerActive?.['넘어뜨리기'] || state.triggerActive?.['강제 넘어뜨리기'],
             '강타': () => state.triggerActive?.['강타'],
@@ -1026,7 +1094,7 @@ function calcSingleSkillDamage(type, st, bRes) {
     const skillDef = skillMap[type];
     if (!skillDef) return null;
 
-    const { finalAtk, atkInc, baseAtk, statBonusPct, skillAtkIncData = { all: 0 }, critExp, finalCritRate, critDmg, amp, takenDmg, vuln, unbalanceDmg, resMult, originiumArts = 0, skillMults = { all: { mult: 0, add: 0 } }, dmgIncData = { all: 0, skill: 0, normal: 0, battle: 0, combo: 0, ult: 0 }, skillCritData = { rate: { all: 0 }, dmg: { all: 0 } } } = bRes.stats;
+    const { finalAtk, atkInc, baseAtk, statBonusPct, skillAtkIncData = { all: 0 }, critExp, finalCritRate, critDmg, amp, takenDmg, vuln, unbalanceDmg, resMult, originiumArts = 0, skillMults = { all: { mult: 0, add: 0 } }, dmgIncData = { all: 0, skill: 0, normal: 0, battle: 0, combo: 0, ult: 0 }, skillCritData = { rate: { all: 0 }, dmg: { all: 0 } }, cryoVuln = 0, cryoVulnAmpUlt = 0 } = bRes.stats;
 
     // dmg 파싱
     const parseDmgPct = (v) => {
@@ -1049,33 +1117,14 @@ function calcSingleSkillDamage(type, st, bRes) {
                     const triggers = Array.isArray(b.trigger) ? b.trigger : [b.trigger];
 
                     for (const t of triggers) {
-                        if (t === '방어 불능') stackCount = Math.max(stackCount, st.debuffState?.physDebuff?.defenseless || 0);
-                        else if (t === '갑옷 파괴') stackCount = Math.max(stackCount, st.debuffState?.physDebuff?.armorBreak || 0);
-                        else if (t === '오리지늄 결정') stackCount = Math.max(stackCount, st.debuffState?.physDebuff?.originiumSeal || 0);
-                        else if (['열기 부착', '전기 부착', '냉기 부착', '자연 부착'].includes(t)) {
-                            if (st.debuffState?.artsAttach?.type === t) {
-                                stackCount = Math.max(stackCount, st.debuffState.artsAttach.stacks || 0);
-                            }
-                        } else if (['연소', '감전', '동결', '부식'].includes(t)) {
-                            stackCount = Math.max(stackCount, st.debuffState?.artsAbnormal?.[t] || 0);
-                        }
-
-                        if (op && op.specialStack) {
-                            const stacks = Array.isArray(op.specialStack) ? op.specialStack : [op.specialStack];
-                            const matchingStack = stacks.find(ms => ms.triggers && ms.triggers.includes(t));
-                            if (matchingStack) {
-                                const stackId = matchingStack.id || 'default';
-                                const count = typeof specialStackVal === 'object' ? (specialStackVal[stackId] || 0) : specialStackVal;
-                                stackCount = Math.max(stackCount, count);
-                            }
-                        }
-                    }
-                    // 트리거가 명시적인 스택성 디버프가 아닌 경우(상시 등) && 기존 로직 호환을 위해 defenseless 체크
-                    if (stackCount === 0 && triggers.includes('방어 불능')) {
-                        stackCount = st.debuffState?.physDebuff?.defenseless || 0;
+                        const count = getAdjustedStackCount(t, st, opData, skillDef.skillType);
+                        stackCount = Math.max(stackCount, count);
                     }
 
-                    const bonusVal = parsePct(b.base) + parsePct(b.perStack) * stackCount;
+                    const bp = b.perStack;
+                    const bb = b.base !== undefined ? b.base : (b.val !== undefined ? b.val : 0);
+                    const bonusVal = (parseFloat(bb) + parseFloat(bp) * stackCount) / 100;
+
                     if (bonusVal > 0) {
                         dmgMult += bonusVal;
                         bonusList.push({
@@ -1181,7 +1230,15 @@ function calcSingleSkillDamage(type, st, bRes) {
     }
 
     const baseMultOnly = adjDmgMult - abnormalMultTotal;
-    const commonMults = adjCritExp * (1 + typeInc / 100) * (1 + amp / 100) * (1 + takenDmg / 100) * (1 + vuln / 100) * (1 + unbalanceDmg / 100) * resMult;
+
+    let finalVuln = vuln;
+    if (baseType === '궁극기' && cryoVuln > 0 && cryoVulnAmpUlt > 0) {
+        const ampVal = (cryoVuln * cryoVulnAmpUlt);
+        finalVuln += ampVal;
+        bonusList.push({ name: '냉기 취약 증폭', val: ampVal / 100 });
+    }
+
+    const commonMults = adjCritExp * (1 + typeInc / 100) * (1 + amp / 100) * (1 + takenDmg / 100) * (1 + finalVuln / 100) * (1 + unbalanceDmg / 100) * resMult;
 
     // 물리 이상용 공통 승수 (스킬 관련 피해 증가 제외) + 아츠 강도 보너스
     const artsStrengthMult = 1 + (originiumArts / 100);
