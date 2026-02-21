@@ -91,12 +91,50 @@ function collectAllEffects(state, opData, wepData, stats, allEffects, forceMaxSt
         const isPct2 = typeof v2 === 'string' && v2.includes('%');
         const n1 = parseFloat(v1) || 0;
         const n2 = parseFloat(v2) || 0;
-        const sum = n1 + n2;
+        const sum = parseFloat((n1 + n2).toPrecision(12));
         if (isPct1 || isPct2) return sum + '%';
         return sum;
     };
 
-    const addEffect = (source, name, forgeMult = 1.0, isSub = false, isSkillSource = false, forceMaxStack = false, effectiveOpData = opData) => {
+    const mergeEffects = (effs) => {
+        if (!effs || effs.length === 0) return [];
+        const groups = {};
+        effs.forEach(eff => {
+            if (!eff) return;
+            const typeStr = JSON.stringify(eff.type);
+            const triggerStr = JSON.stringify(eff.trigger);
+            const skillTypeStr = JSON.stringify(eff.skillType);
+            const key = `${typeStr}|${triggerStr}|${eff.target}|${skillTypeStr}|${eff.cond}`;
+
+            if (!groups[key]) {
+                groups[key] = JSON.parse(JSON.stringify(eff));
+            } else {
+                const g = groups[key];
+                if (eff.val !== undefined) g.val = combineValues(g.val, eff.val);
+                if (eff.dmg !== undefined) g.dmg = combineValues(g.dmg, eff.dmg);
+                if (eff.bonus) {
+                    if (!g.bonus) g.bonus = [];
+                    eff.bonus.forEach(eb => {
+                        const bTypeStr = JSON.stringify(eb.type);
+                        const bTriggerStr = JSON.stringify(eb.trigger);
+                        const existingBonus = g.bonus.find(gb =>
+                            JSON.stringify(gb.type) === bTypeStr &&
+                            JSON.stringify(gb.trigger) === bTriggerStr &&
+                            gb.target === eb.target
+                        );
+                        if (existingBonus) {
+                            if (eb.val !== undefined) existingBonus.val = combineValues(existingBonus.val, eb.val);
+                        } else {
+                            g.bonus.push(JSON.parse(JSON.stringify(eb)));
+                        }
+                    });
+                }
+            }
+        });
+        return Object.values(groups);
+    };
+
+    const addEffect = (source, name, forgeMult = 1.0, isSub = false, isSkillSource = false, forceMaxStack = false, effectiveOpData = opData, uidPrefix = null) => {
         if (!source || !Array.isArray(source)) return;
         const sources = source;
         sources.forEach((eff, i) => {
@@ -135,7 +173,7 @@ function collectAllEffects(state, opData, wepData, stats, allEffects, forceMaxSt
                     let currentVal = typeItem.val !== undefined ? typeItem.val : eff.val;
 
                     // stack 처리
-                    const effUid = `${name}_${typeItem.type}_v${i}_${j}`;
+                    const effUid = `${uidPrefix || name}_${typeItem.type}_v${i}_${j}`;
                     const targetState = getTargetState();
                     let stackCount = targetState.effectStacks?.[effUid];
                     if (stackCount === undefined) {
@@ -148,7 +186,7 @@ function collectAllEffects(state, opData, wepData, stats, allEffects, forceMaxSt
                     if (eff.stack) {
                         // 수치에 중첩수 곱하기 (0이면 0이 됨)
                         const n = parseFloat(currentVal) || 0;
-                        const multiplied = n * stackCount;
+                        const multiplied = parseFloat((n * stackCount).toPrecision(12));
                         currentVal = (typeof currentVal === 'string' && currentVal.includes('%')) ? multiplied + '%' : multiplied;
                         typeItem._stackCount = stackCount; // UI 표시용
                         typeItem._uid = effUid;
@@ -160,7 +198,7 @@ function collectAllEffects(state, opData, wepData, stats, allEffects, forceMaxSt
                                 let bVal = b.val;
                                 if (eff.stack) {
                                     const bn = parseFloat(bVal) || 0;
-                                    const bMultiplied = bn * stackCount;
+                                    const bMultiplied = parseFloat((bn * stackCount).toPrecision(12));
                                     bVal = (typeof bVal === 'string' && bVal.includes('%')) ? bMultiplied + '%' : bMultiplied;
                                 }
                                 currentVal = combineValues(currentVal, bVal);
@@ -178,7 +216,8 @@ function collectAllEffects(state, opData, wepData, stats, allEffects, forceMaxSt
                                             const stackId = matchingStack.id || 'default';
                                             const count = typeof specialStackVal === 'object' ? (specialStackVal[stackId] || 0) : specialStackVal;
                                             if (count > 0) {
-                                                const totalPerStack = (parseFloat(b.perStack) * count) + (parseFloat(b.base) || 0);
+                                                const rawTotal = (parseFloat(b.perStack) * count) + (parseFloat(b.base) || 0);
+                                                const totalPerStack = parseFloat(rawTotal.toPrecision(12));
                                                 const isPct = b.perStack.includes('%') || (b.base && b.base.includes('%'));
                                                 const valStr = isPct ? totalPerStack + '%' : totalPerStack;
                                                 currentVal = combineValues(currentVal, valStr);
@@ -209,7 +248,7 @@ function collectAllEffects(state, opData, wepData, stats, allEffects, forceMaxSt
                         if (activeNonStackTypes.has(key)) return;
                         activeNonStackTypes.add(key);
                     }
-                    const finalUid = typeItem._uid || `${name}_${typeItem.type.toString()}_v${i}_${j}`;
+                    const finalUid = typeItem._uid || `${uidPrefix || name}_${typeItem.type.toString()}_v${i}_${j}`;
                     allEffects.push({ ...expanded, name, forgeMult, uid: finalUid });
                 });
             }
@@ -221,7 +260,7 @@ function collectAllEffects(state, opData, wepData, stats, allEffects, forceMaxSt
                     bonusTypes.forEach((bt, bj) => {
                         const bonusEff = { target: b.target || eff.target, ...b, type: bt };
                         if (!isSub || isSubOpTargetValid(bonusEff)) {
-                            const bUid = `${name}_bonus_${bt.toString()}_v${i}_${j}_${bj}`;
+                            const bUid = `${uidPrefix || name}_bonus_${bt.toString()}_v${i}_${j}_${bj}`;
                             allEffects.push({ ...bonusEff, name, forgeMult, uid: bUid, _triggerFailed: !baseTriggerMet });
                         }
                     });
@@ -291,6 +330,11 @@ function collectAllEffects(state, opData, wepData, stats, allEffects, forceMaxSt
 
             let label = `${entry.data.name} 특성${traitIdx}(Lv${finalLv})`;
             if (!entry.isMain) label = `${entry.name} ${entry.data.name} 특성${traitIdx}`;
+
+            // UID 안정화를 위해 Lv 정보를 제외한 고정 접두사 생성
+            let uidPrefix = `${entry.data.name}_trait${traitIdx}`;
+            if (!entry.isMain) uidPrefix = `${entry.name}_${entry.data.id}_trait${traitIdx}`;
+
             const uniqueLabel = `${label}_t${idx}`;
 
             const types = Array.isArray(trait.type) ? trait.type : [trait.type];
@@ -301,9 +345,9 @@ function collectAllEffects(state, opData, wepData, stats, allEffects, forceMaxSt
                 // idx 기반 판정 삭제, 값에 % 포함 여부로 결정
                 const isPercent = typeof val === 'string' && val.includes('%');
                 const type = isPercent ? '스탯%' : '스탯';
-                addEffect([{ ...eff, type, stat: targetStat }], uniqueLabel, 1.0, !entry.isMain, false, forceMaxStack, entry.ownerOp);
+                addEffect([{ ...eff, type, stat: targetStat }], uniqueLabel, 1.0, !entry.isMain, false, forceMaxStack, entry.ownerOp, uidPrefix);
             } else {
-                addEffect([eff], uniqueLabel, 1.0, !entry.isMain, false, forceMaxStack, entry.ownerOp);
+                addEffect([eff], uniqueLabel, 1.0, !entry.isMain, false, forceMaxStack, entry.ownerOp, uidPrefix);
             }
         });
     });
@@ -315,12 +359,18 @@ function collectAllEffects(state, opData, wepData, stats, allEffects, forceMaxSt
             addEffect([s], `${opData.name} ${skName}`, 1.0, false, true, forceMaxStack, opData);
         });
     }
-    if (opData.talents) opData.talents.forEach((t, i) => addEffect(t, `${opData.name} 재능${i + 1}`, 1.0, false, false, forceMaxStack, opData));
+    if (opData.talents) {
+        const merged = mergeEffects(opData.talents.flat());
+        if (merged.length > 0) addEffect(merged, `${opData.name} 재능`, 1.0, false, false, forceMaxStack, opData, `${opData.id}_talent`);
+    }
 
     const mainPot = Number(state.mainOp.pot) || 0;
+    const potEffs = [];
     for (let p = 0; p < mainPot; p++) {
-        if (opData.potential?.[p]) addEffect(opData.potential[p], `${opData.name} 잠재${p + 1}`, 1.0, false, false, forceMaxStack, opData);
+        if (opData.potential?.[p]) potEffs.push(...opData.potential[p]);
     }
+    const mergedPots = mergeEffects(potEffs);
+    if (mergedPots.length > 0) addEffect(mergedPots, `${opData.name} 잠재`, 1.0, false, false, forceMaxStack, opData, `${opData.id}_pot`);
 
     // 4. 서브 오퍼레이터 시너지
     state.subOps.forEach((sub, idx) => {
@@ -335,12 +385,18 @@ function collectAllEffects(state, opData, wepData, stats, allEffects, forceMaxSt
                 addEffect([s], `${prefix} ${skName}`, 1.0, true, true, forceMaxStack, subOpData);
             });
         }
-        subOpData.talents.forEach((t, ti) => addEffect(t, `${prefix} 재능${ti + 1}`, 1.0, true, false, forceMaxStack, subOpData));
+        if (subOpData.talents) {
+            const merged = mergeEffects(subOpData.talents.flat());
+            if (merged.length > 0) addEffect(merged, `${prefix} 재능`, 1.0, true, false, forceMaxStack, subOpData, `${subOpData.id}_talent`);
+        }
 
         const subPot = Number(sub.pot) || 0;
+        const subPotEffs = [];
         for (let sp = 0; sp < subPot; sp++) {
-            if (subOpData.potential?.[sp]) addEffect(subOpData.potential[sp], `${prefix} 잠재${sp + 1}`, 1.0, true, false, forceMaxStack, subOpData);
+            if (subOpData.potential?.[sp]) subPotEffs.push(...subOpData.potential[sp]);
         }
+        const mergedSubPots = mergeEffects(subPotEffs);
+        if (mergedSubPots.length > 0) addEffect(mergedSubPots, `${prefix} 잠재`, 1.0, true, false, forceMaxStack, subOpData, `${subOpData.id}_pot`);
     });
 
     // 5. 세트 효과
