@@ -290,7 +290,7 @@ const AppTooltip = {
             };
 
             let rangeStr = (t.valByLevel?.length > 0)
-                ? `${label} ${fmt(t.valByLevel[0])}~${fmt(t.valByLevel[t.valByLevel.length - 1])}`
+                ? `${label} ${fmt(t.valByLevel[0])} ~ ${fmt(t.valByLevel[t.valByLevel.length - 1])}`
                 : `${label} ${fmt(t.val || 0)}`;
 
             if (t.stack) rangeStr += ` (최대 ${t.stack}중첩)`;

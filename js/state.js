@@ -98,6 +98,34 @@ function getStatName(key) {
 // ============ 상태 업데이트 ============
 
 /**
+ * [Sync] 전역 설정을 개별 설정(customState)이 있는 모든 항목에도 전파한다.
+ * @param {string} type - 'unbalanced', 'debuff', 'specialStack' 중 하나
+ */
+window.propagateGlobalStateToCustom = function (type) {
+    if (!state.selectedSeqId) {
+        state.skillSequence.forEach(item => {
+            if (item.customState) {
+                switch (type) {
+                    case 'unbalanced':
+                        item.customState.enemyUnbalanced = state.enemyUnbalanced;
+                        break;
+                    case 'debuff':
+                        item.customState.debuffState = JSON.parse(JSON.stringify(state.debuffState));
+                        break;
+                    case 'specialStack':
+                        item.customState.specialStack = JSON.parse(JSON.stringify(state.mainOp.specialStack));
+                        break;
+                    case 'effects':
+                        item.customState.disabledEffects = [...state.disabledEffects];
+                        item.customState.effectStacks = JSON.parse(JSON.stringify(state.effectStacks));
+                        break;
+                }
+            }
+        });
+    }
+};
+
+/**
  * DOM에서 현재 입력값을 읽어 state를 갱신하고,
  * 계산 → 렌더링 → 저장을 순서대로 실행한다.
  *

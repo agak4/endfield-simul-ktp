@@ -239,19 +239,27 @@ function renderLog(id, list) {
                 li.onclick = () => {
                     ensureCustomState();
                     const ts = getTargetState();
-                    if (item.stack) {
-                        // 중첩 토글: 1 -> 2 -> ... -> max -> 0 -> 1
+                    let newVal = null;
+                    let isStack = !!item.stack;
+
+                    if (isStack) {
                         if (!ts.effectStacks) ts.effectStacks = {};
                         let cur = ts.effectStacks[uid] !== undefined ? ts.effectStacks[uid] : 1;
                         cur++;
                         if (cur > item.stack) cur = 0;
                         ts.effectStacks[uid] = cur;
+                        newVal = cur;
                     } else {
-                        // 일반 토글
                         if (!ts.disabledEffects) ts.disabledEffects = [];
                         const idx = ts.disabledEffects.indexOf(uid);
                         if (idx > -1) ts.disabledEffects.splice(idx, 1);
                         else ts.disabledEffects.push(uid);
+                        newVal = ts.disabledEffects.includes(uid);
+                    }
+
+                    // 전역 모드(선택된 시퀀스 없음)인 경우, 이미 개별 설정이 들어간 모든 항목에도 동일하게 반영
+                    if (!state.selectedSeqId) {
+                        propagateGlobalStateToCustom('effects');
                     }
                     updateState();
                 };
@@ -817,7 +825,8 @@ function renderDmgInc(res, cycleRes) {
 
     // 헤더 총 합계 표시
     if (totalEl) {
-        const totalVal = res.stats.dmgIncData ? res.stats.dmgIncData.all : res.stats.dmgInc;
+        // [Fix] 속성 보너스가 포함된 최종 dmgInc 수치를 사용
+        const totalVal = res.stats.dmgInc;
         totalEl.innerText = (totalVal || 0).toFixed(1) + '%';
     }
 
@@ -827,6 +836,8 @@ function renderDmgInc(res, cycleRes) {
     listContainer.innerHTML = '';
 
     const totalCycleDmg = cycleRes ? cycleRes.total : 0;
+    const opData = DATA_OPERATORS.find(o => o.id === state.mainOp.id);
+    const opElement = opData ? (opData.type === 'phys' ? 'phys' : opData.element) : null;
 
     // 5개 카테고리 정의
     const categories = [
@@ -860,11 +871,12 @@ function renderDmgInc(res, cycleRes) {
         const targetState = getTargetState();
 
         // 태그 기반 분류
-        if (log.tag === 'all') {
+        // opElement와 일치하는 속성 태그이거나, 'all' 태그인 경우
+        if (log.tag === 'all' || log.tag === opElement) {
             if (log.txt.includes('스킬')) {
                 // 스킬 관련 공통 요소 -> 배틀, 연계, 궁극기에 복사
                 ['battle', 'combo', 'ult'].forEach(k => {
-                    const uiLog = { ...log, txt: `(공통) ${log.txt}`, _uiUid: `${log.uid}#${k}` };
+                    const uiLog = { ...log, txt: (log.tag === opElement ? log.txt : `(공통) ${log.txt}`), _uiUid: `${log.uid}#${k}` };
                     catLogs[k].push(uiLog);
                     const isUiDisabled = (targetState.disabledEffects && targetState.disabledEffects.includes(uiLog._uiUid)) || !!uiLog._triggerFailed;
                     if (!isUiDisabled) catSums[k] += val;
@@ -903,12 +915,18 @@ function renderDmgInc(res, cycleRes) {
                 });
             }
         } else {
+            // 다른 속성이거나 특수 태그
             const key = Object.keys(catLogs).find(k => k === log.tag);
             if (key) {
                 const uiLog = { ...log, _uiUid: `${log.uid}#${key}` };
                 catLogs[key].push(uiLog);
                 const isUiDisabled = (targetState.disabledEffects && targetState.disabledEffects.includes(uiLog._uiUid)) || !!uiLog._triggerFailed;
                 if (!isUiDisabled) catSums[key] += val;
+            } else {
+                // 분류되지 않은 속성 버프 (비활성 상태로 리스트에만 표시)
+                const uiLog = { ...log, _uiUid: `${log.uid}#inactive`, _inactiveElement: true };
+                // 어디에도 속하지 않지만 리스트 확인용으로 common에 넣어두되 sum에는 포함하지 않음
+                catLogs.common.push(uiLog);
             }
         }
     });
@@ -973,11 +991,19 @@ function renderDmgInc(res, cycleRes) {
                         const targetUid = log._uiUid || uid;
                         if (ts.disabledEffects && ts.disabledEffects.includes(targetUid)) li.classList.add('disabled-effect');
                     }
+                } else {
+                    li.style.cursor = 'default';
+                }
 
-                    if (log._triggerFailed) {
-                        li.classList.add('triggerFail-effect');
-                    }
-
+                // [Fix] 오퍼레이터 속성과 맞지 않는 버프는 비활성 표시 (취소선)
+                if (log._inactiveElement) {
+                    li.classList.add('disabled-effect');
+                    li.title = '오퍼레이터 속성과 일치하지 않아 적용되지 않습니다.';
+                    li.style.cursor = 'default';
+                    // 비활성 속성 버프는 클릭 방지
+                    li.onclick = (e) => e.stopPropagation();
+                } else if (li.style.cursor !== 'default') {
+                    // 기기존 클릭 핸들러 (inactive가 아닐 때만)
                     li.onclick = (e) => {
                         e.stopPropagation();
                         ensureCustomState();
@@ -997,9 +1023,10 @@ function renderDmgInc(res, cycleRes) {
                         }
                         updateState();
                     };
-                } else {
-                    li.style.cursor = 'default';
                 }
+            }
+            if (log._triggerFailed) {
+                li.classList.add('triggerFail-effect');
             }
             ul.appendChild(li);
         });

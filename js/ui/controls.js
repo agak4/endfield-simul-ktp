@@ -484,6 +484,7 @@ function cycleDebuff(el, dir = 1) {
 
     applyDebuffIconState(el, next);
     saveState();
+    if (!state.selectedSeqId) propagateGlobalStateToCustom('debuff');
     updateState();
 }
 
@@ -498,6 +499,7 @@ function cycleDebuffToggle(el) {
     el.dataset.stacks = next;
     applyDebuffIconState(el, next);
     saveState();
+    if (!state.selectedSeqId) propagateGlobalStateToCustom('debuff');
     updateState();
 }
 
@@ -528,6 +530,7 @@ function cycleDebuffAttach(el, dir = 1) {
     });
 
     saveState();
+    if (!state.selectedSeqId) propagateGlobalStateToCustom('debuff');
     updateState();
 }
 
@@ -539,6 +542,7 @@ function cycleDebuffAbnormal(el, dir = 1) {
     getTargetState().debuffState.artsAbnormal[abnType] = next;
     applyDebuffIconState(el, next);
     saveState();
+    if (!state.selectedSeqId) propagateGlobalStateToCustom('debuff');
     updateState();
 }
 
@@ -578,6 +582,7 @@ function cycleSpecialStack(el, dir = 1) {
 
     applyDebuffIconState(el, next);
     saveState();
+    if (!state.selectedSeqId) propagateGlobalStateToCustom('specialStack');
     updateState();
 }
 

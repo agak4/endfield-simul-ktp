@@ -353,7 +353,8 @@ function collectAllEffects(state, opData, wepData, stats, allEffects, forceMaxSt
                 const val = isForged && t.val_f !== undefined ? t.val_f : t.val;
                 let type = t.type;
                 let stat = t.stat;
-                if (t.type === '스탯') {
+                const types = Array.isArray(t.type) ? t.type : [t.type];
+                if (types.includes('스탯')) {
                     // 값에 % 포함 여부로 결정
                     const isPercent = (typeof val === 'string' && val.includes('%'));
                     type = isPercent ? '스탯%' : '스탯';
@@ -671,6 +672,9 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects, act
             const ampFactor = (1 + val).toFixed(1);
             const targetLabel = (eff.targetEffect && Array.isArray(eff.targetEffect)) ? eff.targetEffect.join(', ') : (t === '냉기 취약 증폭' ? '냉기 취약' : '취약');
             logs.vuln.push({ txt: `[${displayName}] *${ampFactor} (${targetLabel})`, uid: eff.uid, target: '적', _triggerFailed: eff._triggerFailed });
+        } else if (t.endsWith('증폭')) {
+            if (!checkDisabled('common')) amp += val;
+            logs.amp.push({ txt: `[${displayName}] ${valDisplay}${eff.stack ? ` (${eff._stackCount}중첩)` : ''} (${t})`, uid: eff.uid, stack: eff.stack, stackCount: eff._stackCount, _triggerFailed: eff._triggerFailed });
         } else if (t.endsWith('취약')) {
             if (!checkDisabled('common')) {
                 vuln += val;
@@ -747,6 +751,7 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects, act
                 _triggerFailed: eff._triggerFailed
             });
         } else if (t.endsWith('피해') || t.includes('피해') || t === '주는 피해' || t === '모든 스킬 피해') {
+            let tag = 'all';
             const skillTypes = eff.skillType ? (Array.isArray(eff.skillType) ? eff.skillType : [eff.skillType]) : null;
 
             if (!skillTypes) {
@@ -778,6 +783,8 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects, act
                                 dmgInc += val;
                             }
                         }
+                        // 속성 태그 할당 (render.js에서 분류용으로 사용)
+                        tag = foundEl;
                     } else {
                         if (!checkDisabled('common')) {
                             dmgInc += val;
@@ -792,7 +799,6 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects, act
                 });
             }
 
-            let tag = 'all';
             if (skillTypes) tag = 'skill';
             else if (t === '모든 스킬 피해') tag = 'skill';
             else if (t.includes('일반 공격')) tag = 'normal';
@@ -1731,6 +1737,11 @@ function calculateCycleDamage(currentState, baseRes, forceMaxStack = false) {
 
         if (skillData.abnormalDmgs) {
             Object.entries(skillData.abnormalDmgs).forEach(([aName, aDmg]) => {
+                // [Fix] '아츠 소모' 종류는 사이클 합계 및 리스트에서 제외 (데미지 0 취급)
+                if (aName.includes('소모(이상)')) {
+                    skillTotal -= aDmg; // skillTotal에서 해당 데미지 차감
+                    return;
+                }
                 if (!perAbnormal[aName]) perAbnormal[aName] = { dmg: 0, count: 0 };
                 perAbnormal[aName].dmg += aDmg;
                 perAbnormal[aName].count += 1;
