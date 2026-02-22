@@ -542,7 +542,7 @@ const AppTooltip = {
         if (filteredEffects.length === 0 && extraEffects.length === 0) return '';
 
         let html = '<div style="margin-top:8px; border-top: 1px solid rgba(255,255,255,0.1); padding-top:8px;"></div>';
-        html += '<div class="tooltip-label" style="font-size:11px; color:var(--accent); margin-bottom:4px;">적용 중인 추가 효과</div>';
+        html += '<div class="tooltip-label" color:var(--accent); margin-bottom:4px;">적용 중인 추가 효과</div>';
         filteredEffects.forEach(eff => {
             const t = Array.isArray(eff.type) ? eff.type[0] : eff.type;
             let val = eff.val !== undefined ? eff.val : eff.dmg;
@@ -560,10 +560,10 @@ const AppTooltip = {
                     valStr = ` +${val}`;
                 }
             }
-            html += `<div class="tooltip-bullet-point" style="color:var(--accent); font-size:12px;"><span class="tooltip-bullet-marker">•</span> ${t}${valStr}</div>`;
+            html += `<div class="tooltip-bullet-point" style="color:var(--accent);"><span class="tooltip-bullet-marker">•</span> ${t}${valStr}</div>`;
         });
         extraEffects.forEach(txt => {
-            html += `<div class="tooltip-bullet-point" style="color:#FFFA00; font-size:12px;"><span class="tooltip-bullet-marker">•</span> ${txt}</div>`;
+            html += `<div class="tooltip-bullet-point" style="color:#FFFA00;"><span class="tooltip-bullet-marker">•</span> ${txt}</div>`;
         });
         return html;
     },
@@ -638,14 +638,14 @@ const AppTooltip = {
 
         if (synergyLines.length > 0 || artsStrength > 0) {
             html += `<div style="margin-top:8px; border-top: 1px solid rgba(255,255,255,0.1); padding-top:8px;"></div>`;
-            html += `<div class="tooltip-label" style="font-size:11px; color:var(--accent); margin-bottom:4px;">적용 중인 추가 효과</div>`;
+            html += `<div class="tooltip-label" color:var(--accent); margin-bottom:4px;">적용 중인 추가 효과</div>`;
 
             if (artsStrength > 0) {
-                html += `<div class="tooltip-bullet-point" style="color:var(--accent); font-size:12px;"><span class="tooltip-bullet-marker">•</span> 오리지늄 아츠 강도 +${artsStrength.toFixed(1)}%</div>`;
+                html += `<div class="tooltip-bullet-point" style="color:var(--accent);"><span class="tooltip-bullet-marker">•</span> 오리지늄 아츠 강도 +${artsStrength.toFixed(1)}%</div>`;
             }
 
             synergyLines.forEach(txt => {
-                html += `<div class="tooltip-bullet-point" style="color:#FFFA00; font-size:12px;"><span class="tooltip-bullet-marker">•</span> ${txt}</div>`;
+                html += `<div class="tooltip-bullet-point" style="color:#FFFA00;"><span class="tooltip-bullet-marker">•</span> ${txt}</div>`;
             });
         }
 

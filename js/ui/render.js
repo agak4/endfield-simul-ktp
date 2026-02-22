@@ -1002,23 +1002,28 @@ function renderDmgInc(res, cycleRes) {
                     // 비활성 속성 버프는 클릭 방지
                     li.onclick = (e) => e.stopPropagation();
                 } else if (li.style.cursor !== 'default') {
-                    // 기기존 클릭 핸들러 (inactive가 아닐 때만)
+                    // 기존 클릭 핸들러 (inactive가 아닐 때만)
                     li.onclick = (e) => {
                         e.stopPropagation();
                         ensureCustomState();
-                        const nextTs = getTargetState();
+                        const ts = getTargetState();
                         const targetToggleUid = log._uiUid || uid;
                         if (log.stack) {
-                            if (!nextTs.effectStacks) nextTs.effectStacks = {};
-                            let cur = nextTs.effectStacks[uid] !== undefined ? nextTs.effectStacks[uid] : 1;
+                            if (!ts.effectStacks) ts.effectStacks = {};
+                            let cur = ts.effectStacks[uid] !== undefined ? ts.effectStacks[uid] : 1;
                             cur++;
                             if (cur > log.stack) cur = 0;
-                            nextTs.effectStacks[uid] = cur;
+                            ts.effectStacks[uid] = cur;
                         } else {
-                            if (!nextTs.disabledEffects) nextTs.disabledEffects = [];
-                            const idx = nextTs.disabledEffects.indexOf(targetToggleUid);
-                            if (idx > -1) nextTs.disabledEffects.splice(idx, 1);
-                            else nextTs.disabledEffects.push(targetToggleUid);
+                            if (!ts.disabledEffects) ts.disabledEffects = [];
+                            const idx = ts.disabledEffects.indexOf(targetToggleUid);
+                            if (idx > -1) ts.disabledEffects.splice(idx, 1);
+                            else ts.disabledEffects.push(targetToggleUid);
+                        }
+
+                        // 전역 모드(선택된 시퀀스 없음)인 경우, 이미 개별 설정이 들어간 모든 항목에도 동일하게 반영
+                        if (!state.selectedSeqId) {
+                            propagateGlobalStateToCustom('effects');
                         }
                         updateState();
                     };

@@ -244,8 +244,8 @@ function collectAllEffects(state, opData, wepData, stats, allEffects, forceMaxSt
 
                     // stack 처리
                     const effUid = `${uidPrefix || name}_${typeItem.type}_v${i}_${j}`;
-                    const targetState = getTargetState();
-                    let stackCount = targetState.effectStacks?.[effUid];
+                    const targetEffectStacks = state.effectStacks;
+                    let stackCount = targetEffectStacks?.[effUid];
                     if (stackCount === undefined) {
                         stackCount = eff.stack ? 1 : 1; // 기본은 1 (비활성은 0)
                     }
@@ -899,17 +899,17 @@ function resolveVal(val, stats) {
     if (typeof val === 'string') {
         let statSum = 0;
         let foundStat = false;
-        
+
         // [Fix] 스탯 비례 수치 처리 (예: "지능, 의지 1포인트당 0.15% 증가")
-        ['str', 'agi', 'int', 'wil'].forEach(k => { 
+        ['str', 'agi', 'int', 'wil'].forEach(k => {
             if (val.includes(STAT_NAME_MAP[k])) {
                 statSum += (stats[k] || 0);
                 foundStat = true;
             }
         });
-        
+
         const num = parseFloat(val);
-        
+
         if (foundStat) {
             // "1포인트당 X%" 또는 "X%" 패턴 추출 -> 스탯 총합에 곱함
             const match = val.match(/([\d.]+)%/);
@@ -1639,13 +1639,13 @@ function calculateCycleDamage(currentState, baseRes, forceMaxStack = false) {
     if (currentState.activeSetId) {
         const setData = DATA_SETS.find(s => s.id === currentState.activeSetId);
         if (setData && setData.effects) {
-             setData.effects.forEach(eff => {
+            setData.effects.forEach(eff => {
                 const isProcType = eff.dmg || (Array.isArray(eff.type) && eff.type.includes('물리 데미지'));
                 if (isProcType && eff.trigger) {
                     let dmgValue = eff.dmg;
                     // dmg가 배열인 경우 첫 번째 값 사용 (예: ['250%'])
                     if (Array.isArray(dmgValue)) dmgValue = dmgValue[0];
-                    
+
                     if (dmgValue) {
                         procEffects.push({
                             ...eff,
@@ -1654,7 +1654,7 @@ function calculateCycleDamage(currentState, baseRes, forceMaxStack = false) {
                         });
                     }
                 }
-             });
+            });
         }
     }
 
