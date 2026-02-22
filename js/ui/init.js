@@ -194,7 +194,7 @@ function initUI() {
 
             if (skillDef) {
                 const activeEffects = window.lastCalcResult ? window.lastCalcResult.activeEffects : [];
-                const content = AppTooltip.renderSkillTooltip(type, skillDef, opData, '', activeEffects);
+                const content = AppTooltip.renderSkillTooltip(type, skillDef, opData, '', activeEffects, state);
                 AppTooltip.showCustom(content, e, { width: '260px' });
             }
         };
