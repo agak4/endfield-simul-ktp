@@ -557,7 +557,10 @@
     font-size: 0.9rem;
     animation: tooltip-fade 0.15s ease-out;
     transform-origin: top left;
-    display: none;
+
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
 .tooltip-header {
@@ -566,7 +569,10 @@
     gap: 12px;
     border-bottom: 1px solid var(--border);
     padding-bottom: 12px;
-    margin-bottom: 12px;
+}
+
+.tooltip-section {
+    margin-top: 10px;
 }
 
 .tooltip-icon {
@@ -599,12 +605,8 @@
 }
 
 .tooltip-sub {
-    font-size: 0.75rem;
+    font-size: 0.85rem;
     color: var(--text-muted);
-}
-
-.tooltip-section {
-    margin-bottom: 12px;
 }
 
 .tooltip-label {
@@ -636,7 +638,7 @@
 
 .tooltip-desc {
     font-size: 0.85rem;
-    line-height: 1.7;
+    line-height: 1.85;
     background: rgba(0, 0, 0, 0.2);
     padding: 10px;
     border-radius: 8px;

@@ -139,7 +139,8 @@ const AppTooltip = {
             const type = target.getAttribute('data-tooltip-type');
             const pot = Number(target.getAttribute('data-tooltip-pot')) || 0;
             const forged = target.getAttribute('data-tooltip-forged') === 'true';
-            if (id && type) this.show(id, type, pot, e, forged);
+            const isModal = !!target.closest('.modal-item');
+            if (id && type) this.show(id, type, pot, e, forged, isModal);
         });
 
         document.addEventListener('mousemove', (e) => {
@@ -151,11 +152,19 @@ const AppTooltip = {
         });
     },
 
-    show(id, type, pot, event, forged = false) {
+    show(id, type, pot, event, forged = false, isModal = false) {
         const data = this.getData(id, type);
         if (!data) return;
+
+        // 메인 화면 오퍼레이터 툴팁만 너비 확장
+        if (type === 'operator' && !isModal) {
+            this.el.style.width = '500px';
+        } else {
+            this.el.style.width = '';
+        }
+
         let content = '';
-        if (type === 'operator') content = this.renderOperator(data, pot);
+        if (type === 'operator') content = this.renderOperator(data, pot, isModal);
         else if (type === 'weapon') content = this.renderWeapon(data);
         else if (type === 'gear') content = this.renderGear(data, forged);
         this.el.innerHTML = content;
@@ -164,6 +173,7 @@ const AppTooltip = {
     },
 
     showCustom(content, event) {
+        this.el.style.width = '';
         this.el.innerHTML = content;
         this.el.style.display = 'block';
         if (event) this.position(event);
@@ -192,7 +202,7 @@ const AppTooltip = {
     // 4. HTML 렌더러
     // ==========================================
 
-    renderOperator(op, currentPot) {
+    renderOperator(op, currentPot, isModal = false) {
         const traitItems = [], synergyItems = [];
         const processSingle = (t, source, sortWeight, potLevel = null) => {
             if (!t?.type) return;
@@ -253,6 +263,18 @@ const AppTooltip = {
                 }).join('');
         };
 
+        const talentDescs = (op.talents || []).map((t, i) => {
+            const entry = t.find(e => e.desc);
+            return entry ? `[재능${i + 1}] ${this.colorizeText(entry.desc)}` : null;
+        }).filter(Boolean);
+
+        const potDescs = (op.potential || []).map((p, i) => {
+            const entry = p.find(e => e.desc);
+            return entry ? `[잠재${i + 1}] ${this.colorizeText(entry.desc)}` : null;
+        }).filter(Boolean);
+
+        const descHtml = [...talentDescs, ...potDescs].join('<br>');
+
         return `
             <div class="tooltip-header">
                 <div class="tooltip-icon"><img src="images/operators/${op.name}.webp"></div>
@@ -271,6 +293,7 @@ const AppTooltip = {
             </div>
             ${traitItems.length > 0 ? `<div class="tooltip-section"><div class="tooltip-label">오퍼레이터 특성</div><div class="tooltip-traits">${renderList(traitItems)}</div></div>` : ''}
             ${synergyItems.length > 0 ? `<div class="tooltip-section"><div class="tooltip-label" style="color:#FFFA00">시너지</div><div class="tooltip-traits">${renderList(synergyItems, true)}</div></div>` : ''}
+            ${!isModal && descHtml ? `<div class="tooltip-section"><div class="tooltip-label">설명</div><div class="tooltip-desc">${descHtml}</div></div>` : ''}
         `;
     },
 
@@ -302,6 +325,9 @@ const AppTooltip = {
             if (isSynergy) synergyItems.push(html); else traitItems.push(html);
         });
 
+        const lastTrait = wep.traits[wep.traits.length - 1];
+        const traitDesc = (lastTrait && lastTrait.desc) ? this.colorizeText(lastTrait.desc) : '';
+
         return `
             <div class="tooltip-header">
                 <div class="tooltip-icon"><img src="images/weapons/${wep.name}.webp"></div>
@@ -316,10 +342,11 @@ const AppTooltip = {
                     <div class="tooltip-stat-item"><span class="tooltip-stat-key">공격력</span><span class="tooltip-stat-val">${wep.baseAtk}</span></div>
                 </div>
             </div>
-            ${traitItems.length > 0 ? `<div class="tooltip-section"><div class="tooltip-label">무기 특성</div><div class="tooltip-traits">${traitItems.join('')}</div></div>` : ''}
-            ${synergyItems.length > 0 ? `<div class="tooltip-section"><div class="tooltip-label" style="color:#FFFA00">시너지</div><div class="tooltip-traits">${synergyItems.join('')}</div></div>` : ''}
-        `;
-    },
+                        ${traitItems.length > 0 ? `<div class="tooltip-section"><div class="tooltip-label">무기 특성</div><div class="tooltip-traits">${traitItems.join('')}</div></div>` : ''}
+                        ${synergyItems.length > 0 ? `<div class="tooltip-section"><div class="tooltip-label" style="color:#FFFA00">시너지</div><div class="tooltip-traits">${synergyItems.join('')}</div></div>` : ''}
+                        ${traitDesc ? `<div class="tooltip-section"><div class="tooltip-label">설명</div><div class="tooltip-desc">${traitDesc}</div></div>` : ''}
+                    `;
+                },
 
     renderGear(gear, forged = false) {
         const setName = DATA_SETS?.find(s => s.id === gear.set)?.name || '일반';
