@@ -569,6 +569,10 @@ input[type="range"]::-webkit-slider-thumb {
         overflow: visible;
         border-radius: 12px;
     }
+
+    #app-tooltip {
+        display: none !important;
+    }
 }
 
 @media (max-width: 768px) {

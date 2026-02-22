@@ -621,6 +621,8 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects, act
         const checkDisabled = (cat) => {
             if (state.disabledEffects.includes(eff.uid) || !!eff._triggerFailed) return true;
             if (cat && state.disabledEffects.includes(`${eff.uid}#${cat}`)) return true;
+            // 실시간 동기화: 현재 계산 컨텍스트(calculationTag)가 있으면 해당 카테고리 태그도 체크
+            if (state.calculationTag && state.disabledEffects.includes(`${eff.uid}#${state.calculationTag}`)) return true;
             return false;
         };
 
@@ -1665,8 +1667,14 @@ function calculateCycleDamage(currentState, baseRes, forceMaxStack = false) {
         if (!skillDef) return;
 
         let specificRes = baseRes;
+        const typeMap = { '배틀 스킬': 'battle', '연계 스킬': 'combo', '궁극기': 'ult', '일반 공격': 'normal' };
+        const calculationTag = typeMap[type] || 'common';
+
         if (skillDef.element) {
-            specificRes = calculateDamage({ ...currentState, overrideSkillElement: skillDef.element }, forceMaxStack);
+            specificRes = calculateDamage({ ...currentState, overrideSkillElement: skillDef.element, calculationTag }, forceMaxStack);
+        } else {
+            // 속성 변경이 없더라도 태그를 전달하기 위해 새 결과 계산
+            specificRes = calculateDamage({ ...currentState, calculationTag }, forceMaxStack);
         }
 
         const res = calcSingleSkillDamage(type, currentState, specificRes);
@@ -1701,10 +1709,14 @@ function calculateCycleDamage(currentState, baseRes, forceMaxStack = false) {
         if (isObj && itemObj.customState) {
             hasCustomState = true;
             customStateMerged.disabledEffects = itemObj.customState.disabledEffects;
+            customStateMerged.effectStacks = itemObj.customState.effectStacks;
             customStateMerged.debuffState = itemObj.customState.debuffState;
             customStateMerged.enemyUnbalanced = itemObj.customState.enemyUnbalanced;
             customStateMerged.mainOp.specialStack = itemObj.customState.specialStack;
         }
+
+        const typeMap = { '배틀 스킬': 'battle', '연계 스킬': 'combo', '궁극기': 'ult', '일반 공격': 'normal' };
+        customStateMerged.calculationTag = typeMap[type] || 'common';
 
         // 스킬에 지정된 속성이 있다면 덮어쓰기를 설정합니다.
         if (skillDef && skillDef.element) {

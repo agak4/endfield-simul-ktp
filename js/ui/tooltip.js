@@ -154,6 +154,7 @@ const AppTooltip = {
     },
 
     show(id, type, pot, event, forged = false, isModal = false) {
+        if (window.innerWidth <= 1024) return;
         const data = this.getData(id, type);
         if (!data) return;
 
@@ -174,6 +175,7 @@ const AppTooltip = {
     },
 
     showCustom(content, event) {
+        if (window.innerWidth <= 1024) return;
         this.el.style.width = '';
         this.el.innerHTML = content;
         this.el.style.display = 'block';
