@@ -414,10 +414,7 @@ const AppTooltip = {
     /** 시퀀스 아이템 전용 간소화된 툴팁 */
     renderSequenceTooltip(type, displayDmg, rateHtml, activeEffects, st, opData) {
         const extraHtml = `
-            <div class="tooltip-desc">
-                피해량: <strong class="tooltip-highlight">${Math.floor(displayDmg).toLocaleString()}</strong><br>
-                데미지 배율: <strong>${rateHtml}</strong>
-            </div>
+            <div class="tooltip-desc">피해량: <strong class="tooltip-highlight">${Math.floor(displayDmg).toLocaleString()}</strong><br>데미지 배율: <strong>${rateHtml}</strong></div>
         `;
 
         const synergyHtml = this.renderSynergySection(activeEffects, st, opData, type);
@@ -496,7 +493,7 @@ const AppTooltip = {
                 const skillDef = opDataLocal.skill?.find(s => s.skillType?.includes(skillType));
                 if (skillDef && skillDef.bonus) {
                     (Array.isArray(skillDef.bonus) ? skillDef.bonus : [skillDef.bonus]).forEach(b => {
-                        if (b.trigger && evaluateTrigger(b.trigger, st)) {
+                        if (b.trigger && evaluateTrigger(b.trigger, st, opDataLocal, null, false, null, true)) {
                             const triggerTxt = Array.isArray(b.trigger) ? b.trigger.join(', ') : b.trigger;
                             // 스페셜 스택과 이름이 겹치면 (보너스 발동) 라인은 생략
                             const isAlreadyShown = extraEffects.some(ee => ee.includes(triggerTxt));

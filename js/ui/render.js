@@ -680,9 +680,13 @@ function renderWeaponComparison(currentRes, currentCycle) {
         .filter(Boolean)
         .sort((a, b) => b.finalDmg - a.finalDmg);
 
-    // [Mod] 바 너비 기준을 '목록 내 최대 데미지'로 변경 (현재 무기 제외)
-    // 가장 높은 pct(데미지)를 가진 항목을 기준으로 바를 꽉 채우기 위함
-    const maxDmg = comparisons.length > 0 ? comparisons[0].finalDmg : 0;
+    // [Mod] 바 너비 기준 설정
+    // 기본적으로 목록 내 가장 높은 데미지를 100% 기준으로 삼되,
+    // 가장 높은 무기의 효율이 음수(현재 무기보다 약함)라면 현재 무기(currentTotal)를 100% 기준으로 삼는다.
+    let maxDmg = comparisons.length > 0 ? comparisons[0].finalDmg : 0;
+    if (comparisons.length > 0 && comparisons[0].pct < 0) {
+        maxDmg = currentTotal;
+    }
     box.innerHTML = '';
 
     comparisons.forEach(item => {

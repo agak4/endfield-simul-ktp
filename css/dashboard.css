@@ -298,10 +298,6 @@
     background: rgba(255, 180, 0, 0.07);
 }
 
-.cycle-label {
-    font-size: 0.8rem;
-}
-
 .cycle-val {
     font-size: 0.9rem;
     font-weight: 700;
@@ -874,7 +870,7 @@
 }
 
 .skill-name {
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     color: var(--text-gold);
     font-weight: 600;
 }

@@ -1000,7 +1000,7 @@ function checkSetViability(setId, opData) {
  * @param {object} currentState
  * @returns {boolean}
  */
-function evaluateTrigger(trigger, state, opData, triggerType, isTargetOnly = false, effectTarget = null) {
+function evaluateTrigger(trigger, state, opData, triggerType, isTargetOnly = false, effectTarget = null, strictMode = false) {
     if (!trigger || trigger.length === 0) return true;
 
     const triggers = Array.isArray(trigger) ? trigger : [trigger];
@@ -1029,6 +1029,18 @@ function evaluateTrigger(trigger, state, opData, triggerType, isTargetOnly = fal
 
         const evalFn = TRIGGER_MAP[t];
         if (evalFn && evalFn()) return true;
+
+        const op = opData || DATA_OPERATORS.find(o => o.id === (state.mainOp?.id));
+        if (op && op.specialStack) {
+            const stacks = Array.isArray(op.specialStack) ? op.specialStack : [op.specialStack];
+            const matchingStack = stacks.find(s => s.triggers && s.triggers.includes(t));
+            if (matchingStack) {
+                const stackId = matchingStack.id || 'default';
+                const val = typeof specialStackVal === 'object' ? (specialStackVal[stackId] || 0) : specialStackVal;
+                if (val > 0) return true;
+                if (strictMode) return false;
+            }
+        }
 
         // 2. 오퍼레이터 역량 확인 (OpTrigger)
         if (opData && !isTargetOnly) {
@@ -1084,17 +1096,6 @@ function evaluateTrigger(trigger, state, opData, triggerType, isTargetOnly = fal
 
         if (state.triggerActive && state.triggerActive[t]) return true;
 
-        const op = opData || DATA_OPERATORS.find(o => o.id === (state.mainOp?.id));
-        if (op && op.specialStack) {
-            const stacks = Array.isArray(op.specialStack) ? op.specialStack : [op.specialStack];
-            const matchingStack = stacks.find(s => s.triggers && s.triggers.includes(t));
-            if (matchingStack) {
-                const stackId = matchingStack.id || 'default';
-                const val = typeof specialStackVal === 'object' ? (specialStackVal[stackId] || 0) : specialStackVal;
-                return val > 0;
-            }
-        }
-
         return false;
     });
 }
@@ -1127,7 +1128,7 @@ function calcSingleSkillDamage(type, st, bRes) {
     const bonusList = [];
     if (skillDef.bonus) {
         skillDef.bonus.forEach(b => {
-            if (evaluateTrigger(b.trigger, st, opData, b.triggerType, false, b.target)) {
+            if (evaluateTrigger(b.trigger, st, opData, b.triggerType, false, b.target, true)) {
                 const parsePct = (v) => v ? parseFloat(String(v)) / 100 : 0;
                 if (b.base !== undefined || b.perStack !== undefined) {
                     let stackCount = 0;
