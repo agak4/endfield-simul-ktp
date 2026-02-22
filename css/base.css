@@ -23,7 +23,7 @@
     --text-muted: #e0e0e0;
     --text-gold: #589bff;
 
-    --skill-element-phys: #CCAA60;
+    --skill-element-phys: #8f7d58;
     --skill-element-heat: #FF623D;
     --skill-element-elec: #FFC001;
     --skill-element-cryo: #21C6D0;
@@ -97,7 +97,7 @@ body {
 
 .container {
     display: grid;
-    grid-template-columns: 1fr 1.5fr 1fr;
+    grid-template-columns: 9fr 16fr 9fr;
     flex: 1;
     gap: 10px;
     padding: 10px;

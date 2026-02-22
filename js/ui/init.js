@@ -147,6 +147,14 @@ function initUI() {
         };
     });
 
+    // 적 방어력 입력 (Input 제거됨 -> Span 변경으로 이벤트 리스너 제거)
+    /*
+    const defInput = document.getElementById('enemy-defense');
+    if (defInput) {
+        defInput.onchange = updateState;
+    }
+    */
+
     // 디버프 아이콘 우클릭 바인딩
     document.querySelectorAll('.debuff-icon-wrap').forEach(el => {
         el.oncontextmenu = (e) => {
@@ -395,6 +403,12 @@ function applyStateToUI() {
     if (enemyCb) {
         enemyCb.checked = state.enemyUnbalanced;
         updateToggleButton(document.getElementById('enemy-unbalanced-toggle'), enemyCb.checked, '불균형');
+    }
+
+    const defInput = document.getElementById('enemy-defense');
+    if (defInput) {
+        if (defInput.tagName === 'INPUT') defInput.value = state.enemyDefense || 100;
+        else defInput.innerText = state.enemyDefense || 100;
     }
 
     const resBtns = document.querySelectorAll('.res-btn');

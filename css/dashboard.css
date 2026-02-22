@@ -112,7 +112,7 @@
     height: 35px;
     border-radius: 50%;
     overflow: hidden;
-    border: 1px solid var(--accent);
+    border: 2px solid var(--accent);
     display: flex;
     justify-content: center;
     align-items: center;

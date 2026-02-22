@@ -819,7 +819,13 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects, act
     // 저항 0 기준, 음수 = 저항 감소 = 피해 배율 1 이상
     const resMult = 1 - activeResVal / 100;
 
-    let finalDmg = finalAtk * critExp * (1 + dmgInc / 100) * (1 + amp / 100) * (1 + takenDmg / 100) * (1 + vuln / 100) * multiHit * (1 + finalUnbal / 100) * resMult;
+    // 방어력에 의한 피해 감소 (기본 100)
+    // 감소율 = 1 - 1 / (0.01 * 방어력 + 1)
+    // 피해 배율 = 1 / (0.01 * 방어력 + 1)
+    const defVal = state.enemyDefense !== undefined ? state.enemyDefense : 100;
+    const defMult = 1 / (0.01 * defVal + 1);
+
+    let finalDmg = finalAtk * critExp * (1 + dmgInc / 100) * (1 + amp / 100) * (1 + takenDmg / 100) * (1 + vuln / 100) * multiHit * (1 + finalUnbal / 100) * resMult * defMult;
 
     const swordsman = allEffects.find(e => e.setId === 'set_swordsman' && e.triggered);
     if (swordsman) {
@@ -843,7 +849,7 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects, act
             mainStatName: STAT_NAME_MAP[opData.mainStat], mainStatVal: stats[opData.mainStat],
             subStatName: STAT_NAME_MAP[opData.subStat], subStatVal: stats[opData.subStat],
             critExp, finalCritRate, critDmg, dmgInc, amp, vuln, takenDmg, unbalanceDmg: finalUnbal, originiumArts, skillMults, dmgIncData: dmgIncMap,
-            skillCritData, resistance: activeResVal, resMult, ultRecharge, finalUltCost, vulnMap, vulnAmpEffects
+            skillCritData, resistance: activeResVal, resMult, defMult, enemyDefense: defVal, ultRecharge, finalUltCost, vulnMap, vulnAmpEffects
         },
         logs
     };
@@ -1107,7 +1113,7 @@ function calcSingleSkillDamage(type, st, bRes) {
     const skillDef = skillMap[type];
     if (!skillDef) return null;
 
-    const { finalAtk, atkInc, baseAtk, statBonusPct, skillAtkIncData = { all: 0 }, critExp, finalCritRate, critDmg, amp, takenDmg, vuln, unbalanceDmg, resMult, originiumArts = 0, skillMults = { all: { mult: 0, add: 0 } }, dmgIncData = { all: 0, skill: 0, normal: 0, battle: 0, combo: 0, ult: 0 }, skillCritData = { rate: { all: 0 }, dmg: { all: 0 } }, vulnMap = {}, vulnAmpEffects = [] } = bRes.stats;
+    const { finalAtk, atkInc, baseAtk, statBonusPct, skillAtkIncData = { all: 0 }, critExp, finalCritRate, critDmg, amp, takenDmg, vuln, unbalanceDmg, resMult, defMult = 1, originiumArts = 0, skillMults = { all: { mult: 0, add: 0 } }, dmgIncData = { all: 0, skill: 0, normal: 0, battle: 0, combo: 0, ult: 0 }, skillCritData = { rate: { all: 0 }, dmg: { all: 0 } }, vulnMap = {}, vulnAmpEffects = [] } = bRes.stats;
 
     // dmg 파싱
     const parseDmgPct = (v) => {
@@ -1216,7 +1222,7 @@ function calcSingleSkillDamage(type, st, bRes) {
         }
     }
 
-    let adjDmgMult = SKILL_MULT_TYPES.has(baseType) ? (dmgMult + sAdd / 100) * (1 + sMult / 100) : dmgMult;
+    let adjDmgMult = SKILL_MULT_TYPES.has(baseType) ? dmgMult * (1 + (sMult + sAdd) / 100) : dmgMult;
 
     // 물리 이상은 스킬 배율(sMult)에 영향받지 않도록 나중에 더함
     adjDmgMult += abnormalMultTotal;
@@ -1261,17 +1267,15 @@ function calcSingleSkillDamage(type, st, bRes) {
         }
     });
 
-    const commonMults = adjCritExp * (1 + typeInc / 100) * (1 + amp / 100) * (1 + takenDmg / 100) * (1 + finalVuln / 100) * (1 + unbalanceDmg / 100) * resMult;
+    const commonMults = adjCritExp * (1 + typeInc / 100) * (1 + amp / 100) * (1 + takenDmg / 100) * (1 + finalVuln / 100) * (1 + unbalanceDmg / 100) * resMult * defMult;
 
     // 물리 이상용 공통 승수 (스킬 관련 피해 증가 제외) + 아츠 강도 보너스
     const artsStrengthMult = 1 + (originiumArts / 100);
-    const hasSmash = skillTypes.some(t => (typeof t === 'string' ? t : t.type) === '강타');
-    const isArtsSkill = opData.type === 'arts' || skillDef.element;
     const abnormalInc = dmgIncData.all;
 
-    // 강타가 포함된 스킬이거나 아츠 타입 스킬인 경우 아츠 강도 반영
-    const finalSkillCommonMults = (hasSmash || isArtsSkill) ? commonMults * artsStrengthMult : commonMults;
-    const abnormalCommonMults = adjCritExp * (1 + abnormalInc / 100) * (1 + amp / 100) * (1 + takenDmg / 100) * (1 + vuln / 100) * (1 + unbalanceDmg / 100) * resMult * artsStrengthMult;
+    // [Fix] 오리지늄 아츠 강도는 물리/아츠 이상 데미지에만 적용 (스킬 기본 데미지 미적용)
+    const finalSkillCommonMults = commonMults;
+    const abnormalCommonMults = adjCritExp * (1 + abnormalInc / 100) * (1 + amp / 100) * (1 + takenDmg / 100) * (1 + vuln / 100) * (1 + unbalanceDmg / 100) * resMult * defMult * artsStrengthMult;
 
     const baseHitDmg = adjFinalAtk * baseMultOnly * finalSkillCommonMults;
 
@@ -1332,9 +1336,9 @@ function calcSingleSkillDamage(type, st, bRes) {
         myLogs.dmgInc.push({ txt: `[판 고유 특성] 강타 피해 x1.20 (곱연산)`, uid: 'fan_smash_bonus', tag: typeMap[baseType] });
     }
 
-    // 아츠 강도 로그 추가
-    if (originiumArts > 0 && (hasSmash || isArtsSkill)) {
-        myLogs.arts.push({ txt: `오리지늄 아츠 강도: +${originiumArts.toFixed(1)}%`, uid: 'skill_arts_strength', tag: typeMap[baseType] });
+    // 아츠 강도 로그 추가 (이상 데미지가 있는 경우에만)
+    if (originiumArts > 0 && abnormalList.length > 0) {
+        myLogs.arts.push({ txt: `오리지늄 아츠 강도: +${originiumArts.toFixed(1)}% (이상 데미지에 적용)`, uid: 'skill_arts_strength', tag: typeMap[baseType] });
     }
 
     // 취약 증폭 로그 추가
@@ -1549,7 +1553,8 @@ function calculateCycleDamage(currentState, baseRes, forceMaxStack = false) {
                         (1 + (targetStats.takenDmg || 0) / 100) *
                         (1 + (targetStats.vuln || 0) / 100) *
                         (1 + (targetStats.unbalanceDmg || 0) / 100) *
-                        (targetStats.resMult || 1);
+                        (targetStats.resMult || 1) *
+                        (targetStats.defMult || 1);
 
                     const procDmg = Math.floor(targetStats.finalAtk * dmgMult * commonMults);
                     if (procDmg > 0) {

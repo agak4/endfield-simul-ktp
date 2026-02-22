@@ -23,29 +23,6 @@
 
 // ============ 결과 렌더링 ============
 
-const ELEMENT_COLORS = {
-    phys: 'var(--skill-element-phys)',
-    heat: 'var(--skill-element-heat)',
-    elec: 'var(--skill-element-elec)',
-    cryo: 'var(--skill-element-cryo)',
-    nature: 'var(--skill-element-nature)'
-};
-
-function getSkillElementColor(opData, skillType) {
-    if (!opData || !opData.skill) return ELEMENT_COLORS.phys;
-
-    // skillType 문자열을 포함하는 스킬 정의 찾기 (예: '일반 공격' 검색 시 ['일반 공격'] 또는 ['강화 일반 공격'] 찾음)
-    // 정확한 매칭을 위해 skillType 배열을 순회
-    const skillDef = opData.skill.find(s => {
-        return s.skillType && s.skillType.some(st => st.includes(skillType) || skillType.includes(st));
-    });
-
-    if (skillDef && skillDef.element) {
-        return ELEMENT_COLORS[skillDef.element] || ELEMENT_COLORS.phys;
-    }
-
-    return ELEMENT_COLORS.phys;
-}
 
 /**
  * 정적 사이클 버튼(일반, 배틀, 연계, 궁극기)의 테두리 색상을 오퍼레이터 속성에 맞춰 업데이트
@@ -61,7 +38,7 @@ function updateStaticCycleButtonsElementColor(opId) {
     const buttons = document.querySelectorAll('.cycle-add-buttons .cycle-btn:not(.cycle-btn-enhanced)');
     buttons.forEach(btn => {
         const type = btn.dataset.type;
-        const color = getSkillElementColor(opData, type);
+        const color = AppTooltip.getSkillElementColor(opData, type);
         const frame = btn.querySelector('.skill-icon-frame');
         if (frame) {
             frame.style.borderColor = color;
@@ -118,7 +95,8 @@ function renderResult(res) {
         'stat-arts': displayRes.stats.originiumArts.toFixed(0),
         'stat-arts-bonus': '+' + displayRes.stats.originiumArts.toFixed(1) + '%',
         'stat-res': (displayRes.stats.resistance ?? 0).toFixed(0),
-        'stat-res-mult': (((displayRes.stats.resMult ?? 1) - 1) * 100).toFixed(1) + '%'
+        'stat-res-mult': (((displayRes.stats.resMult ?? 1) - 1) * 100).toFixed(1) + '%',
+        'stat-def-red': ((1 - (displayRes.stats.defMult ?? 1)) * 100).toFixed(1) + '%'
     };
 
     // 피해 배율 빨간색 표시
@@ -337,7 +315,7 @@ function renderCycleSequence(cycleRes) {
         else if (type.includes('일반')) baseType = '일반 공격';
 
         const opData = DATA_OPERATORS.find(o => o.id === state.mainOp.id);
-        const color = getSkillElementColor(opData, type);
+        const color = AppTooltip.getSkillElementColor(opData, type);
 
         const imgSrc = imgMap[baseType] || imgMap['일반 공격'];
         const iconHtml = `
@@ -433,14 +411,37 @@ function renderCycleSequence(cycleRes) {
                 rateHtml = item.dmgRate || '0%';
             }
 
-            const content = `
-                <div class="tooltip-title tooltip-highlight">${type}</div>
+            const opData = DATA_OPERATORS.find(o => o.id === (state.mainOp?.id || ''));
+            const skillDef = opData?.skill?.find(s => s.skillType?.includes(type));
+
+            const extraHtml = `
                 <div class="tooltip-desc">
                     피해량: <strong class="tooltip-highlight">${Math.floor(displayDmg).toLocaleString()}</strong><br>
                     데미지 배율: <strong>${rateHtml}</strong>
                 </div>
             `;
-            AppTooltip.showCustom(content, e, { width: '260px' });
+
+            if (skillDef) {
+                const activeEffects = item.activeEffects || (window.lastCalcResult ? window.lastCalcResult.activeEffects : []);
+                let targetSt = state;
+                if (item.customState) {
+                    targetSt = {
+                        ...state,
+                        disabledEffects: item.customState.disabledEffects,
+                        debuffState: item.customState.debuffState,
+                        enemyUnbalanced: item.customState.enemyUnbalanced,
+                        mainOp: { ...state.mainOp, specialStack: item.customState.specialStack }
+                    };
+                }
+                const content = AppTooltip.renderSkillTooltip(type, skillDef, opData, extraHtml, activeEffects, targetSt);
+                AppTooltip.showCustom(content, e, { width: '260px' });
+            } else {
+                const content = `
+                    <div class="tooltip-title tooltip-highlight">${type}</div>
+                    ${extraHtml}
+                `;
+                AppTooltip.showCustom(content, e, { width: '260px' });
+            }
         };
         cardContainer.onmouseleave = () => AppTooltip.hide();
 
@@ -607,13 +608,7 @@ function renderCyclePerSkill(cycleRes) {
             header.onmouseenter = (e) => {
                 if (!isProc) {
                     const artsStrength = window.lastCalcResult?.stats?.originiumArts || 0;
-                    const content = `
-                        <div class="tooltip-title">${aName}</div>
-                        <div style="margin-top:8px; border-top: 1px solid rgba(255,255,255,0.1); padding-top:8px;"></div>
-                        <div class="tooltip-label" style="font-size:11px; color:var(--accent); margin-bottom:4px;">적용 중인 추가 효과</div>
-                        <div class="tooltip-bullet-point" style="color:var(--accent); font-size:12px;"><span class="tooltip-bullet-marker">•</span> 오리지늄 아츠 강도 +${artsStrength}%</div>
-                        <div class="tooltip-desc">기본 배율에 오리지늄 아츠 강도 보너스가 곱연산으로 적용됩니다.</div>
-                    `;
+                    const content = AppTooltip.renderAbnormalTooltip(aName, artsStrength);
                     AppTooltip.showCustom(content, e, { width: '260px' });
                 }
             };
@@ -656,28 +651,36 @@ function renderWeaponComparison(currentRes, currentCycle) {
     // FLIP 애니메이션: 현재 각 항목의 위치(First) 저장
     const firstPositions = new Map();
     Array.from(box.children).forEach(child => {
-        const name = child.querySelector('.comp-name')?.innerText;
+        const name = child.getAttribute('data-weapon-name');
         if (name) firstPositions.set(name, child.getBoundingClientRect());
     });
 
     const compPot = Number(document.getElementById('comp-wep-pot')?.value) || 0;
     const compState = document.getElementById('comp-wep-state')?.checked || false;
 
-    // 현재 무기 정보 임시 백업 (비교 후 원복 필요)
-    const { wepId: savedWepId, wepPot: savedWepPot, wepState: savedWepState } = state.mainOp;
-
     const comparisons = DATA_WEAPONS
         .filter(w => currentOp.usableWeapons.includes(w.type))
         .map(w => {
-            // 임시로 비교 무기로 교체하여 계산
-            state.mainOp.wepId = w.id;
-            state.mainOp.wepPot = compPot;
-            state.mainOp.wepState = compState;
+            // [Fix] 전역 state 직접 수정 방지: 깊은 복사하여 독립적으로 계산
+            // state에는 저항, 디버프, 비활성화된 효과(disabledEffects) 등 현재 설정이 모두 포함되어 있음
+            // 따라서 현재 옵션 상태 그대로 무기만 변경하여 비교함
+            const tempState = JSON.parse(JSON.stringify(state));
 
-            const res = calculateDamage(state, true);
+            // [Fix] 서브 무기 등의 특성 설정은 유지하고, 비교 대상 무기(w)의 특성만 강제로 활성화(기본값)한다.
+            if (tempState.disabledEffects) {
+                const targetPrefix = `${w.name}_trait`;
+                tempState.disabledEffects = tempState.disabledEffects.filter(uid => !uid.startsWith(targetPrefix));
+            }
+
+            tempState.mainOp.wepId = w.id;
+            tempState.mainOp.wepPot = compPot;
+            tempState.mainOp.wepState = compState;
+
+            // forceMaxStack: false로 설정하여 현재 중첩 상태 유지
+            const res = calculateDamage(tempState, false);
             if (!res) return null;
 
-            const cRes = typeof calculateCycleDamage === 'function' ? calculateCycleDamage(state, res, true) : null;
+            const cRes = typeof calculateCycleDamage === 'function' ? calculateCycleDamage(tempState, res, false) : null;
             const compTotal = (cRes && cRes.total > 0) ? cRes.total : res.finalDmg;
 
             const diff = compTotal - currentTotal;
@@ -688,18 +691,19 @@ function renderWeaponComparison(currentRes, currentCycle) {
         .filter(Boolean)
         .sort((a, b) => b.finalDmg - a.finalDmg);
 
-    // 원래 무기 정보 복원
-    state.mainOp.wepId = savedWepId;
-    state.mainOp.wepPot = savedWepPot;
-    state.mainOp.wepState = savedWepState;
-
-    const maxDmg = comparisons.length > 0 ? Math.max(comparisons[0].finalDmg, currentTotal) : currentTotal;
+    // [Mod] 바 너비 기준을 '목록 내 최대 데미지'로 변경 (현재 무기 제외)
+    // 가장 높은 pct(데미지)를 가진 항목을 기준으로 바를 꽉 채우기 위함
+    const maxDmg = comparisons.length > 0 ? comparisons[0].finalDmg : 0;
     box.innerHTML = '';
 
     comparisons.forEach(item => {
         const sign = item.pct > 0 ? '+' : '';
         const cls = item.pct >= 0 ? (item.pct === 0 ? 'current' : 'positive') : 'negative';
-        const barWidth = maxDmg > 0 ? (item.finalDmg / maxDmg * 100) : 0;
+
+        // [Fix] 너비 계산 안전장치
+        let ratio = maxDmg > 0 ? (item.finalDmg / maxDmg) : 0;
+        ratio = Math.max(0, Math.min(1, ratio));
+        const barWidth = (ratio * 100).toFixed(1);
 
         const div = document.createElement('div');
         div.className = `comp-item ${cls}`;
@@ -940,7 +944,7 @@ function updateEnhancedSkillButtons(opId) {
 
     enhancedSkills.forEach(es => {
         const skillName = es.skillType[0]; // 0번 인덱스가 기본 스킬명
-        const color = getSkillElementColor(opData, skillName);
+        const color = AppTooltip.getSkillElementColor(opData, skillName);
 
         const btn = document.createElement('div');
         btn.className = 'cycle-btn cycle-btn-enhanced';

@@ -47,6 +47,7 @@ let state = {
     ],
     subOpsCollapsed: [false, true, true], // 기본값: 첫 번째만 펼침
     enemyUnbalanced: false,
+    enemyDefense: 100,  // 적 방어력 (기본 100)
     enemyResistance: 0, // 적의 기본 저항 (0, 20, 50, 70)
     activeSetId: null,   // collectAllEffects에서 갱신됨
     disabledEffects: [],  // uid 문자열 배열
@@ -137,6 +138,9 @@ function updateState() {
     if (unbalancedCb) {
         getTargetState().setUnbalanced(unbalancedCb.checked);
     }
+
+    const defenseInput = document.getElementById('enemy-defense');
+    state.enemyDefense = defenseInput ? (parseInt(defenseInput.value || defenseInput.innerText) || 0) : 100;
 
     // 계산 → 렌더링
     const result = calculateDamage(state);
@@ -308,6 +312,7 @@ function loadState() {
             if (!state.disabledEffects) state.disabledEffects = [];
             if (!state.effectStacks) state.effectStacks = {};
 
+            state.enemyDefense = 100;
 
             // 구버전 저장 데이터 호환: debuffState 필드 없으면 기본값
             if (!state.debuffState) {
