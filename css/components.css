@@ -230,10 +230,6 @@
     gap: 18px;
 }
 
-.main-op-left {
-    flex: 0 0 110px;
-}
-
 .main-op-right {
     flex: 1;
     display: flex;
@@ -339,12 +335,6 @@
     align-items: flex-start;
 }
 
-.sub-char-left,
-.sub-wep-left,
-.wep-left {
-    flex: 0 0 110px;
-}
-
 .sub-char-right,
 .sub-wep-right,
 .wep-right {
@@ -357,6 +347,7 @@
 /* ============ 장비 그리드 ============ */
 .gear-flex-row {
     display: flex;
+    flex-flow: wrap;
     justify-content: space-between;
     gap: 10px;
     margin-bottom: 5px;
@@ -644,6 +635,15 @@
 }
 
 .tooltip-desc {
+    font-size: 0.85rem;
+    line-height: 1.7;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 10px;
+    border-radius: 8px;
+    white-space: pre-line;
+}
+
+.tooltip-traits {
     font-size: 0.85rem;
     line-height: 1.7;
     background: rgba(0, 0, 0, 0.2);

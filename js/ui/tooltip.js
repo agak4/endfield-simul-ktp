@@ -269,8 +269,8 @@ const AppTooltip = {
                     <div class="tooltip-stat-item"><span class="tooltip-stat-key">${getStatName(op.subStat)}</span><span class="tooltip-stat-val">${op.stats?.[op.subStat] ?? 0}</span></div>
                 </div>
             </div>
-            ${traitItems.length > 0 ? `<div class="tooltip-section"><div class="tooltip-label">오퍼레이터 특성</div><div class="tooltip-desc">${renderList(traitItems)}</div></div>` : ''}
-            ${synergyItems.length > 0 ? `<div class="tooltip-section"><div class="tooltip-label" style="color:#FFFA00">시너지</div><div class="tooltip-desc">${renderList(synergyItems, true)}</div></div>` : ''}
+            ${traitItems.length > 0 ? `<div class="tooltip-section"><div class="tooltip-label">오퍼레이터 특성</div><div class="tooltip-traits">${renderList(traitItems)}</div></div>` : ''}
+            ${synergyItems.length > 0 ? `<div class="tooltip-section"><div class="tooltip-label" style="color:#FFFA00">시너지</div><div class="tooltip-traits">${renderList(synergyItems, true)}</div></div>` : ''}
         `;
     },
 
@@ -316,8 +316,8 @@ const AppTooltip = {
                     <div class="tooltip-stat-item"><span class="tooltip-stat-key">공격력</span><span class="tooltip-stat-val">${wep.baseAtk}</span></div>
                 </div>
             </div>
-            ${traitItems.length > 0 ? `<div class="tooltip-section"><div class="tooltip-label">무기 특성</div><div class="tooltip-desc">${traitItems.join('')}</div></div>` : ''}
-            ${synergyItems.length > 0 ? `<div class="tooltip-section"><div class="tooltip-label" style="color:#FFFA00">시너지</div><div class="tooltip-desc">${synergyItems.join('')}</div></div>` : ''}
+            ${traitItems.length > 0 ? `<div class="tooltip-section"><div class="tooltip-label">무기 특성</div><div class="tooltip-traits">${traitItems.join('')}</div></div>` : ''}
+            ${synergyItems.length > 0 ? `<div class="tooltip-section"><div class="tooltip-label" style="color:#FFFA00">시너지</div><div class="tooltip-traits">${synergyItems.join('')}</div></div>` : ''}
         `;
     },
 

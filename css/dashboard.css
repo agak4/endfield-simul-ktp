@@ -709,6 +709,7 @@
     display: flex;
     align-items: flex-start;
     justify-content: center;
+    flex-flow: wrap;
     gap: 7px;
 }
 
