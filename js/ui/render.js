@@ -460,16 +460,20 @@ function renderCyclePerSkill(cycleRes) {
     const list = document.getElementById('cycle-dmg-list');
     const totalEl = document.getElementById('cycle-dmg-total');
 
-    if (list) list.innerHTML = '';
     if (totalEl) totalEl.innerText = cycleRes ? Math.floor(cycleRes.total).toLocaleString() : '0';
 
     if (!cycleRes || !list) return;
 
-    // FLIP 애니메이션: 현재 위치 저장
+    // FLIP 애니메이션: 현재 위치 저장 및 기존 노드 매핑
     const firstPositions = new Map();
+    const existingNodes = new Map();
+    
     Array.from(list.children).forEach(child => {
         const key = child.getAttribute('data-item-key');
-        if (key) firstPositions.set(key, child.getBoundingClientRect());
+        if (key) {
+            firstPositions.set(key, child.getBoundingClientRect());
+            existingNodes.set(key, child);
+        }
     });
 
     let allItems = [];
@@ -497,12 +501,8 @@ function renderCyclePerSkill(cycleRes) {
 
     // 2. 정렬 로직
     if (window.isCycleSortEnabled) {
-        // 데미지 내림차순 정렬 (전체 통합)
         allItems.sort((a, b) => (b.data.dmg || 0) - (a.data.dmg || 0));
     } else {
-        // 기본 순서: 스킬 목록 -> Abnormal 목록
-        // 스킬은 기본 키 순서(또는 정의된 순서) 유지
-        // Abnormal은 기존 로직대로 재능/잠재를 뒤로 보냄
         const skills = allItems.filter(i => i.type === 'skill');
         const abnormals = allItems.filter(i => i.type === 'abnormal');
 
@@ -517,7 +517,7 @@ function renderCyclePerSkill(cycleRes) {
         allItems = [...skills, ...abnormals];
     }
 
-    // 3. 렌더링
+    // 3. 렌더링 (DOM 재사용)
     allItems.forEach(item => {
         const name = item.key;
         const data = item.data;
@@ -526,17 +526,34 @@ function renderCyclePerSkill(cycleRes) {
         const totalValue = cycleRes.total || 0;
         const share = totalValue > 0 ? (dmgVal / totalValue * 100) : 0;
 
-        const row = document.createElement('div');
-        row.className = 'cycle-dmg-row';
-        if (item.type === 'abnormal') row.classList.add('abnormal-row'); // 스타일 유지를 위해 클래스 추가
-        
-        // FLIP 식별자 (유니크해야 함)
-        row.setAttribute('data-item-key', name);
-        
-        row.style.display = 'flex';
-        row.style.alignItems = 'center';
-        row.style.gap = '8px';
-        if (item.type === 'abnormal') row.style.opacity = '0.9';
+        let row = existingNodes.get(name);
+        let isNew = false;
+
+        if (!row) {
+            isNew = true;
+            row = document.createElement('div');
+            row.className = 'cycle-dmg-row';
+            row.setAttribute('data-item-key', name);
+            row.style.display = 'flex';
+            row.style.alignItems = 'center';
+            row.style.gap = '8px';
+            row.style.opacity = '0'; // 신규 항목은 투명하게 시작
+        } else {
+            // 기존 노드 재사용 시 스타일 초기화 (혹시 모를 잔여 스타일 제거)
+            row.style.transition = '';
+            row.style.transform = '';
+            row.style.opacity = item.type === 'abnormal' ? '0.9' : '1';
+            // 맵에서 제거하여 나중에 남은 것들(삭제 대상)만 남김
+            existingNodes.delete(name);
+        }
+
+        // 클래스 업데이트
+        if (item.type === 'abnormal') row.classList.add('abnormal-row');
+        else row.classList.remove('abnormal-row');
+
+        // 내부 HTML 갱신 (데이터가 변경되었을 수 있으므로 재생성)
+        // *주의: innerHTML을 덮어쓰면 내부 이벤트 리스너가 사라지므로 다시 걸어줘야 함.
+        row.innerHTML = '';
 
         // 1. 횟수 표시 뱃지
         const countDiv = document.createElement('div');
@@ -564,11 +581,7 @@ function renderCyclePerSkill(cycleRes) {
         const header = document.createElement('div');
         header.className = 'skill-card-header';
         
-        // 이름 표시 처리 (abnormal의 경우)
         let displayName = name;
-        // 기존 로직에서는 abnormal의 경우 name 그대로 사용했음. 
-        // 만약 '재능1' 등을 식별하기 어렵다면 보강 필요하나, 현재는 그대로 사용.
-        
         header.innerHTML = `<span class="skill-name">${displayName}</span><span class="skill-dmg">${dmgVal.toLocaleString()}</span>`;
 
         // 툴팁 이벤트
@@ -605,15 +618,11 @@ function renderCyclePerSkill(cycleRes) {
                 }
                 AppTooltip.showCustom(content, e, { width: '260px' });
             } else {
-                // Abnormal Tooltip
                 const isProc = name.startsWith('재능') || name.startsWith('잠재') || name.startsWith('무기');
                 if (!isProc) {
                     const artsStrength = window.lastCalcResult?.stats?.originiumArts || 0;
                     const content = AppTooltip.renderAbnormalTooltip(name, artsStrength);
                     AppTooltip.showCustom(content, e, { width: '260px' });
-                } else {
-                    // 재능/잠재/무기 특성 등은 별도 툴팁이 없으면 표시하지 않거나 간단히 표시
-                    // 기존 코드에서는 !isProc 일때만 툴팁을 띄웠음.
                 }
             }
         };
@@ -630,32 +639,38 @@ function renderCyclePerSkill(cycleRes) {
         row.appendChild(card);
         row.appendChild(shareDiv);
 
+        // 리스트에 추가 (기존 노드면 이동, 새 노드면 추가됨)
         list.appendChild(row);
     });
 
-    // FLIP 애니메이션 적용
+    // 4. 남은 노드 삭제 (더 이상 존재하지 않는 항목)
+    existingNodes.forEach(node => node.remove());
+
+    // 5. FLIP 애니메이션 적용
     requestAnimationFrame(() => {
         Array.from(list.children).forEach(child => {
             const key = child.getAttribute('data-item-key');
             const firstRect = firstPositions.get(key);
+            
             if (firstRect) {
+                // 기존 요소: 이동 애니메이션
                 const lastRect = child.getBoundingClientRect();
                 const deltaY = firstRect.top - lastRect.top;
+                
                 if (deltaY !== 0) {
                     child.style.transition = 'none';
                     child.style.transform = `translateY(${deltaY}px)`;
+                    
                     requestAnimationFrame(() => {
                         child.style.transition = 'transform 0.3s ease';
                         child.style.transform = '';
                     });
                 }
             } else {
-                // 새로 추가된 항목 페이드인
-                child.style.opacity = '0';
+                // 신규 요소: 페이드인
                 requestAnimationFrame(() => {
                     child.style.transition = 'opacity 0.3s ease';
-                    child.style.opacity = '1'; // abnormal일 경우 0.9로 설정했었으나, transition으로는 1로 가는게 깔끔함 (또는 클래스로 제어)
-                    if (child.classList.contains('abnormal-row')) child.style.opacity = '0.9';
+                    child.style.opacity = child.classList.contains('abnormal-row') ? '0.9' : '1';
                 });
             }
         });

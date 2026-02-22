@@ -174,7 +174,6 @@
     padding: 5px;
     gap: 6px;
     cursor: grab;
-    transition: background 0.2s, opacity 0.2s, transform 0.2s;
     flex-shrink: 0;
 }
 
@@ -977,15 +976,12 @@
     background-position: center;
     background-repeat: no-repeat;
     opacity: 1;
-    /* 가독성을 위해 1로 설정 */
     border: 1px solid rgba(255, 215, 0, 0.4);
     background-color: rgba(0, 0, 0, 0.5);
-    /* 이미지 로드 전 대비 */
 }
 
 .special-stack-bg img {
     display: none;
-    /* 배경 이미지를 사용하므로 실제 img 태그는 숨김 */
 }
 
 .special-stack-name {
@@ -1068,7 +1064,6 @@
     position: relative;
     overflow: hidden;
     z-index: 1;
-    /* 기존 스타일 유지 */
 }
 
 .skill-dmg-bar {
@@ -1082,7 +1077,6 @@
     border-right: 1px solid rgba(0, 217, 255, 0.3);
 }
 
-/* 스킬 카드 내부 텍스트가 바 위로 올라오도록 */
 .skill-card-header {
     position: relative;
     z-index: 2;
