@@ -24,60 +24,61 @@
 
 // ============ UI 초기화 및 이벤트 바인딩 ============
 
-window.onload = function () {
+/**
+ * UI 초기화 진입점. DOM 구조가 준비되면 즉시 실행된다.
+ */
+document.addEventListener('DOMContentLoaded', function () {
     const DEFAULT_OP_ID = 'Endministrator';
     const DEFAULT_WEP_ID = 'Grand Vision';
 
-    preloadAllImages();
     initUI();
 
     if (typeof loadState === 'function' && loadState()) {
         applyStateToUI();
-        return;
-    }
-
-    // 기본 오퍼레이터
-    const mainOpSelect = document.getElementById('main-op-select');
-    if (mainOpSelect) {
-        mainOpSelect.value = DEFAULT_OP_ID;
-        const opData = DATA_OPERATORS.find(o => o.id === DEFAULT_OP_ID);
-        if (opData) {
-            document.getElementById('main-op-select-btn').innerText = opData.name;
-            updateMainWeaponList(DEFAULT_OP_ID);
-            applyOpSettingsToUI(DEFAULT_OP_ID, 'main');
-            updateEntityImage(DEFAULT_OP_ID, 'main-op-image', 'operators');
-            if (typeof updateEnhancedSkillButtons === 'function') {
-                updateEnhancedSkillButtons(DEFAULT_OP_ID);
-            }
-            if (typeof updateStaticCycleButtonsElementColor === 'function') {
-                updateStaticCycleButtonsElementColor(DEFAULT_OP_ID);
+    } else {
+        // 기본 오퍼레이터 설정 (저장된 상태가 없을 때만)
+        const mainOpSelect = document.getElementById('main-op-select');
+        if (mainOpSelect) {
+            mainOpSelect.value = DEFAULT_OP_ID;
+            const opData = DATA_OPERATORS.find(o => o.id === DEFAULT_OP_ID);
+            if (opData) {
+                document.getElementById('main-op-select-btn').innerText = opData.name;
+                updateMainWeaponList(DEFAULT_OP_ID);
+                applyOpSettingsToUI(DEFAULT_OP_ID, 'main');
+                updateEntityImage(DEFAULT_OP_ID, 'main-op-image', 'operators');
+                if (typeof updateEnhancedSkillButtons === 'function') {
+                    updateEnhancedSkillButtons(DEFAULT_OP_ID);
+                }
+                if (typeof updateStaticCycleButtonsElementColor === 'function') {
+                    updateStaticCycleButtonsElementColor(DEFAULT_OP_ID);
+                }
             }
         }
-    }
 
-    // 기본 무기
-    const wepSelect = document.getElementById('main-wep-select');
-    if (wepSelect?.querySelector(`option[value="${DEFAULT_WEP_ID}"]`)) {
-        wepSelect.value = DEFAULT_WEP_ID;
-        const wepData = DATA_WEAPONS.find(w => w.id === DEFAULT_WEP_ID);
-        if (wepData) document.getElementById('main-wep-select-btn').innerText = wepData.name;
-        updateEntityImage(DEFAULT_WEP_ID, 'main-wep-image', 'weapons');
-    }
-
-    // 기본 장비
-    const defaultGears = [
-        { selectId: 'gear-gloves-select', val: 'gear_13' },
-        { selectId: 'gear-armor-select', val: 'gear_16' },
-        { selectId: 'gear-kit1-select', val: 'gear_11' },
-        { selectId: 'gear-kit2-select', val: 'gear_12' }
-    ];
-    defaultGears.forEach(({ selectId, val }) => {
-        const el = document.getElementById(selectId);
-        if (el) {
-            el.value = val;
-            updateEntityImage(val, selectId.replace('-select', '-image'), 'gears');
+        // 기본 무기 설정
+        const wepSelect = document.getElementById('main-wep-select');
+        if (wepSelect?.querySelector(`option[value="${DEFAULT_WEP_ID}"]`)) {
+            wepSelect.value = DEFAULT_WEP_ID;
+            const wepData = DATA_WEAPONS.find(w => w.id === DEFAULT_WEP_ID);
+            if (wepData) document.getElementById('main-wep-select-btn').innerText = wepData.name;
+            updateEntityImage(DEFAULT_WEP_ID, 'main-wep-image', 'weapons');
         }
-    });
+
+        // 기본 장비 설정
+        const defaultGears = [
+            { selectId: 'gear-gloves-select', val: 'gear_13' },
+            { selectId: 'gear-armor-select', val: 'gear_16' },
+            { selectId: 'gear-kit1-select', val: 'gear_11' },
+            { selectId: 'gear-kit2-select', val: 'gear_12' }
+        ];
+        defaultGears.forEach(({ selectId, val }) => {
+            const el = document.getElementById(selectId);
+            if (el) {
+                el.value = val;
+                updateEntityImage(val, selectId.replace('-select', '-image'), 'gears');
+            }
+        });
+    }
 
     // 첫 방문 시 가이드 오픈
     if (!localStorage.getItem('endfield_guide_seen')) {
@@ -86,6 +87,13 @@ window.onload = function () {
     }
 
     updateState();
+});
+
+/**
+ * 모든 리소스(이미지 포함) 로드가 완료된 후 무거운 작업(프리로딩)을 시작한다.
+ */
+window.onload = function () {
+    preloadAllImages();
 };
 
 function initUI() {
