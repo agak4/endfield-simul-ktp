@@ -3,9 +3,17 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>엔드필드 세팅 시뮬레이터</title>
     <link rel="icon" type="image/x-icon" href="images/favicon.ico">
+
+    <!-- 리소스 우선순위 최적화 (Preload) -->
+    <link rel="preload" href="css/base.css" as="style">
+    <link rel="preload" href="css/components.css" as="style">
+    <link rel="preload" href="css/dashboard.css" as="style">
+    <link rel="preload" href="js/data/data_operators.js" as="script">
+    <link rel="preload" href="js/state.js" as="script">
+
     <link rel="stylesheet" href="css/base.css">
     <link rel="stylesheet" href="css/components.css">
     <link rel="stylesheet" href="css/dashboard.css">
@@ -831,10 +839,19 @@
     </footer>
 
     <!-- 툴팁 컨테이너 -->
-    <div id="app-tooltip" class="app-tooltip" style="display: none;"></div>
-
-    <!-- 통합 스크립트 로더 -->
-    <script src="js/load.js"></script>
+    <!-- 스크립트 로드 최적화 (병렬 로드 및 실행 순서 보장) -->
+    <script src="js/data/data_operators.js?v=20240223" defer></script>
+    <script src="js/data/data_weapons.js?v=20240223" defer></script>
+    <script src="js/data/data_gears.js?v=20240223" defer></script>
+    <script src="js/data/data_abnormals.js?v=20240223" defer></script>
+    <script src="js/state.js?v=20240223" defer></script>
+    <script src="js/calc.js?v=20240223" defer></script>
+    <script src="js/ui/controls.js?v=20240223" defer></script>
+    <script src="js/ui/sidebar.js?v=20240223" defer></script>
+    <script src="js/ui/modal.js?v=20240223" defer></script>
+    <script src="js/ui/render.js?v=20240223" defer></script>
+    <script src="js/ui/tooltip.js?v=20240223" defer></script>
+    <script src="js/ui/init.js?v=20240223" defer></script>
 </body>
 
 </html>
