@@ -607,8 +607,8 @@ function preloadAllImages() {
     });
 
     let index = 0;
-    const CHUNK_SIZE = 5;
-    const INTERVAL = 200;
+    const CHUNK_SIZE = 15;
+    const INTERVAL = 50;
 
     function loadNextChunk() {
         if (index >= allRemaining.length) return;
@@ -624,7 +624,7 @@ function preloadAllImages() {
     }
 
     // 초기 렌더링 부하를 피해 약간의 지연 후 나머지 로드 시작
-    setTimeout(loadNextChunk, 1000);
+    setTimeout(loadNextChunk, 300);
 }
 
 /**
