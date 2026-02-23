@@ -174,9 +174,9 @@ const AppTooltip = {
         if (event) this.position(event);
     },
 
-    showCustom(content, event) {
+    showCustom(content, event, options = {}) {
         if (window.innerWidth <= 1024) return;
-        this.el.style.width = '';
+        this.el.style.width = options.width || '';
         this.el.innerHTML = content;
         this.el.style.display = 'block';
         if (event) this.position(event);
