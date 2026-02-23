@@ -28,7 +28,7 @@
  * @returns {string} HTML 문자열
  */
 function buildModalThumb(src, alt = '') {
-    const v = Date.now();
+    const v = APP_VERSION;
     return `
         <div class="modal-thumb">
             <img src="${src}?v=${v}" alt="${alt}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">

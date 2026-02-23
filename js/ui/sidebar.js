@@ -92,7 +92,7 @@ function renderGearSidebar(filterPart) {
             if (!isMatch) item.classList.add('disabled');
             if (document.getElementById(currentGearInputId)?.value === gear.id) item.classList.add('selected');
 
-            const v = Date.now();
+            const v = APP_VERSION;
             item.innerHTML = `
                 <div class="sidebar-item-img"><img src="images/gears/${gear.name}.webp?v=${v}"></div>
                 <span class="sidebar-item-name">${gear.name}</span>

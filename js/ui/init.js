@@ -557,7 +557,7 @@ window._preloadedImages = [];
  * 모든 이미지를 프리로딩하되, 주요 이미지를 먼저 로드하고 나머지는 유휴 시간에 분할 로드한다.
  */
 function preloadAllImages() {
-    const v = Date.now();
+    const v = APP_VERSION;
     const categories = {
         operators: typeof DATA_OPERATORS !== 'undefined' ? DATA_OPERATORS : [],
         weapons: typeof DATA_WEAPONS !== 'undefined' ? DATA_WEAPONS : [],
