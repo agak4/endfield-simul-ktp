@@ -31,7 +31,7 @@ function buildModalThumb(src, alt = '') {
     const v = Date.now();
     return `
         <div class="modal-thumb">
-            <img src="${src}?v=${v}" alt="${alt}" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
+            <img src="${src}?v=${v}" alt="${alt}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
             <span class="modal-thumb-fallback">IMG</span>
         </div>`;
 }

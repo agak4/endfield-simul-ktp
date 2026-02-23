@@ -94,7 +94,7 @@ function renderGearSidebar(filterPart) {
 
             const v = Date.now();
             item.innerHTML = `
-                <div class="sidebar-item-img"><img src="images/gears/${gear.name}.webp?v=${v}" loading="lazy"></div>
+                <div class="sidebar-item-img"><img src="images/gears/${gear.name}.webp?v=${v}"></div>
                 <span class="sidebar-item-name">${gear.name}</span>
             `;
             if (isMatch) item.onclick = () => selectGear(gear.id);
