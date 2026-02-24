@@ -13,19 +13,61 @@
  *
  * [내부 규칙]
  * - setupToggleButton()은 체크박스를 숨기고 버튼을 DOM에 동적으로 삽입한다.
- *   이미 버튼이 삽입된 요소에 중복 호출하지 않도록 초기화 시점을 주의한다.
- * - updateEntityImage()는 entityId가 빈 문자열이거나 null이면 이미지를 숨기고
- *   툴팁 속성을 제거한다. 이 함수가 이미지 관련 모든 상태의 단일 진입점이다.
- * - syncPotencyToTooltip / syncForgedToTooltip은 툴팁 표시를 위한 데이터 속성만
- *   업데이트하며, state를 직접 수정하지 않는다.
+ * - updateEntityImage()는 entityId가 없으면 이미지를 숨기고 툴팁 속성을 제거한다.
+ * - syncPotencyToTooltip / syncForgedToTooltip은 툴팁 데이터 속성만 업데이트한다.
  */
 
-// ============ UI 컨트롤 (버튼, 토글, 잠재, 이미지) ============
+// ============================================================
+// 모듈 상수
+// ============================================================
+
+/** 아츠 부착 타입 목록 (cycleDebuffAttach, applyDebuffStateToUI 공용) */
+const ATTACH_TYPES = ['열기 부착', '전기 부착', '냉기 부착', '자연 부착'];
+
+/** 아츠 이상 타입 목록 (applyDebuffStateToUI 공용) */
+const ABNORMAL_TYPES = ['연소', '감전', '동결', '부식'];
+
+/** 잠재 input ID → 대응 이미지 element ID 매핑 */
+const POT_INPUT_TO_IMAGE = {
+    'main-op-pot': 'main-op-image',
+    'main-wep-pot': 'main-wep-image',
+};
+
+/** 단조 체크박스 ID → 대응 이미지 element ID 매핑 */
+const FORGE_CB_TO_IMAGE = Object.fromEntries(
+    GEAR_SLOT_KEYS.map(k => [`gear-${k}-forge`, `gear-${k}-image`])
+);
+
+// ============================================================
+// 내부 유틸리티
+// ============================================================
+
+/**
+ * 고유한 스킬 시퀀스 ID를 생성한다.
+ * @returns {string}
+ */
+function makeSeqId() {
+    return `seq_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+}
+
+/**
+ * 디버프 변경 후 공통으로 필요한 저장·전파·갱신을 실행한다.
+ * cycleDebuff, cycleDebuffAttach, cycleDebuffAbnormal, cycleSpecialStack에서 공통 사용.
+ * @param {'debuff'|'specialStack'} propagateType
+ */
+function commitDebuffChange(propagateType) {
+    saveState();
+    if (!state.selectedSeqId) propagateGlobalStateToCustom(propagateType);
+    updateState();
+}
+
+// ============================================================
+// 잠재 버튼
+// ============================================================
 
 /**
  * 잠재 레벨 선택 버튼 그룹을 렌더링한다 (0~5).
  * 버튼 클릭 시 hidden input 값을 갱신하고 updateState()를 호출한다.
- *
  * @param {string} inputId - 연결된 hidden number input의 ID
  * @param {string} groupId - 버튼을 삽입할 컨테이너 div의 ID
  */
@@ -34,8 +76,8 @@ function setupPotencyButtons(inputId, groupId) {
     const group = document.getElementById(groupId);
     if (!input || !group) return;
 
-    group.innerHTML = '';
     const currentVal = Number(input.value) || 0;
+    group.innerHTML = '';
 
     for (let i = 0; i <= 5; i++) {
         const btn = document.createElement('button');
@@ -54,49 +96,34 @@ function setupPotencyButtons(inputId, groupId) {
 }
 
 /**
- * 잠재 레벨 변경 시 연결된 이미지 요소의 data-tooltip-pot 속성을 갱신한다.
- * 툴팁이 현재 잠재 레벨을 반영하도록 동기화하기 위함이다.
- *
+ * 잠재 레벨 변경 시 대응 이미지 요소의 data-tooltip-pot 속성을 갱신한다.
  * @param {string} inputId  - 잠재 레벨 input의 ID
  * @param {number} potValue - 새로운 잠재 레벨 값
  */
 function syncPotencyToTooltip(inputId, potValue) {
-    let targetImgId = '';
-    if (inputId === 'main-op-pot') targetImgId = 'main-op-image';
-    else if (inputId === 'main-wep-pot') targetImgId = 'main-wep-image';
-    else if (inputId.includes('sub-')) targetImgId = inputId.replace('-pot', '-image');
-
-    if (targetImgId) {
-        const img = document.getElementById(targetImgId);
-        if (img) img.setAttribute('data-tooltip-pot', potValue);
-    }
+    // sub-N-pot 패턴은 동적으로 이미지 ID를 도출한다
+    const imgId = POT_INPUT_TO_IMAGE[inputId]
+        || (inputId.includes('sub-') ? inputId.replace('-pot', '-image') : '');
+    document.getElementById(imgId)?.setAttribute('data-tooltip-pot', potValue);
 }
 
+// ============================================================
+// 단조 / 기질 토글
+// ============================================================
+
 /**
- * 단조 체크박스 변경 시 연결된 장비 이미지의 data-tooltip-forged 속성을 갱신한다.
- *
+ * 단조 체크박스 변경 시 대응 장비 이미지의 data-tooltip-forged 속성을 갱신한다.
  * @param {string}  checkboxId - 단조 checkbox 요소의 ID
  * @param {boolean} isForged   - 단조 ON/OFF
  */
 function syncForgedToTooltip(checkboxId, isForged) {
-    // 체크박스 ID → 이미지 ID 매핑
-    const gearSlotMap = {
-        'gear-gloves-forge': 'gear-gloves-image',
-        'gear-armor-forge': 'gear-armor-image',
-        'gear-kit1-forge': 'gear-kit1-image',
-        'gear-kit2-forge': 'gear-kit2-image'
-    };
-    const imgId = gearSlotMap[checkboxId];
-    if (imgId) {
-        const img = document.getElementById(imgId);
-        if (img) img.setAttribute('data-tooltip-forged', isForged);
-    }
+    document.getElementById(FORGE_CB_TO_IMAGE[checkboxId])
+        ?.setAttribute('data-tooltip-forged', isForged);
 }
 
 /**
  * 체크박스를 숨기고 토글 버튼을 DOM에 삽입한다.
  * 버튼 클릭 시 체크박스 값을 반전시키고 updateState()를 호출한다.
- *
  * @param {string} checkboxId - 원본 checkbox 요소의 ID
  * @param {string} buttonId   - 생성할 버튼에 부여할 ID
  * @param {string} label      - 버튼 텍스트에 표시할 레이블 (e.g. '기질', '단조')
@@ -105,10 +132,10 @@ function setupToggleButton(checkboxId, buttonId, label) {
     const cb = document.getElementById(checkboxId);
     if (!cb) return;
     cb.style.display = 'none';
+
     const btn = document.createElement('button');
     btn.id = buttonId;
     btn.className = 'toggle-btn';
-    btn.innerText = `${label}: OFF`;
     btn.onclick = () => {
         cb.checked = !cb.checked;
         updateToggleButton(btn, cb.checked, label);
@@ -120,7 +147,7 @@ function setupToggleButton(checkboxId, buttonId, label) {
 
 /**
  * 메인 단조 일괄 토글을 설정한다.
- * 메인 단조 버튼 클릭 시 모든 개별 슬롯 단조를 동시에 ON/OFF한다.
+ * 클릭 시 모든 개별 슬롯 단조를 동시에 ON/OFF한다.
  */
 function setupMainForgeToggle() {
     const mainForgeCb = document.getElementById('main-gear-forge');
@@ -130,10 +157,8 @@ function setupMainForgeToggle() {
     const toggle = document.createElement('button');
     toggle.id = 'main-forge-toggle';
     toggle.className = 'toggle-btn';
-    toggle.innerText = '전체 단조: OFF';
     toggle.onclick = () => {
         mainForgeCb.checked = !mainForgeCb.checked;
-        // 모든 슬롯 단조 체크박스 일괄 동기화
         GEAR_FORGE_IDS.forEach(gid => {
             const gcb = document.getElementById(gid);
             const gbtn = document.getElementById(gid + '-toggle');
@@ -164,13 +189,13 @@ function setupGearForgeToggles() {
         const btn = document.createElement('button');
         btn.id = id + '-toggle';
         btn.className = 'toggle-btn';
-        btn.innerText = '단조: OFF';
         btn.onclick = () => {
             cb.checked = !cb.checked;
             updateToggleButton(btn, cb.checked, '단조');
             syncForgedToTooltip(id, cb.checked);
-            // 모든 슬롯이 ON인지 확인하여 메인 단조 버튼 상태를 갱신
-            const allOn = GEAR_FORGE_IDS.every(gid => document.getElementById(gid)?.checked || false);
+
+            // 모든 슬롯 ON이면 메인 단조도 ON
+            const allOn = GEAR_FORGE_IDS.every(gid => document.getElementById(gid)?.checked);
             if (mainForgeCb) mainForgeCb.checked = allOn;
             if (mainForgeToggle) updateToggleButton(mainForgeToggle, allOn, '전체 단조');
             updateState();
@@ -183,25 +208,22 @@ function setupGearForgeToggles() {
 
 /**
  * 토글 버튼의 텍스트와 active 클래스를 갱신한다.
- *
  * @param {HTMLButtonElement} btn       - 대상 버튼 요소
  * @param {boolean}           isChecked - 현재 ON/OFF 상태
- * @param {string}            label     - 버튼 레이블 (e.g. '기질', '단조')
+ * @param {string}            label     - 버튼 레이블
  */
 function updateToggleButton(btn, isChecked, label) {
-    if (isChecked) {
-        btn.classList.add('active');
-        btn.innerText = `${label}: ON`;
-    } else {
-        btn.classList.remove('active');
-        btn.innerText = `${label}: OFF`;
-    }
+    btn.classList.toggle('active', isChecked);
+    btn.innerText = `${label}: ${isChecked ? 'ON' : 'OFF'}`;
 }
+
+// ============================================================
+// 서브 오퍼레이터 접기/펼치기
+// ============================================================
 
 /**
  * 서브 오퍼레이터 카드를 접거나 펼친다.
  * HTML의 onclick 속성에서 직접 호출되므로 전역에서 접근 가능해야 한다.
- *
  * @param {number} idx - 서브 오퍼레이터 인덱스 (0~2)
  */
 function toggleSubOp(idx) {
@@ -212,6 +234,10 @@ function toggleSubOp(idx) {
     }
 }
 
+// ============================================================
+// 엔티티 이미지 업데이트
+// ============================================================
+
 /**
  * 엔티티(오퍼레이터/무기/장비) 이미지를 업데이트하고 툴팁 속성을 동기화한다.
  *
@@ -219,7 +245,7 @@ function toggleSubOp(idx) {
  * - 이미지 로드 실패(onerror) 시 자동으로 숨긴다.
  * - 오퍼레이터/무기는 희귀도 클래스(rarity-N)를 컨테이너에 적용한다.
  *
- * @param {string|null} entityId     - 엔티티 ID. null 또는 빈 문자열이면 이미지 숨김.
+ * @param {string|null} entityId     - 엔티티 ID
  * @param {string}      imgElementId - <img> 요소의 ID
  * @param {string}      folder       - 이미지 폴더명 ('operators' | 'weapons' | 'gears')
  */
@@ -228,8 +254,7 @@ function updateEntityImage(entityId, imgElementId, folder) {
     if (!imgElement) return;
 
     const container = imgElement.parentElement;
-    // 기존 희귀도 클래스 초기화
-    if (container) container.classList.remove('rarity-6', 'rarity-5', 'rarity-4');
+    container?.classList.remove('rarity-6', 'rarity-5', 'rarity-4');
 
     if (!entityId) {
         imgElement.src = '';
@@ -240,59 +265,55 @@ function updateEntityImage(entityId, imgElementId, folder) {
     let fileName = '', rarity = 0;
     if (folder === 'operators') {
         const op = DATA_OPERATORS.find(o => o.id === entityId);
-        fileName = op?.name;
-        rarity = op?.rarity || 0;
+        fileName = op?.name; rarity = op?.rarity || 0;
     } else if (folder === 'weapons') {
         const wep = DATA_WEAPONS.find(w => w.id === entityId);
-        fileName = wep?.name;
-        rarity = wep?.rarity || 0;
+        fileName = wep?.name; rarity = wep?.rarity || 0;
     } else if (folder === 'gears') {
         fileName = DATA_GEAR.find(g => g.id === entityId)?.name;
     }
 
-    if (fileName) {
-        if (rarity && container) container.classList.add(`rarity-${rarity}`);
-
-        const v = APP_VERSION;
-        imgElement.src = `images/${folder}/${fileName}.webp?v=${v}`;
-        imgElement.loading = "eager"; // 메인 화면 필수 이미지는 즉시 로드
-        imgElement.style.display = 'block';
-
-        // 툴팁용 데이터 속성 설정
-        imgElement.setAttribute('data-tooltip-id', entityId);
-        imgElement.setAttribute('data-tooltip-type', folder === 'operators' ? 'operator' : folder === 'weapons' ? 'weapon' : 'gear');
-
-        // 잠재 레벨 속성 (오퍼레이터/무기 전용)
-        let potency = 0;
-        if (folder === 'operators' || folder === 'weapons') {
-            let inputId = '';
-            if (imgElementId === 'main-op-image') inputId = 'main-op-pot';
-            else if (imgElementId === 'main-wep-image') inputId = 'main-wep-pot';
-            else if (imgElementId.startsWith('sub-')) inputId = imgElementId.replace('-image', '-pot');
-            if (inputId) potency = Number(document.getElementById(inputId)?.value) || 0;
-        }
-        imgElement.setAttribute('data-tooltip-pot', potency);
-
-        // 단조 속성 (장비 전용)
-        if (folder === 'gears') {
-            const slot = imgElementId.replace('gear-', '').replace('-image', '');
-            const forged = document.getElementById(`gear-${slot}-forge`)?.checked || false;
-            imgElement.setAttribute('data-tooltip-forged', forged);
-        }
-
-        imgElement.onerror = function () { this.style.display = 'none'; };
-    } else {
+    if (!fileName) {
         imgElement.src = '';
         imgElement.style.display = 'none';
         imgElement.removeAttribute('data-tooltip-id');
         imgElement.removeAttribute('data-tooltip-type');
+        return;
     }
+
+    if (rarity && container) container.classList.add(`rarity-${rarity}`);
+    imgElement.src = `images/${folder}/${fileName}.webp?v=${APP_VERSION}`;
+    imgElement.loading = 'eager';
+    imgElement.style.display = 'block';
+    imgElement.setAttribute('data-tooltip-id', entityId);
+    imgElement.setAttribute('data-tooltip-type',
+        folder === 'operators' ? 'operator' : folder === 'weapons' ? 'weapon' : 'gear');
+
+    // 잠재 레벨 속성 (오퍼레이터/무기 전용)
+    if (folder === 'operators' || folder === 'weapons') {
+        const inputId = POT_INPUT_TO_IMAGE[imgElementId.replace('-image', '-pot')]
+            ? imgElementId.replace('-image', '-pot')
+            : imgElementId.startsWith('sub-') ? imgElementId.replace('-image', '-pot') : '';
+        imgElement.setAttribute('data-tooltip-pot', Number(document.getElementById(inputId)?.value) || 0);
+    }
+
+    // 단조 속성 (장비 전용)
+    if (folder === 'gears') {
+        const slot = imgElementId.replace('gear-', '').replace('-image', '');
+        imgElement.setAttribute('data-tooltip-forged',
+            document.getElementById(`gear-${slot}-forge`)?.checked || false);
+    }
+
+    imgElement.onerror = function () { this.style.display = 'none'; };
 }
+
+// ============================================================
+// select 유틸리티
+// ============================================================
 
 /**
  * select 요소의 옵션을 데이터 배열로 채운다.
  * 기존 옵션은 모두 지우고 새로 렌더링한다.
- *
  * @param {string}   id   - select 요소의 ID
  * @param {object[]} list - { name, id } 형태의 배열
  */
@@ -303,21 +324,22 @@ function renderSelect(id, list) {
     list.forEach(item => sel.add(new Option(item.name, item.id)));
 }
 
-// ============ 디버프 아이콘 ============
+// ============================================================
+// 디버프 아이콘 상태 관리
+// ============================================================
 
 /**
- * 아이콘 래퍼 요소에 stacks값을 반영하여 호(ring-seg)를 활성/비활성 처리.
- * seg-0(상단)부터 stacks 개수만큼 active 클래스 부여.
- *
+ * 아이콘 래퍼 요소에 stacks 값을 반영하여 호(ring-seg)를 활성/비활성 처리한다.
+ * seg-0(상단)부터 stacks 개수만큼 active 클래스를 부여한다.
  * @param {HTMLElement} wrap   - .debuff-icon-wrap 요소
  * @param {number}      stacks - 활성 단계 (0~4)
  */
 function applyDebuffIconState(wrap, stacks) {
     wrap.dataset.stacks = stacks;
+
     const label = wrap.querySelector('.debuff-stack-label');
     if (label) label.textContent = stacks;
 
-    // 버블 업데이트
     const bubble = wrap.querySelector('.debuff-stack-bubble');
     if (bubble) {
         bubble.textContent = stacks;
@@ -326,11 +348,9 @@ function applyDebuffIconState(wrap, stacks) {
     }
 
     const ringSvg = wrap.querySelector('.debuff-ring-svg');
-    if (ringSvg && ringSvg.classList.contains('single-ring-svg')) {
-        // 단일 원형 처리
+    if (ringSvg?.classList.contains('single-ring-svg')) {
         ringSvg.classList.toggle('active', stacks > 0);
     } else {
-        // 4분할 호 처리
         wrap.querySelectorAll('.ring-seg').forEach((seg, i) => {
             seg.classList.toggle('active', i < Math.min(stacks, 4));
         });
@@ -338,27 +358,20 @@ function applyDebuffIconState(wrap, stacks) {
 }
 
 /**
- * 디버프 아이콘 우클릭 시 호출 (스택 감소)
+ * 디버프 아이콘 우클릭 시 호출. 스택을 감소(dir = -1)시킨다.
+ * @param {HTMLElement} el - .debuff-icon-wrap 요소
+ * @param {MouseEvent}  e
  */
 function handleDebuffRightClick(el, e) {
     e.preventDefault();
-    const debuffType = el.dataset.debuff;
-    const attachType = el.dataset.attachType;
-    const abnormalType = el.dataset.abnormalType;
-
-    if (debuffType === 'specialStack') {
-        cycleSpecialStack(el, -1);
-    } else if (attachType) {
-        cycleDebuffAttach(el, -1);
-    } else if (abnormalType) {
-        cycleDebuffAbnormal(el, -1);
-    } else if (debuffType) {
-        cycleDebuff(el, -1);
-    }
+    if (el.dataset.debuff === 'specialStack') cycleSpecialStack(el, -1);
+    else if (el.dataset.attachType) cycleDebuffAttach(el, -1);
+    else if (el.dataset.abnormalType) cycleDebuffAbnormal(el, -1);
+    else if (el.dataset.debuff) cycleDebuff(el, -1);
 }
 
 /**
- * 현재 활성화된 상태(일괄 or 개별)에 맞춰 UI 시각적 요소(디버프 아이콘, 토글 등)를 최신화한다.
+ * 현재 활성 상태(일괄 or 개별)에 맞춰 디버프 아이콘과 불균형 토글 등 UI를 최신화한다.
  */
 function updateUIStateVisuals() {
     const ts = getTargetState();
@@ -366,227 +379,205 @@ function updateUIStateVisuals() {
     if (!ds) return;
 
     document.querySelectorAll('.debuff-icon-wrap').forEach(el => {
-        if (el.dataset.debuff === 'specialStack') return; // 전용 스택은 따로 처리
+        if (el.dataset.debuff === 'specialStack') return;
 
         let val = 0;
         if (el.dataset.attachType) {
-            if (ds.artsAttach && ds.artsAttach.type === el.dataset.attachType) {
-                val = ds.artsAttach.stacks || 0;
-            } else {
-                val = 0;
-            }
+            val = (ds.artsAttach?.type === el.dataset.attachType) ? (ds.artsAttach?.stacks || 0) : 0;
         } else if (el.dataset.abnormalType) {
-            val = ds.artsAbnormal && ds.artsAbnormal[el.dataset.abnormalType] ? ds.artsAbnormal[el.dataset.abnormalType] : 0;
+            val = ds.artsAbnormal?.[el.dataset.abnormalType] || 0;
         } else if (el.dataset.debuff) {
             const type = el.dataset.debuff;
-            if (ds.physDebuff && ds.physDebuff[type] !== undefined) {
-                val = ds.physDebuff[type];
-            } else if (ds[type] !== undefined) {
-                val = ds[type];
-            }
+            val = ds.physDebuff?.[type] !== undefined ? ds.physDebuff[type] : (ds[type] || 0);
         }
-        el.dataset.stacks = val;
         applyDebuffIconState(el, val);
     });
 
     const enemyCb = document.getElementById('enemy-unbalanced');
     const enemyBtn = document.getElementById('enemy-unbalanced-toggle');
     if (enemyCb && enemyBtn) {
-        const isUnbal = ts.isUnbalanced();
-        enemyCb.checked = !!isUnbal;
+        enemyCb.checked = !!ts.isUnbalanced();
         updateToggleButton(enemyBtn, enemyCb.checked, '불균형');
     }
 
-    // 전용 스택 UI 동기화
+    // 전용 스택 UI 동기화 (오퍼레이터 변경 시 동적 재생성)
     const mainOp = DATA_OPERATORS.find(o => o.id === state.mainOp.id);
     const specGroup = document.getElementById('special-stack-group');
     if (!specGroup) return;
 
-    if (mainOp && mainOp.specialStack) {
+    if (mainOp?.specialStack) {
         specGroup.style.display = 'block';
-        specGroup.innerHTML = ''; // 기존 내용 삭제 후 동적 생성
+        specGroup.innerHTML = '';
 
         const stacks = Array.isArray(mainOp.specialStack) ? mainOp.specialStack : [mainOp.specialStack];
         const row = document.createElement('div');
         row.className = 'debuff-attach-row';
+        const specStacks = ts.getSpecialStack ? ts.getSpecialStack() : (state.mainOp.specialStack || {});
 
         stacks.forEach(s => {
             const stackId = s.id || 'default';
+            const useSingleCircle = s.max === 1 || s.max === null;
+
             const wrap = document.createElement('div');
             wrap.className = 'debuff-icon-wrap';
             wrap.id = `debuff-icon-special-${stackId}`;
             wrap.dataset.debuff = 'specialStack';
             wrap.dataset.stackId = stackId;
 
-            // Laevatain (max=1) or Avywenna (max=null) both use single circle SVG per request
-            const useSingleCircle = (s.max === 1 || s.max === null);
-
-            if (useSingleCircle) {
-                wrap.innerHTML = `
-                    <svg class="debuff-ring-svg single-ring-svg" viewBox="0 0 100 100">
-                        <circle class="ring-bg" cx="50" cy="50" r="42" />
-                        <circle class="ring-fill" cx="50" cy="50" r="42" transform="rotate(-90 50 50)" />
-                    </svg>
-                    <div class="debuff-icon-img-wrap special-stack-bg" style="background-image: url('images/operators/${mainOp.name}.webp')">
-                        <img src="" alt="${s.name}" style="display:none">
-                    </div>
-                    <span class="debuff-stack-label">0</span>
-                    <div class="debuff-stack-bubble">0</div>
-                    <span class="special-stack-name">${s.name}</span>
-                `;
-            } else {
-                wrap.innerHTML = `
-                    <svg class="debuff-ring-svg" viewBox="0 0 100 100">
-                        <path class="ring-seg seg-0" d="M74.1,15.6 A42,42 0 0,0 25.9,15.6" />
-                        <path class="ring-seg seg-1" d="M84.4,74.1 A42,42 0 0,0 84.4,25.9" />
-                        <path class="ring-seg seg-2" d="M25.9,84.4 A42,42 0 0,0 74.1,84.4" />
-                        <path class="ring-seg seg-3" d="M15.6,25.9 A42,42 0 0,0 15.6,74.1" />
-                    </svg>
-                    <div class="debuff-icon-img-wrap special-stack-bg" style="background-image: url('images/operators/${mainOp.name}.webp')">
-                        <img src="" alt="${s.name}" style="display:none">
-                    </div>
-                    <span class="debuff-stack-label">0</span>
-                    <span class="special-stack-name">${s.name}</span>
-                `;
-            }
+            wrap.innerHTML = useSingleCircle ? `
+                <svg class="debuff-ring-svg single-ring-svg" viewBox="0 0 100 100">
+                    <circle class="ring-bg"   cx="50" cy="50" r="42" />
+                    <circle class="ring-fill" cx="50" cy="50" r="42" transform="rotate(-90 50 50)" />
+                </svg>
+                <div class="debuff-icon-img-wrap special-stack-bg" style="background-image:url('images/operators/${mainOp.name}.webp')">
+                    <img src="" alt="${s.name}" style="display:none">
+                </div>
+                <span class="debuff-stack-label">0</span>
+                <div class="debuff-stack-bubble">0</div>
+                <span class="special-stack-name">${s.name}</span>
+            ` : `
+                <svg class="debuff-ring-svg" viewBox="0 0 100 100">
+                    <path class="ring-seg seg-0" d="M74.1,15.6 A42,42 0 0,0 25.9,15.6" />
+                    <path class="ring-seg seg-1" d="M84.4,74.1 A42,42 0 0,0 84.4,25.9" />
+                    <path class="ring-seg seg-2" d="M25.9,84.4 A42,42 0 0,0 74.1,84.4" />
+                    <path class="ring-seg seg-3" d="M15.6,25.9 A42,42 0 0,0 15.6,74.1" />
+                </svg>
+                <div class="debuff-icon-img-wrap special-stack-bg" style="background-image:url('images/operators/${mainOp.name}.webp')">
+                    <img src="" alt="${s.name}" style="display:none">
+                </div>
+                <span class="debuff-stack-label">0</span>
+                <span class="special-stack-name">${s.name}</span>
+            `;
 
             wrap.onclick = () => cycleSpecialStack(wrap, 1);
             wrap.oncontextmenu = (e) => handleDebuffRightClick(wrap, e);
-
-            const specStacks = ts.getSpecialStack ? ts.getSpecialStack() : (state.mainOp.specialStack || {});
-            const val = specStacks[stackId] || 0;
-            applyDebuffIconState(wrap, val);
+            applyDebuffIconState(wrap, specStacks[stackId] || 0);
             row.appendChild(wrap);
         });
         specGroup.appendChild(row);
-
     } else {
         specGroup.style.display = 'none';
     }
 }
 
+// ============================================================
+// 디버프 사이클 핸들러
+// ============================================================
+
 /**
- * 단일 디버프(방어불능, 갑옷파괴) 아이콘 클릭: 0→1→2→3→4→0 순환.
- * data-debuff 속성을 읽어 state.debuffState[type]을 갱신한다.
- *
- * @param {HTMLElement} el - 클릭된 .debuff-icon-wrap
+ * 방어불능/갑옷파괴/연타 아이콘 클릭: 0→1→2→3→4→0 순환.
+ * data-debuff 속성을 읽어 state.debuffState.physDebuff[type]을 갱신한다.
+ * @param {HTMLElement} el  - 클릭된 .debuff-icon-wrap
+ * @param {number}      dir - 순환 방향 (+1 증가 / -1 감소)
  */
 function cycleDebuff(el, dir = 1) {
     ensureCustomState();
     const type = el.dataset.debuff;
-    const cur = parseInt(el.dataset.stacks, 10) || 0;
-    const next = (cur + dir + 5) % 5;
-
+    const next = ((parseInt(el.dataset.stacks, 10) || 0) + dir + 5) % 5;
     const ds = getTargetState().debuffState;
-    if (ds.physDebuff && ds.physDebuff[type] !== undefined) {
-        ds.physDebuff[type] = next;
-    } else if (ds && ds[type] !== undefined) {
-        ds[type] = next;
-    }
+
+    if (ds.physDebuff?.[type] !== undefined) ds.physDebuff[type] = next;
+    else if (ds[type] !== undefined) ds[type] = next;
 
     applyDebuffIconState(el, next);
-    saveState();
-    if (!state.selectedSeqId) propagateGlobalStateToCustom('debuff');
-    updateState();
+    commitDebuffChange('debuff');
 }
 
+/**
+ * 연타 아이콘을 0/1로 토글한다.
+ * @param {HTMLElement} el - .debuff-icon-wrap
+ */
 function cycleDebuffToggle(el) {
     ensureCustomState();
     const type = el.dataset.debuff;
     const ds = getTargetState().debuffState;
     if (!ds.physDebuff) ds.physDebuff = {};
-    const cur = ds.physDebuff[type] || 0;
-    const next = cur === 0 ? 1 : 0;
+    const next = ds.physDebuff[type] ? 0 : 1;
     ds.physDebuff[type] = next;
-    el.dataset.stacks = next;
     applyDebuffIconState(el, next);
-    saveState();
-    if (!state.selectedSeqId) propagateGlobalStateToCustom('debuff');
-    updateState();
+    commitDebuffChange('debuff');
 }
 
+/**
+ * 아츠 부착 아이콘 클릭: 스택을 0~4로 순환하며, 다른 타입 선택 시 해당 타입으로 교체.
+ * @param {HTMLElement} el  - .debuff-icon-wrap
+ * @param {number}      dir - 순환 방향 (+1 / -1)
+ */
 function cycleDebuffAttach(el, dir = 1) {
     ensureCustomState();
     const attachType = el.dataset.attachType;
     const ds = getTargetState().debuffState.artsAttach;
 
-    let nextStacks;
-    if (ds.type !== null && ds.type !== attachType) {
-        nextStacks = dir === 1 ? 1 : 4;
-    } else {
-        const cur = parseInt(el.dataset.stacks, 10) || 0;
-        nextStacks = (cur + dir + 5) % 5;
-    }
+    // 다른 타입이 활성화된 상태에서 클릭하면 해당 타입으로 즉시 교체
+    const nextStacks = (ds.type !== null && ds.type !== attachType)
+        ? (dir === 1 ? 1 : 4)
+        : ((parseInt(el.dataset.stacks, 10) || 0) + dir + 5) % 5;
 
     ds.type = nextStacks === 0 ? null : attachType;
     ds.stacks = nextStacks;
 
-    const ATTACH_TYPES = ['열기 부착', '전기 부착', '냉기 부착', '자연 부착'];
     ATTACH_TYPES.forEach(t => {
         const wrap = document.getElementById(`debuff-icon-${t}`);
         if (!wrap) return;
-        const isSelected = (t === attachType && nextStacks > 0);
-        const isOther = (ds.type !== null && t !== ds.type);
-        applyDebuffIconState(wrap, isSelected ? nextStacks : 0);
-        wrap.classList.toggle('attach-disabled', isOther);
+        applyDebuffIconState(wrap, t === attachType && nextStacks > 0 ? nextStacks : 0);
+        wrap.classList.toggle('attach-disabled', ds.type !== null && t !== ds.type);
     });
 
-    saveState();
-    if (!state.selectedSeqId) propagateGlobalStateToCustom('debuff');
-    updateState();
-}
-
-function cycleDebuffAbnormal(el, dir = 1) {
-    ensureCustomState();
-    const abnType = el.dataset.abnormalType;
-    const cur = parseInt(el.dataset.stacks, 10) || 0;
-    const next = (cur + dir + 5) % 5;
-    getTargetState().debuffState.artsAbnormal[abnType] = next;
-    applyDebuffIconState(el, next);
-    saveState();
-    if (!state.selectedSeqId) propagateGlobalStateToCustom('debuff');
-    updateState();
+    commitDebuffChange('debuff');
 }
 
 /**
- * 전용 스택 클릭: 0 -> 1 -> ... -> max -> 0 순환.
+ * 아츠 이상 아이콘 클릭: 0~4 순환.
+ * @param {HTMLElement} el  - .debuff-icon-wrap
+ * @param {number}      dir - 순환 방향
+ */
+function cycleDebuffAbnormal(el, dir = 1) {
+    ensureCustomState();
+    const abnType = el.dataset.abnormalType;
+    const next = ((parseInt(el.dataset.stacks, 10) || 0) + dir + 5) % 5;
+    getTargetState().debuffState.artsAbnormal[abnType] = next;
+    applyDebuffIconState(el, next);
+    commitDebuffChange('debuff');
+}
+
+/**
+ * 전용 스택 아이콘 클릭: 0 → 1 → ... → max → 0 순환.
+ * max === null이면 상한 없이 증감한다.
+ * @param {HTMLElement} el  - .debuff-icon-wrap
+ * @param {number}      dir - 순환 방향
  */
 function cycleSpecialStack(el, dir = 1) {
     ensureCustomState();
     const op = DATA_OPERATORS.find(o => o.id === state.mainOp.id);
-    if (!op || !op.specialStack) return;
+    if (!op?.specialStack) return;
 
     const stackId = el.dataset.stackId || 'default';
     const ts = getTargetState();
     const specStacks = ts.getSpecialStack ? ts.getSpecialStack() : (state.mainOp.specialStack || {});
     const cur = specStacks[stackId] || 0;
 
-    let next;
     const stacksData = Array.isArray(op.specialStack) ? op.specialStack : [op.specialStack];
-    const sData = stacksData.find(s => (s.id || 'default') === stackId);
-    const max = sData ? sData.max : 1;
+    const max = stacksData.find(s => (s.id || 'default') === stackId)?.max ?? 1;
 
+    let next;
     if (max === null) {
-        // 최대 제한 없음
         next = Math.max(0, cur + dir);
     } else {
-        next = (cur + dir);
+        next = cur + dir;
         if (next > max) next = 0;
         else if (next < 0) next = max;
     }
 
-    if (ts.setSpecialStack) {
-        const newStacks = { ...specStacks, [stackId]: next };
-        ts.setSpecialStack(newStacks);
-    } else {
-        state.mainOp.specialStack[stackId] = next;
-    }
+    if (ts.setSpecialStack) ts.setSpecialStack({ ...specStacks, [stackId]: next });
+    else state.mainOp.specialStack[stackId] = next;
 
     applyDebuffIconState(el, next);
-    saveState();
-    if (!state.selectedSeqId) propagateGlobalStateToCustom('specialStack');
-    updateState();
+    commitDebuffChange('specialStack');
 }
+
+// ============================================================
+// 디버프 상태 → UI 반영
+// ============================================================
 
 /**
  * 저장된 state.debuffState를 UI 아이콘에 반영한다.
@@ -596,92 +587,72 @@ function applyDebuffStateToUI() {
     const ds = getTargetState().debuffState;
     if (!ds) return;
 
-    // 방어불능
-    const defEl = document.getElementById('debuff-icon-defenseless');
-    if (defEl) applyDebuffIconState(defEl, ds.physDebuff?.defenseless || 0);
+    // 물리 디버프 (방어불능, 갑옷파괴, 연타)
+    ['defenseless', 'armorBreak', 'combo'].forEach(type => {
+        const el = document.getElementById(`debuff-icon-${type}`);
+        if (el) applyDebuffIconState(el, ds.physDebuff?.[type] || 0);
+    });
 
-    // 갑옷 파괴
-    const abEl = document.getElementById('debuff-icon-armorBreak');
-    if (abEl) applyDebuffIconState(abEl, ds.physDebuff?.armorBreak || 0);
-
-    // 연타
-    const comboEl = document.getElementById('debuff-icon-combo');
-    if (comboEl) {
-        const v = ds.physDebuff?.combo || 0;
-        comboEl.dataset.stacks = v;
-        applyDebuffIconState(comboEl, v);
-    }
-
-    // 아츠 부착
-    const ATTACH_TYPES = ['열기 부착', '전기 부착', '냉기 부착', '자연 부착'];
+    // 아츠 부착 (단일 선택)
     ATTACH_TYPES.forEach(t => {
         const wrap = document.getElementById(`debuff-icon-${t}`);
         if (!wrap) return;
         const activeType = ds.artsAttach?.type;
-        const isSelected = activeType === t;
-        const isOther = activeType !== null && activeType !== t;
-        applyDebuffIconState(wrap, isSelected ? (ds.artsAttach?.stacks || 0) : 0);
-        wrap.classList.toggle('attach-disabled', isOther);
+        applyDebuffIconState(wrap, activeType === t ? (ds.artsAttach?.stacks || 0) : 0);
+        wrap.classList.toggle('attach-disabled', activeType !== null && activeType !== t);
     });
 
-    // 아츠 이상
-    const ABNORMAL_TYPES = ['연소', '감전', '동결', '부식'];
+    // 아츠 이상 4종
     ABNORMAL_TYPES.forEach(t => {
         const wrap = document.getElementById(`debuff-icon-${t}`);
         if (wrap) applyDebuffIconState(wrap, ds.artsAbnormal?.[t] || 0);
     });
 
     // 전용 스택
-    const mainOp = DATA_OPERATORS.find(o => o.id === (state.mainOp.id || ''));
-    if (mainOp && mainOp.specialStack) {
+    const mainOp = DATA_OPERATORS.find(o => o.id === state.mainOp.id);
+    if (mainOp?.specialStack) {
         const ts = getTargetState();
         const specStacks = ts.getSpecialStack ? ts.getSpecialStack() : (state.mainOp.specialStack || {});
-        const stacks = Array.isArray(mainOp.specialStack) ? mainOp.specialStack : [mainOp.specialStack];
-
-        stacks.forEach(s => {
+        (Array.isArray(mainOp.specialStack) ? mainOp.specialStack : [mainOp.specialStack]).forEach(s => {
             const stackId = s.id || 'default';
-            const specIcon = document.getElementById(`debuff-icon-special-${stackId}`);
-            if (specIcon) {
-                applyDebuffIconState(specIcon, specStacks[stackId] || 0);
-            }
+            document.getElementById(`debuff-icon-special-${stackId}`)
+                && applyDebuffIconState(document.getElementById(`debuff-icon-special-${stackId}`), specStacks[stackId] || 0);
         });
     }
 
     updateUIStateVisuals();
 }
 
-// ============ 스킬 사이클 보드 제어 및 드래그 앤 드롭 ============
+// ============================================================
+// 스킬 사이클 보드 제어 및 드래그 앤 드롭
+// ============================================================
 
 /**
- * 스킬 아이콘 클릭 시 사이클 배열 마지막에 추가
+ * 스킬 아이콘 클릭 시 사이클 배열 마지막에 항목을 추가한다.
+ * @param {string} skillType - 추가할 스킬 타입
  */
 function addCycleItem(skillType) {
     if (!state.skillSequence) state.skillSequence = [];
-    state.skillSequence.push({
-        id: 'seq_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
-        type: skillType,
-        customState: null
-    });
+    state.skillSequence.push({ id: makeSeqId(), type: skillType, customState: null });
     saveState();
     updateState();
 }
 
 /**
- * 디스플레이 보드 내 특정 위치의 아이템 삭제
+ * 디스플레이 보드 내 특정 위치의 아이템을 삭제한다.
+ * @param {number} index - 삭제할 아이템의 인덱스
  */
 function removeCycleItem(index) {
     if (!state.skillSequence) return;
     const removedId = state.skillSequence[index]?.id;
     state.skillSequence.splice(index, 1);
-    if (state.selectedSeqId === removedId) {
-        state.selectedSeqId = null;
-    }
+    if (state.selectedSeqId === removedId) state.selectedSeqId = null;
     saveState();
     updateState();
 }
 
 /**
- * 전체 사이클 초기화
+ * 전체 사이클을 초기화한다.
  */
 function clearCycleItems() {
     state.skillSequence = [];
@@ -690,77 +661,63 @@ function clearCycleItems() {
     updateState();
 }
 
+// ============================================================
+// 드래그 앤 드롭 핸들러
+// ============================================================
+
 let dragStartIndex = -1;
 
+/** 드래그 시작 시 인덱스를 저장하고 'dragging' 클래스를 추가한다. */
 function handleDragStart(e) {
     dragStartIndex = +this.dataset.index;
     e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/plain', dragStartIndex); // Firefox 호환용
+    e.dataTransfer.setData('text/plain', dragStartIndex); // Firefox 호환
     this.classList.add('dragging');
-    if (typeof AppTooltip !== 'undefined') AppTooltip.hide();
+    AppTooltip?.hide();
 }
 
+/** 드롭 대상 위 이동 중: 커서 위치에 따라 left/right 방향 표시를 업데이트한다. */
 function handleDragOver(e) {
-    e.preventDefault(); // 드롭 허용
+    e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
-
-    // 기준점(가운데)을 기준으로 왼쪽/오른쪽 판단
     const rect = this.getBoundingClientRect();
-    const relX = e.clientX - rect.left;
-
     this.classList.remove('drag-over-left', 'drag-over-right');
-    if (relX < rect.width / 2) {
-        this.classList.add('drag-over-left');
-    } else {
-        this.classList.add('drag-over-right');
-    }
+    this.classList.add(e.clientX - rect.left < rect.width / 2 ? 'drag-over-left' : 'drag-over-right');
     return false;
 }
 
-function handleDragEnter(e) {
-    e.preventDefault();
-}
+/** dragenter: 기본 동작 방지 */
+function handleDragEnter(e) { e.preventDefault(); }
 
-function handleDragLeave(e) {
-    this.classList.remove('drag-over-left', 'drag-over-right');
-}
+/** dragleave: 방향 표시 클래스 제거 */
+function handleDragLeave() { this.classList.remove('drag-over-left', 'drag-over-right'); }
 
+/** 드롭 시 아이템을 새 위치로 이동하고 상태를 저장한다. */
 function handleDrop(e) {
     e.stopPropagation();
-
     const isRight = this.classList.contains('drag-over-right');
     this.classList.remove('drag-over-left', 'drag-over-right');
 
     let dragEndIndex = +this.dataset.index;
-
     if (dragStartIndex !== dragEndIndex && dragStartIndex >= 0) {
-        // 오른쪽 절반에 드롭했다면 삽입 위치를 뒤로 한 칸 밀어줌
-        if (isRight) {
-            dragEndIndex++;
-        }
+        if (isRight) dragEndIndex++;
+        if (dragStartIndex < dragEndIndex) dragEndIndex--;
 
-        // 아이템을 빼면 배열이 당겨지므로, 뒤로 보낼 때 인덱스 보정
-        if (dragStartIndex < dragEndIndex) {
-            dragEndIndex--;
-        }
-
-        const item = state.skillSequence.splice(dragStartIndex, 1)[0];
+        const [item] = state.skillSequence.splice(dragStartIndex, 1);
         state.skillSequence.splice(dragEndIndex, 0, item);
-
         saveState();
         updateState();
     }
     return false;
 }
 
-function handleDragEnd(e) {
+/** 드래그 종료 시 모든 드래그 관련 클래스를 정리한다. */
+function handleDragEnd() {
     this.classList.remove('dragging');
-    const items = document.querySelectorAll('.cycle-sequence-item');
-    items.forEach(item => item.classList.remove('drag-over-left', 'drag-over-right'));
+    document.querySelectorAll('.cycle-sequence-item')
+        .forEach(item => item.classList.remove('drag-over-left', 'drag-over-right'));
     dragStartIndex = -1;
 }
 
-// 초기화 시 기존 skill-count-x 요소가 없으므로 applySkillCountsToUI 역할 대체 (빈 함수로 두거나 삭제)
-function applySkillCountsToUI() {
-    // legacy
-}
+/** @deprecated 구버전 호환용 빈 함수 */
+function applySkillCountsToUI() { }
