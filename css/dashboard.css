@@ -14,7 +14,7 @@
 }
 
 .result-box {
-    border: 2px solid var(--accent);
+    border: 1px solid rgba(0, 217, 255, 0.2);
     background: linear-gradient(135deg, #1a1a1a 0%, #111 100%);
     border-radius: 12px;
     padding: 10px;
@@ -667,6 +667,18 @@
 }
 
 /* ============ 반응형 추가 (대시보드 전용) ============ */
+@media (max-width: 1400px) {
+    .result-debuff-wrapper {
+        display: contents;
+    }
+
+    .debuff-icon-section {
+        flex-direction: row !important;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+}
+
 @media (max-width: 1024px) {
     .dashboard-grid {
         grid-template-columns: 1fr 1fr;
@@ -717,7 +729,6 @@
     flex-direction: column;
     align-items: center;
     gap: 7px;
-    flex-shrink: 0;
 }
 
 .debuff-group {

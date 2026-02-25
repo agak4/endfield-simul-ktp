@@ -215,13 +215,13 @@ const AppTooltip = {
     },
 
     /**
-     * 지정된 엔티티의 툴팁을 표시한다.
-     * @param {string} id - 데이터 ID
-     * @param {string} type - 'operator' | 'weapon' | 'gear'
+     * 특정 엔티티의 툴팁을 표시한다.
+     * @param {string} id - 엔티티 ID
+     * @param {string} type - 엔티티 타입 ('operator', 'weapon', 'gear')
      * @param {number} pot - 잠재 단계
-     * @param {MouseEvent} event
-     * @param {boolean} forged - 단조 여부
-     * @param {boolean} isModal - 모달 내부 여부
+     * @param {Event}  event - 마우스 이벤트
+     * @param {boolean} forged - 장비 단조 여부
+     * @param {boolean} isModal - 모달에서 표시되는지 여부
      */
     show(id, type, pot, event, forged = false, isModal = false) {
         if (window.innerWidth <= 1024) return;
@@ -398,7 +398,7 @@ const AppTooltip = {
 
         return `
             <div class="tooltip-header">
-                <div class="tooltip-icon"><img src="images/operators/${op.name}.webp"></div>
+                <div class="tooltip-icon"><img src="images/operators/${op.name}.webp?v=${APP_VERSION}" loading="eager" decoding="async"></div>
                 <div class="tooltip-title-group">
                     <div class="tooltip-name">${op.name}</div>
                     <div class="tooltip-sub">${this.getElementName(op)} / ${this.getWepTypeName(op.usableWeapons[0])}</div>
@@ -451,7 +451,7 @@ const AppTooltip = {
 
         return `
             <div class="tooltip-header">
-                <div class="tooltip-icon"><img src="images/weapons/${wep.name}.webp"></div>
+                <div class="tooltip-icon"><img src="images/weapons/${wep.name}.webp?v=${APP_VERSION}" loading="eager" decoding="async"></div>
                 <div class="tooltip-title-group">
                     <div class="tooltip-name">${wep.name}</div>
                     <div class="tooltip-sub">${this.getWepTypeName(wep.type)}</div>
@@ -507,7 +507,7 @@ const AppTooltip = {
 
         return `
             <div class="tooltip-header">
-                <div class="tooltip-icon"><img src="images/gears/${gear.name}.webp"></div>
+                <div class="tooltip-icon"><img src="images/gears/${gear.name}.webp?v=${APP_VERSION}" loading="eager" decoding="async"></div>
                 <div class="tooltip-title-group">
                     <div class="tooltip-name">${gear.name}</div>
                     <div class="tooltip-sub">${this.GEAR_PART_MAP[gear.part] || gear.part} / ${setName}</div>
