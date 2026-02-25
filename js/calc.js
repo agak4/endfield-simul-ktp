@@ -367,7 +367,7 @@ function collectAllEffects(state, opData, wepData, stats, allEffects, forceMaxSt
 
             const traits = gear.trait.map(processGearTrait);
             const gearUniqueName = `${gear.name}_s${i}`;
-            addEffect(traits, gearUniqueName, 1.0, false, false, forceMaxStack, opData);
+            addEffect(traits, gearUniqueName, 1.0, false, false, false, opData);
         }
     });
 
@@ -400,6 +400,9 @@ function collectAllEffects(state, opData, wepData, stats, allEffects, forceMaxSt
             const uniqueLabel = `${label}_t${idx}`;
 
             const types = Array.isArray(trait.type) ? trait.type : [trait.type];
+            // 메인 무기인 경우에만 forceMaxStack 적용
+            const useMaxStack = entry.isMain ? forceMaxStack : false;
+
             if (types.includes('스탯')) {
                 const targetStat = trait.stat === '주스탯' ? opData.mainStat
                     : trait.stat === '부스탯' ? opData.subStat
@@ -407,9 +410,9 @@ function collectAllEffects(state, opData, wepData, stats, allEffects, forceMaxSt
                 // idx 기반 판정 삭제, 값에 % 포함 여부로 결정
                 const isPercent = typeof val === 'string' && val.includes('%');
                 const type = isPercent ? '스탯%' : '스탯';
-                addEffect([{ ...eff, type, stat: targetStat }], uniqueLabel, 1.0, !entry.isMain, false, forceMaxStack, entry.ownerOp, uidPrefix);
+                addEffect([{ ...eff, type, stat: targetStat }], uniqueLabel, 1.0, !entry.isMain, false, useMaxStack, entry.ownerOp, uidPrefix);
             } else {
-                addEffect([eff], uniqueLabel, 1.0, !entry.isMain, false, forceMaxStack, entry.ownerOp, uidPrefix);
+                addEffect([eff], uniqueLabel, 1.0, !entry.isMain, false, useMaxStack, entry.ownerOp, uidPrefix);
             }
         });
     });
@@ -418,14 +421,14 @@ function collectAllEffects(state, opData, wepData, stats, allEffects, forceMaxSt
     if (opData.skill) {
         opData.skill.forEach((s, i) => {
             const skName = (s.skillType && Array.isArray(s.skillType)) ? s.skillType.join('/') : `스킬${i + 1}`;
-            addEffect([s], `${opData.name} ${skName}`, 1.0, false, true, forceMaxStack, opData);
+            addEffect([s], `${opData.name} ${skName}`, 1.0, false, true, false, opData);
         });
     }
     if (opData.talents) {
         opData.talents.forEach((t, i) => {
             if (!t || t.length === 0) return;
             const merged = mergeEffects(t);
-            addEffect(merged, `${opData.name} 재능${i + 1}`, 1.0, false, false, forceMaxStack, opData, `${opData.id}_talent${i}`);
+            addEffect(merged, `${opData.name} 재능${i + 1}`, 1.0, false, false, false, opData, `${opData.id}_talent${i}`);
         });
     }
 
@@ -434,7 +437,7 @@ function collectAllEffects(state, opData, wepData, stats, allEffects, forceMaxSt
         const pot = opData.potential?.[p];
         if (!pot || pot.length === 0) continue;
         const merged = mergeEffects(pot);
-        addEffect(merged, `${opData.name} 잠재${p + 1}`, 1.0, false, false, forceMaxStack, opData, `${opData.id}_pot${p}`);
+        addEffect(merged, `${opData.name} 잠재${p + 1}`, 1.0, false, false, false, opData, `${opData.id}_pot${p}`);
     }
 
     // 4. 서브 오퍼레이터 시너지
@@ -447,14 +450,14 @@ function collectAllEffects(state, opData, wepData, stats, allEffects, forceMaxSt
         if (subOpData.skill) {
             subOpData.skill.forEach((s, i) => {
                 const skName = (s.skillType && Array.isArray(s.skillType)) ? s.skillType.join('/') : `스킬${i + 1}`;
-                addEffect([s], `${prefix} ${skName}`, 1.0, true, true, forceMaxStack, subOpData);
+                addEffect([s], `${prefix} ${skName}`, 1.0, true, true, false, subOpData);
             });
         }
         if (subOpData.talents) {
             subOpData.talents.forEach((t, ti) => {
                 if (!t || t.length === 0) return;
                 const merged = mergeEffects(t);
-                addEffect(merged, `${prefix} 재능${ti + 1}`, 1.0, true, false, forceMaxStack, subOpData, `${subOpData.id}_talent${ti}`);
+                addEffect(merged, `${prefix} 재능${ti + 1}`, 1.0, true, false, false, subOpData, `${subOpData.id}_talent${ti}`);
             });
         }
 
@@ -463,7 +466,7 @@ function collectAllEffects(state, opData, wepData, stats, allEffects, forceMaxSt
             const pot = subOpData.potential?.[sp];
             if (!pot || pot.length === 0) continue;
             const merged = mergeEffects(pot);
-            addEffect(merged, `${prefix} 잠재${sp + 1}`, 1.0, true, false, forceMaxStack, subOpData, `${subOpData.id}_pot${sp}`);
+            addEffect(merged, `${prefix} 잠재${sp + 1}`, 1.0, true, false, false, subOpData, `${subOpData.id}_pot${sp}`);
         }
     });
 
