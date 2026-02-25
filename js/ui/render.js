@@ -703,18 +703,23 @@ function initCycleSortButton() {
  * 현재 오퍼레이터가 사용할 수 있는 모든 무기의 데미지를 비교 렌더링한다.
  * 사이클 데미지 합계를 우선으로 비교하며, 합계가 0이면 최종 1회 데미지를 기준으로 한다.
  *
- * @param {object} currentRes - 현재 무기로 계산된 calculateDamage 결과
- * @param {object|null} currentCycle - 현재 무기로 계산된 calculateCycleDamage 결과
+ * [리팩토링] currentRes → res, currentCycle → cycleRes
+ * - res: renderResult(res), renderDmgInc(res, cycleRes) 등 파일 전체 관례에 맞게 통일
+ * - cycleRes: renderCycleDamage(cycleRes), renderDmgInc(res, cycleRes) 관례에 맞게 통일
+ * - 내부 지역변수 충돌 방지: calculateDamage 결과를 담는 로컬 변수는 wepRes로 명명
+ *
+ * @param {object} res - 현재 무기로 계산된 calculateDamage 결과
+ * @param {object|null} cycleRes - 현재 무기로 계산된 calculateCycleDamage 결과
  */
-function renderWeaponComparison(currentRes, currentCycle) {
+function renderWeaponComparison(res, cycleRes) {
     const box = document.getElementById('weapon-comparison');
-    if (!box || !state.mainOp.id || !currentRes) return;
+    if (!box || !state.mainOp.id || !res) return;
 
     const currentOp = DATA_OPERATORS.find(o => o.id === state.mainOp.id);
     if (!currentOp) return;
 
     // 기준값 결정 (사이클 합산 > 0 이면 사이클 데미지, 아니면 최종 데미지)
-    const currentTotal = (currentCycle && currentCycle.total > 0) ? currentCycle.total : currentRes.finalDmg;
+    const currentTotal = (cycleRes && cycleRes.total > 0) ? cycleRes.total : res.finalDmg;
 
     // FLIP 애니메이션: 현재 각 항목의 위치(First) 저장
     const firstPositions = new Map();
@@ -745,11 +750,11 @@ function renderWeaponComparison(currentRes, currentCycle) {
             tempState.mainOp.wepState = compState;
 
             // forceMaxStack: true로 설정하여 비교 시에만 최대 중첩 상태 가정
-            const res = calculateDamage(tempState, true);
-            if (!res) return null;
+            const wepRes = calculateDamage(tempState, true);
+            if (!wepRes) return null;
 
-            const cRes = typeof calculateCycleDamage === 'function' ? calculateCycleDamage(tempState, res, true) : null;
-            const compTotal = (cRes && cRes.total > 0) ? cRes.total : res.finalDmg;
+            const wepCycleRes = typeof calculateCycleDamage === 'function' ? calculateCycleDamage(tempState, wepRes, true) : null;
+            const compTotal = (wepCycleRes && wepCycleRes.total > 0) ? wepCycleRes.total : wepRes.finalDmg;
 
             const diff = compTotal - currentTotal;
             const pct = currentTotal > 0 ? ((diff / currentTotal) * 100).toFixed(1) : 0;
@@ -1092,5 +1097,4 @@ function updateEnhancedSkillButtons(opId) {
 
         btnContainer.appendChild(btn);
     });
-    console.log(`[DEBUG] updateEnhancedSkillButtons(${opId}) created ${enhancedSkills.length} buttons.`);
 }

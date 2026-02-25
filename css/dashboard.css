@@ -1,12 +1,20 @@
 /* ============ 결과 대시보드 ============ */
 /* ============ 최종/사이클 계산값 가로 배치 ============ */
+.result-debuff-wrapper {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+}
+
 .result-area-row {
     display: flex;
     gap: 12px;
+    flex: 1;
+    height: -webkit-fill-available;
 }
 
 .result-box {
-    border: 2px solid var(--accent);
+    border: 1px solid rgba(0, 217, 255, 0.2);
     background: linear-gradient(135deg, #1a1a1a 0%, #111 100%);
     border-radius: 12px;
     padding: 10px;
@@ -659,6 +667,18 @@
 }
 
 /* ============ 반응형 추가 (대시보드 전용) ============ */
+@media (max-width: 1400px) {
+    .result-debuff-wrapper {
+        display: contents;
+    }
+
+    .debuff-icon-section {
+        flex-direction: row !important;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+}
+
 @media (max-width: 1024px) {
     .dashboard-grid {
         grid-template-columns: 1fr 1fr;
@@ -706,9 +726,8 @@
 /* ============ 디버프 아이콘 섹션 ============ */
 .debuff-icon-section {
     display: flex;
-    align-items: flex-start;
-    justify-content: center;
-    flex-flow: wrap;
+    flex-direction: column;
+    align-items: center;
     gap: 7px;
 }
 
@@ -721,6 +740,7 @@
 
 .debuff-attach-row {
     display: flex;
+    flex-direction: row;
 }
 
 .debuff-label {

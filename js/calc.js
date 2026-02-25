@@ -1157,8 +1157,12 @@ function evaluateTrigger(trigger, state, opData, triggerType, isTargetOnly = fal
     });
 }
 
-function calcSingleSkillDamage(type, st, bRes) {
-    const opData = DATA_OPERATORS.find(o => o.id === st.mainOp.id);
+// ---- 스킬 단일 데미지 계산 ----
+// [리팩토링] st → state, bRes → res
+// - state: 모든 상태 관련 함수(collectAllEffects, evaluateTrigger 등)와 동일하게 state로 통일
+// - res: calculateDamage 반환값. render.js 및 호출부(calculateCycleDamage)의 관례(res, specificRes, cRes)에 맞춰 통일
+function calcSingleSkillDamage(type, state, res) {
+    const opData = DATA_OPERATORS.find(o => o.id === state.mainOp.id);
     const skillMap = {};
     opData.skill.forEach(s => {
         if (s?.skillType) {
@@ -1169,7 +1173,7 @@ function calcSingleSkillDamage(type, st, bRes) {
     const skillDef = skillMap[type];
     if (!skillDef) return null;
 
-    const { finalAtk, atkInc, baseAtk, statBonusPct, skillAtkIncData = { all: 0 }, critExp, finalCritRate, critDmg, amp, takenDmg, vuln, unbalanceDmg, resMult, defMult = 1, originiumArts = 0, skillMults = { all: { mult: 0, add: 0 } }, dmgIncData = { all: 0, skill: 0, normal: 0, battle: 0, combo: 0, ult: 0 }, skillCritData = { rate: { all: 0 }, dmg: { all: 0 } }, vulnMap = {}, vulnAmpEffects = [] } = bRes.stats;
+    const { finalAtk, atkInc, baseAtk, statBonusPct, skillAtkIncData = { all: 0 }, critExp, finalCritRate, critDmg, amp, takenDmg, vuln, unbalanceDmg, resMult, defMult = 1, originiumArts = 0, skillMults = { all: { mult: 0, add: 0 } }, dmgIncData = { all: 0, skill: 0, normal: 0, battle: 0, combo: 0, ult: 0 }, skillCritData = { rate: { all: 0 }, dmg: { all: 0 } }, vulnMap = {}, vulnAmpEffects = [] } = res.stats;
 
     // dmg 파싱
     const parseDmgPct = (v) => {
@@ -1179,20 +1183,20 @@ function calcSingleSkillDamage(type, st, bRes) {
     };
     let dmgMult = parseDmgPct(skillDef.dmg);
 
-    const op = DATA_OPERATORS.find(o => o.id === st.mainOp?.id);
-    const specialStackVal = st.getSpecialStack ? st.getSpecialStack() : (st.mainOp?.specialStack || 0);
+    const op = DATA_OPERATORS.find(o => o.id === state.mainOp?.id);
+    const specialStackVal = state.getSpecialStack ? state.getSpecialStack() : (state.mainOp?.specialStack || 0);
 
     const bonusList = [];
     if (skillDef.bonus) {
         skillDef.bonus.forEach(b => {
-            if (evaluateTrigger(b.trigger, st, opData, b.triggerType, false, b.target, true)) {
+            if (evaluateTrigger(b.trigger, state, opData, b.triggerType, false, b.target, true)) {
                 const parsePct = (v) => v ? parseFloat(String(v)) / 100 : 0;
                 if (b.base !== undefined || b.perStack !== undefined) {
                     let stackCount = 0;
                     const triggers = Array.isArray(b.trigger) ? b.trigger : [b.trigger];
 
                     for (const t of triggers) {
-                        const count = getAdjustedStackCount(t, st, opData, skillDef.skillType);
+                        const count = getAdjustedStackCount(t, state, opData, skillDef.skillType);
                         stackCount = Math.max(stackCount, count);
                     }
 
@@ -1223,7 +1227,7 @@ function calcSingleSkillDamage(type, st, bRes) {
 
     // 7. 물리 이상 처리를 위한 데이터 구성
     const abnormalList = [];
-    const defenselessStacks = st.debuffState?.physDebuff?.defenseless || 0;
+    const defenselessStacks = state.debuffState?.physDebuff?.defenseless || 0;
     const hasDefenseless = defenselessStacks > 0;
 
     let abnormalMultTotal = 0;
@@ -1249,7 +1253,7 @@ function calcSingleSkillDamage(type, st, bRes) {
         }
 
         // --- 아츠 이상 및 아츠 폭발 구현 ---
-        const artsAttach = st.debuffState?.artsAttach || { type: null, stacks: 0 };
+        const artsAttach = state.debuffState?.artsAttach || { type: null, stacks: 0 };
         const currentAttachType = artsAttach.type;
         const currentStacks = artsAttach.stacks || 0;
 
@@ -1398,7 +1402,7 @@ function calcSingleSkillDamage(type, st, bRes) {
     let finalVuln = vuln;
     vulnAmpEffects.forEach(eff => {
         const isTypeMatch = !eff.skillType || (eff.skillType && eff.skillType.includes(baseType));
-        if (isTypeMatch && !st.disabledEffects.includes(eff.uid)) {
+        if (isTypeMatch && !state.disabledEffects.includes(eff.uid)) {
             const targets = eff.targetEffect || (eff.type.includes('냉기 취약 증폭') ? ['냉기 취약'] : ['취약']);
             targets.forEach(tKey => {
                 const vVal = vulnMap[tKey] || 0;
@@ -1437,23 +1441,23 @@ function calcSingleSkillDamage(type, st, bRes) {
             const aElem = aData.element;
             const activeResKey = aElem === 'phys' ? '물리' : (resKeyMap[aElem] || null);
 
-            if (activeResKey && bRes.stats.allRes) {
-                const aResVal = bRes.stats.allRes[activeResKey] - (bRes.stats.resIgnore || 0);
+            if (activeResKey && res.stats.allRes) {
+                const aResVal = res.stats.allRes[activeResKey] - (res.stats.resIgnore || 0);
                 aResMult = 1 - aResVal / 100;
             }
 
             const eKey = aElem === 'phys' ? '물리' : (resKeyMap[aElem] || null);
             if (eKey) {
-                aVuln = (bRes.stats.vulnMap['취약'] || 0) + (bRes.stats.vulnMap[eKey + ' 취약'] || 0);
+                aVuln = (res.stats.vulnMap['취약'] || 0) + (res.stats.vulnMap[eKey + ' 취약'] || 0);
 
                 const isArts = (aElem !== 'phys');
-                const abVal = bRes.stats.armorBreakVal || 0;
-                const gsVal = bRes.stats.gamsunVal || 0;
-                aTaken = (bRes.stats.baseTakenDmg || 0) + (isArts ? gsVal : abVal);
+                const abVal = res.stats.armorBreakVal || 0;
+                const gsVal = res.stats.gamsunVal || 0;
+                aTaken = (res.stats.baseTakenDmg || 0) + (isArts ? gsVal : abVal);
 
                 // 속성별 피해 증가 적용 (예: 물리 피해 증가, 열기 피해 증가)
                 const elKey = aElem; // phys, heat, elec, cryo, nature
-                aInc = (bRes.stats.dmgIncData.all || 0) + (bRes.stats.dmgIncData[elKey] || 0);
+                aInc = (res.stats.dmgIncData.all || 0) + (res.stats.dmgIncData[elKey] || 0);
             }
         }
 
@@ -1461,17 +1465,17 @@ function calcSingleSkillDamage(type, st, bRes) {
         let aDmg = adjFinalAtk * a.mult * aCommonMults;
 
         // 판(Da Pan) 전용 강타 보너스 (1.2배 곱연산)
-        if (st.mainOp.id === 'Da Pan' && a.name === '강타') {
+        if (state.mainOp.id === 'Da Pan' && a.name === '강타') {
             aDmg *= 1.2;
         }
 
         abnormalDmgMap[a.name] = Math.floor(aDmg);
     });
 
-    const myLogs = JSON.parse(JSON.stringify(bRes.logs));
+    const myLogs = JSON.parse(JSON.stringify(res.logs));
 
     // 스킬 전용 로그 필터링
-    myLogs.dmgInc = (bRes.logs.dmgInc || []).filter(l => {
+    myLogs.dmgInc = (res.logs.dmgInc || []).filter(l => {
         if (l.tag === 'all') return false;
         if (l.tag === 'skillMult') {
             const arr = l.skillType || [];
@@ -1484,7 +1488,7 @@ function calcSingleSkillDamage(type, st, bRes) {
     });
 
     // 필터링된 공격력 로그 (스킬 타입 매칭되는 것만)
-    myLogs.atk = (bRes.logs.atk || []).filter(l => {
+    myLogs.atk = (res.logs.atk || []).filter(l => {
         if (l.uid === 'base_op_atk' || l.uid === 'base_wep_atk' || l.uid === 'stat_bonus_atk') return true;
         if (l.tag === 'skillAtk') {
             const arr = l.skillType || [];
@@ -1496,7 +1500,7 @@ function calcSingleSkillDamage(type, st, bRes) {
 
     // 연타(Combo) 곱연산 버프 처리
     let comboMult = 1;
-    const comboStacks = st.debuffState?.physDebuff?.combo || 0;
+    const comboStacks = state.debuffState?.physDebuff?.combo || 0;
     if (comboStacks > 0) {
         if (baseType === '배틀 스킬') comboMult = 1 + ([0, 30, 45, 60, 75][comboStacks] / 100);
         else if (baseType === '궁극기') comboMult = 1 + ([0, 20, 30, 40, 50][comboStacks] / 100);
@@ -1508,7 +1512,7 @@ function calcSingleSkillDamage(type, st, bRes) {
     }
 
     // 판 전용 강타 로그 추가
-    if (st.mainOp.id === 'Da Pan' && abnormalDmgMap['강타'] !== undefined) {
+    if (state.mainOp.id === 'Da Pan' && abnormalDmgMap['강타'] !== undefined) {
         myLogs.dmgInc.push({ txt: `[판 고유 특성] 강타 피해 x1.20 (곱연산)`, uid: 'fan_smash_bonus', tag: typeMap[baseType] });
     }
 
@@ -1520,12 +1524,12 @@ function calcSingleSkillDamage(type, st, bRes) {
     // 취약 증폭 로그 추가
     vulnAmpEffects.forEach(eff => {
         const isTypeMatch = !eff.skillType || (eff.skillType && eff.skillType.includes(baseType));
-        if (isTypeMatch && !st.disabledEffects.includes(eff.uid)) {
+        if (isTypeMatch && !state.disabledEffects.includes(eff.uid)) {
             const targets = eff.targetEffect || (eff.type.includes('냉기 취약 증폭') ? ['냉기 취약'] : ['취약']);
             targets.forEach(tKey => {
                 const vVal = vulnMap[tKey] || 0;
                 if (vVal > 0) {
-                    const ampFactor = (1 + (resolveVal(eff.val, bRes.stats) * (eff.forgeMult || 1.0))).toFixed(1);
+                    const ampFactor = (1 + (resolveVal(eff.val, res.stats) * (eff.forgeMult || 1.0))).toFixed(1);
                     const displayName = (eff.name || '').replace(/(_t|_s)\d+$/g, '');
                     myLogs.vuln.push({ txt: `[${displayName}] *${ampFactor} (${tKey})`, uid: eff.uid });
                 }
@@ -1536,7 +1540,7 @@ function calcSingleSkillDamage(type, st, bRes) {
     const finalSingleHitDmg = Math.floor(baseHitDmg * comboMult) + Object.values(abnormalDmgMap).reduce((acc, v) => acc + v, 0);
 
     // 스킬 전용 치명타 로그 필터링 및 추가
-    const critLogs = (bRes.logs.crit || []).filter(l => {
+    const critLogs = (res.logs.crit || []).filter(l => {
         if (l.tag === 'skillCrit') {
             const arr = l.skillType || [];
             if (arr.length === 0) return true; // all
@@ -1547,7 +1551,7 @@ function calcSingleSkillDamage(type, st, bRes) {
     myLogs.crit.push(...critLogs);
 
     // 스킬 전용 공격력 보너스 로그 필터링 및 추가
-    const atkLogs = (bRes.logs.atkBuffs || []).filter(l => {
+    const atkLogs = (res.logs.atkBuffs || []).filter(l => {
         if (l.tag === 'skillAtk') {
             const arr = l.skillType || [];
             if (arr.length === 0) return true; // all
@@ -1569,7 +1573,7 @@ function calcSingleSkillDamage(type, st, bRes) {
         bonusList,
         abnormalList,
         abnormalInfo: abnormalList.length > 0 ? abnormalList : undefined,
-        activeEffects: bRes.activeEffects
+        activeEffects: res.activeEffects
     };
 }
 

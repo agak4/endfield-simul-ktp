@@ -254,9 +254,9 @@
 
 .potency-group {
     display: flex;
-    gap: 6px;
+    gap: 0;
     align-items: center;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
 }
 
 .potency-btn {
@@ -265,7 +265,8 @@
     border: 1px solid rgba(0, 217, 255, 0.3);
     background: rgba(0, 0, 0, 0.4);
     color: var(--text-primary);
-    border-radius: 8px;
+    border-radius: 0;
+    margin-right: -1px;
     cursor: pointer;
     transition: all var(--transition-speed) ease;
     font-size: 0.95rem;
@@ -273,6 +274,19 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    position: relative;
+    z-index: 0;
+}
+
+.potency-btn:first-child {
+    border-top-left-radius: 8px;
+    border-bottom-left-radius: 8px;
+}
+
+.potency-btn:last-child {
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
+    margin-right: 0;
 }
 
 .potency-btn.active {
@@ -281,6 +295,7 @@
     border-color: var(--accent);
     font-weight: 700;
     box-shadow: 0 0 15px var(--accent-glow);
+    z-index: 1;
 }
 
 /* ============ 서브 오퍼레이터 카드 ============ */

@@ -314,240 +314,243 @@
 
         <section class="panel right-panel">
             <h2>스킬 사이클 및 특성 설정</h2>
-            <div class="result-area-row">
+            <!-- 사이클 보드와 디버프 아이콘 구역 (가로 배치 래퍼 추가) -->
+            <div class="result-debuff-wrapper">
+                <div class="result-area-row">
 
-                <!-- 스킬 사이클 입력 및 순서 (통합) -->
-                <div class="result-box cycle-board-box">
-                    <div
-                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                        <h3 style="margin: 0;">스킬 사이클</h3>
-                        <div style="display: flex; align-items: center; gap: 15px;">
-                            <button id="clear-cycle-btn" class="btn-select"
-                                style="padding: 4px 10px; font-size: 0.9rem;">전체 초기화</button>
-                        </div>
-                    </div>
-                    <!-- SVG 아이콘 버튼 그룹 -->
-                    <div class="cycle-add-buttons">
-                        <div class="cycle-btn" data-type="일반 공격" title="일반 공격">
-                            <div class="skill-icon-frame">
-                                <img src="images/skills/기본 공격.webp" alt="일반 공격">
+                    <!-- 스킬 사이클 입력 및 순서 (통합) -->
+                    <div class="result-box cycle-board-box">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                            <h3 style="margin: 0;">스킬 사이클</h3>
+                            <div style="display: flex; align-items: center; gap: 15px;">
+                                <button id="clear-cycle-btn" class="btn-select"
+                                    style="padding: 4px 10px; font-size: 0.9rem;">전체 초기화</button>
                             </div>
-                            <span>일반 공격</span>
                         </div>
-                        <div class="cycle-btn" data-type="배틀 스킬" title="배틀 스킬">
-                            <div class="skill-icon-frame">
-                                <img src="images/skills/배틀 스킬.webp" alt="배틀 스킬">
+                        <!-- SVG 아이콘 버튼 그룹 -->
+                        <div class="cycle-add-buttons">
+                            <div class="cycle-btn" data-type="일반 공격" title="일반 공격">
+                                <div class="skill-icon-frame">
+                                    <img src="images/skills/기본 공격.webp" alt="일반 공격">
+                                </div>
+                                <span>일반 공격</span>
                             </div>
-                            <span>배틀 스킬</span>
+                            <div class="cycle-btn" data-type="배틀 스킬" title="배틀 스킬">
+                                <div class="skill-icon-frame">
+                                    <img src="images/skills/배틀 스킬.webp" alt="배틀 스킬">
+                                </div>
+                                <span>배틀 스킬</span>
+                            </div>
+                            <div class="cycle-btn" data-type="연계 스킬" title="연계 스킬">
+                                <div class="skill-icon-frame">
+                                    <img src="images/skills/연계 스킬.webp" alt="연계 스킬">
+                                </div>
+                                <span>연계 스킬</span>
+                            </div>
+                            <div class="cycle-btn cycle-btn-ult" data-type="궁극기" title="궁극기">
+                                <div class="skill-icon-frame">
+                                    <img src="images/skills/궁극기.webp" alt="궁극기">
+                                </div>
+                                <span>궁극기</span>
+                            </div>
                         </div>
-                        <div class="cycle-btn" data-type="연계 스킬" title="연계 스킬">
-                            <div class="skill-icon-frame">
-                                <img src="images/skills/연계 스킬.webp" alt="연계 스킬">
+
+                        <!-- 클릭한 순서대로 보여주는 디스플레이 영역 (가로 스크롤) -->
+                        <div class="cycle-sequence-container" style="margin-top: 15px;">
+                            <h4 style="color: var(--text-muted); margin-bottom: 8px;">현재 사이클 순서</h4>
+                            <div id="cycle-sequence-display" class="cycle-sequence-display">
+                                <!-- JS에서 동적으로 아이템 채움 -->
                             </div>
-                            <span>연계 스킬</span>
-                        </div>
-                        <div class="cycle-btn cycle-btn-ult" data-type="궁극기" title="궁극기">
-                            <div class="skill-icon-frame">
-                                <img src="images/skills/궁극기.webp" alt="궁극기">
-                            </div>
-                            <span>궁극기</span>
                         </div>
                     </div>
 
-                    <!-- 클릭한 순서대로 보여주는 디스플레이 영역 (가로 스크롤) -->
-                    <div class="cycle-sequence-container" style="margin-top: 15px;">
-                        <h4 style="color: var(--text-muted); margin-bottom: 8px;">현재 사이클 순서</h4>
-                        <div id="cycle-sequence-display" class="cycle-sequence-display">
-                            <!-- JS에서 동적으로 아이템 채움 -->
-                        </div>
-                    </div>
                 </div>
 
-            </div>
-
-            <!-- 디버프 상태 아이콘 (방어불능 / 아츠부착 / 아츠이상) -->
-            <div class="debuff-icon-section">
-                <!-- 방어불능 -->
-                <div class="debuff-group">
-                    <div class="debuff-attach-row">
-                        <!-- 연타: 0~4단계 토글 -->
-                        <div class="debuff-icon-wrap" id="debuff-icon-combo" data-debuff="combo"
-                            onclick="cycleDebuff(this)">
-                            <svg class="debuff-ring-svg" viewBox="0 0 100 100">
-                                <path class="ring-seg seg-0" d="M74.1,15.6 A42,42 0 0,0 25.9,15.6" />
-                                <path class="ring-seg seg-1" d="M84.4,74.1 A42,42 0 0,0 84.4,25.9" />
-                                <path class="ring-seg seg-2" d="M25.9,84.4 A42,42 0 0,0 74.1,84.4" />
-                                <path class="ring-seg seg-3" d="M15.6,25.9 A42,42 0 0,0 15.6,74.1" />
-                            </svg>
-                            <div class="debuff-icon-img-wrap">
-                                <img src="images/buff/연타.webp" alt="연타">
+                <!-- 디버프 상태 아이콘 (방어불능 / 아츠부착 / 아츠이상) -->
+                <div class="debuff-icon-section">
+                    <!-- 방어불능 -->
+                    <div class="debuff-group">
+                        <div class="debuff-attach-row">
+                            <!-- 연타: 0~4단계 토글 -->
+                            <div class="debuff-icon-wrap" id="debuff-icon-combo" data-debuff="combo"
+                                onclick="cycleDebuff(this)">
+                                <svg class="debuff-ring-svg" viewBox="0 0 100 100">
+                                    <path class="ring-seg seg-0" d="M74.1,15.6 A42,42 0 0,0 25.9,15.6" />
+                                    <path class="ring-seg seg-1" d="M84.4,74.1 A42,42 0 0,0 84.4,25.9" />
+                                    <path class="ring-seg seg-2" d="M25.9,84.4 A42,42 0 0,0 74.1,84.4" />
+                                    <path class="ring-seg seg-3" d="M15.6,25.9 A42,42 0 0,0 15.6,74.1" />
+                                </svg>
+                                <div class="debuff-icon-img-wrap">
+                                    <img src="images/buff/연타.webp" alt="연타">
+                                </div>
+                                <span class="debuff-stack-label">0</span>
                             </div>
-                            <span class="debuff-stack-label">0</span>
-                        </div>
 
-                        <div class="debuff-icon-wrap" id="debuff-icon-defenseless" data-debuff="defenseless"
-                            onclick="cycleDebuff(this)">
-                            <svg class="debuff-ring-svg" viewBox="0 0 100 100">
-                                <!-- X자 분할 4개 호 (비활성) -->
-                                <path class="ring-seg seg-0" d="M74.1,15.6 A42,42 0 0,0 25.9,15.6" />
-                                <path class="ring-seg seg-1" d="M84.4,74.1 A42,42 0 0,0 84.4,25.9" />
-                                <path class="ring-seg seg-2" d="M25.9,84.4 A42,42 0 0,0 74.1,84.4" />
-                                <path class="ring-seg seg-3" d="M15.6,25.9 A42,42 0 0,0 15.6,74.1" />
-                            </svg>
-                            <div class="debuff-icon-img-wrap">
-                                <img src="images/debuff/방어불능.png" alt="방어불능">
+                            <div class="debuff-icon-wrap" id="debuff-icon-defenseless" data-debuff="defenseless"
+                                onclick="cycleDebuff(this)">
+                                <svg class="debuff-ring-svg" viewBox="0 0 100 100">
+                                    <!-- X자 분할 4개 호 (비활성) -->
+                                    <path class="ring-seg seg-0" d="M74.1,15.6 A42,42 0 0,0 25.9,15.6" />
+                                    <path class="ring-seg seg-1" d="M84.4,74.1 A42,42 0 0,0 84.4,25.9" />
+                                    <path class="ring-seg seg-2" d="M25.9,84.4 A42,42 0 0,0 74.1,84.4" />
+                                    <path class="ring-seg seg-3" d="M15.6,25.9 A42,42 0 0,0 15.6,74.1" />
+                                </svg>
+                                <div class="debuff-icon-img-wrap">
+                                    <img src="images/debuff/방어불능.png" alt="방어불능">
+                                </div>
+                                <span class="debuff-stack-label">0</span>
                             </div>
-                            <span class="debuff-stack-label">0</span>
-                        </div>
 
-                        <div class="debuff-icon-wrap" id="debuff-icon-armorBreak" data-debuff="armorBreak"
-                            onclick="cycleDebuff(this)">
-                            <svg class="debuff-ring-svg" viewBox="0 0 100 100">
-                                <path class="ring-seg seg-0" d="M74.1,15.6 A42,42 0 0,0 25.9,15.6" />
-                                <path class="ring-seg seg-1" d="M84.4,74.1 A42,42 0 0,0 84.4,25.9" />
-                                <path class="ring-seg seg-2" d="M25.9,84.4 A42,42 0 0,0 74.1,84.4" />
-                                <path class="ring-seg seg-3" d="M15.6,25.9 A42,42 0 0,0 15.6,74.1" />
-                            </svg>
-                            <div class="debuff-icon-img-wrap">
-                                <img src="images/debuff/갑옷 파괴.png" alt="갑옷 파괴">
+                            <div class="debuff-icon-wrap" id="debuff-icon-armorBreak" data-debuff="armorBreak"
+                                onclick="cycleDebuff(this)">
+                                <svg class="debuff-ring-svg" viewBox="0 0 100 100">
+                                    <path class="ring-seg seg-0" d="M74.1,15.6 A42,42 0 0,0 25.9,15.6" />
+                                    <path class="ring-seg seg-1" d="M84.4,74.1 A42,42 0 0,0 84.4,25.9" />
+                                    <path class="ring-seg seg-2" d="M25.9,84.4 A42,42 0 0,0 74.1,84.4" />
+                                    <path class="ring-seg seg-3" d="M15.6,25.9 A42,42 0 0,0 15.6,74.1" />
+                                </svg>
+                                <div class="debuff-icon-img-wrap">
+                                    <img src="images/debuff/갑옷 파괴.png" alt="갑옷 파괴">
+                                </div>
+                                <span class="debuff-stack-label">0</span>
                             </div>
-                            <span class="debuff-stack-label">0</span>
                         </div>
                     </div>
-                </div>
 
-                <!-- 아츠 부착 (4종, 한 번에 한 종류) -->
-                <div class="debuff-group">
-                    <div class="debuff-attach-row">
-                        <div class="debuff-icon-wrap" id="debuff-icon-열기 부착" data-debuff="artsAttach"
-                            data-attach-type="열기 부착" data-stacks="0" onclick="cycleDebuffAttach(this)">
-                            <svg class="debuff-ring-svg" viewBox="0 0 100 100">
-                                <path class="ring-seg seg-0" d="M74.1,15.6 A42,42 0 0,0 25.9,15.6" />
-                                <path class="ring-seg seg-1" d="M84.4,74.1 A42,42 0 0,0 84.4,25.9" />
-                                <path class="ring-seg seg-2" d="M25.9,84.4 A42,42 0 0,0 74.1,84.4" />
-                                <path class="ring-seg seg-3" d="M15.6,25.9 A42,42 0 0,0 15.6,74.1" />
-                            </svg>
-                            <div class="debuff-icon-img-wrap">
-                                <img src="images/debuff/열기 부착.png" alt="열기 부착">
+                    <!-- 아츠 부착 (4종, 한 번에 한 종류) -->
+                    <div class="debuff-group">
+                        <div class="debuff-attach-row">
+                            <div class="debuff-icon-wrap" id="debuff-icon-열기 부착" data-debuff="artsAttach"
+                                data-attach-type="열기 부착" data-stacks="0" onclick="cycleDebuffAttach(this)">
+                                <svg class="debuff-ring-svg" viewBox="0 0 100 100">
+                                    <path class="ring-seg seg-0" d="M74.1,15.6 A42,42 0 0,0 25.9,15.6" />
+                                    <path class="ring-seg seg-1" d="M84.4,74.1 A42,42 0 0,0 84.4,25.9" />
+                                    <path class="ring-seg seg-2" d="M25.9,84.4 A42,42 0 0,0 74.1,84.4" />
+                                    <path class="ring-seg seg-3" d="M15.6,25.9 A42,42 0 0,0 15.6,74.1" />
+                                </svg>
+                                <div class="debuff-icon-img-wrap">
+                                    <img src="images/debuff/열기 부착.png" alt="열기 부착">
+                                </div>
+                                <span class="debuff-stack-label">0</span>
                             </div>
-                            <span class="debuff-stack-label">0</span>
-                        </div>
-                        <div class="debuff-icon-wrap" id="debuff-icon-전기 부착" data-debuff="artsAttach"
-                            data-attach-type="전기 부착" data-stacks="0" onclick="cycleDebuffAttach(this)">
-                            <svg class="debuff-ring-svg" viewBox="0 0 100 100">
-                                <path class="ring-seg seg-0" d="M74.1,15.6 A42,42 0 0,0 25.9,15.6" />
-                                <path class="ring-seg seg-1" d="M84.4,74.1 A42,42 0 0,0 84.4,25.9" />
-                                <path class="ring-seg seg-2" d="M25.9,84.4 A42,42 0 0,0 74.1,84.4" />
-                                <path class="ring-seg seg-3" d="M15.6,25.9 A42,42 0 0,0 15.6,74.1" />
-                            </svg>
-                            <div class="debuff-icon-img-wrap">
-                                <img src="images/debuff/전기 부착.png" alt="전기 부착">
+                            <div class="debuff-icon-wrap" id="debuff-icon-전기 부착" data-debuff="artsAttach"
+                                data-attach-type="전기 부착" data-stacks="0" onclick="cycleDebuffAttach(this)">
+                                <svg class="debuff-ring-svg" viewBox="0 0 100 100">
+                                    <path class="ring-seg seg-0" d="M74.1,15.6 A42,42 0 0,0 25.9,15.6" />
+                                    <path class="ring-seg seg-1" d="M84.4,74.1 A42,42 0 0,0 84.4,25.9" />
+                                    <path class="ring-seg seg-2" d="M25.9,84.4 A42,42 0 0,0 74.1,84.4" />
+                                    <path class="ring-seg seg-3" d="M15.6,25.9 A42,42 0 0,0 15.6,74.1" />
+                                </svg>
+                                <div class="debuff-icon-img-wrap">
+                                    <img src="images/debuff/전기 부착.png" alt="전기 부착">
+                                </div>
+                                <span class="debuff-stack-label">0</span>
                             </div>
-                            <span class="debuff-stack-label">0</span>
-                        </div>
-                        <div class="debuff-icon-wrap" id="debuff-icon-냉기 부착" data-debuff="artsAttach"
-                            data-attach-type="냉기 부착" data-stacks="0" onclick="cycleDebuffAttach(this)">
-                            <svg class="debuff-ring-svg" viewBox="0 0 100 100">
-                                <path class="ring-seg seg-0" d="M74.1,15.6 A42,42 0 0,0 25.9,15.6" />
-                                <path class="ring-seg seg-1" d="M84.4,74.1 A42,42 0 0,0 84.4,25.9" />
-                                <path class="ring-seg seg-2" d="M25.9,84.4 A42,42 0 0,0 74.1,84.4" />
-                                <path class="ring-seg seg-3" d="M15.6,25.9 A42,42 0 0,0 15.6,74.1" />
-                            </svg>
-                            <div class="debuff-icon-img-wrap">
-                                <img src="images/debuff/냉기 부착.png" alt="냉기 부착">
+                            <div class="debuff-icon-wrap" id="debuff-icon-냉기 부착" data-debuff="artsAttach"
+                                data-attach-type="냉기 부착" data-stacks="0" onclick="cycleDebuffAttach(this)">
+                                <svg class="debuff-ring-svg" viewBox="0 0 100 100">
+                                    <path class="ring-seg seg-0" d="M74.1,15.6 A42,42 0 0,0 25.9,15.6" />
+                                    <path class="ring-seg seg-1" d="M84.4,74.1 A42,42 0 0,0 84.4,25.9" />
+                                    <path class="ring-seg seg-2" d="M25.9,84.4 A42,42 0 0,0 74.1,84.4" />
+                                    <path class="ring-seg seg-3" d="M15.6,25.9 A42,42 0 0,0 15.6,74.1" />
+                                </svg>
+                                <div class="debuff-icon-img-wrap">
+                                    <img src="images/debuff/냉기 부착.png" alt="냉기 부착">
+                                </div>
+                                <span class="debuff-stack-label">0</span>
                             </div>
-                            <span class="debuff-stack-label">0</span>
-                        </div>
-                        <div class="debuff-icon-wrap" id="debuff-icon-자연 부착" data-debuff="artsAttach"
-                            data-attach-type="자연 부착" data-stacks="0" onclick="cycleDebuffAttach(this)">
-                            <svg class="debuff-ring-svg" viewBox="0 0 100 100">
-                                <path class="ring-seg seg-0" d="M74.1,15.6 A42,42 0 0,0 25.9,15.6" />
-                                <path class="ring-seg seg-1" d="M84.4,74.1 A42,42 0 0,0 84.4,25.9" />
-                                <path class="ring-seg seg-2" d="M25.9,84.4 A42,42 0 0,0 74.1,84.4" />
-                                <path class="ring-seg seg-3" d="M15.6,25.9 A42,42 0 0,0 15.6,74.1" />
-                            </svg>
-                            <div class="debuff-icon-img-wrap">
-                                <img src="images/debuff/자연 부착.png" alt="자연 부착">
+                            <div class="debuff-icon-wrap" id="debuff-icon-자연 부착" data-debuff="artsAttach"
+                                data-attach-type="자연 부착" data-stacks="0" onclick="cycleDebuffAttach(this)">
+                                <svg class="debuff-ring-svg" viewBox="0 0 100 100">
+                                    <path class="ring-seg seg-0" d="M74.1,15.6 A42,42 0 0,0 25.9,15.6" />
+                                    <path class="ring-seg seg-1" d="M84.4,74.1 A42,42 0 0,0 84.4,25.9" />
+                                    <path class="ring-seg seg-2" d="M25.9,84.4 A42,42 0 0,0 74.1,84.4" />
+                                    <path class="ring-seg seg-3" d="M15.6,25.9 A42,42 0 0,0 15.6,74.1" />
+                                </svg>
+                                <div class="debuff-icon-img-wrap">
+                                    <img src="images/debuff/자연 부착.png" alt="자연 부착">
+                                </div>
+                                <span class="debuff-stack-label">0</span>
                             </div>
-                            <span class="debuff-stack-label">0</span>
                         </div>
                     </div>
-                </div>
 
-                <!-- 아츠 이상 (4종, 각각 독립) -->
-                <div class="debuff-group">
-                    <div class="debuff-attach-row">
-                        <div class="debuff-icon-wrap" id="debuff-icon-연소" data-debuff="artsAbnormal"
-                            data-abnormal-type="연소" data-stacks="0" onclick="cycleDebuffAbnormal(this)">
-                            <svg class="debuff-ring-svg" viewBox="0 0 100 100">
-                                <path class="ring-seg seg-0" d="M74.1,15.6 A42,42 0 0,0 25.9,15.6" />
-                                <path class="ring-seg seg-1" d="M84.4,74.1 A42,42 0 0,0 84.4,25.9" />
-                                <path class="ring-seg seg-2" d="M25.9,84.4 A42,42 0 0,0 74.1,84.4" />
-                                <path class="ring-seg seg-3" d="M15.6,25.9 A42,42 0 0,0 15.6,74.1" />
-                            </svg>
-                            <div class="debuff-icon-img-wrap">
-                                <img src="images/debuff/연소.png" alt="연소">
+                    <!-- 아츠 이상 (4종, 각각 독립) -->
+                    <div class="debuff-group">
+                        <div class="debuff-attach-row">
+                            <div class="debuff-icon-wrap" id="debuff-icon-연소" data-debuff="artsAbnormal"
+                                data-abnormal-type="연소" data-stacks="0" onclick="cycleDebuffAbnormal(this)">
+                                <svg class="debuff-ring-svg" viewBox="0 0 100 100">
+                                    <path class="ring-seg seg-0" d="M74.1,15.6 A42,42 0 0,0 25.9,15.6" />
+                                    <path class="ring-seg seg-1" d="M84.4,74.1 A42,42 0 0,0 84.4,25.9" />
+                                    <path class="ring-seg seg-2" d="M25.9,84.4 A42,42 0 0,0 74.1,84.4" />
+                                    <path class="ring-seg seg-3" d="M15.6,25.9 A42,42 0 0,0 15.6,74.1" />
+                                </svg>
+                                <div class="debuff-icon-img-wrap">
+                                    <img src="images/debuff/연소.png" alt="연소">
+                                </div>
+                                <span class="debuff-stack-label">0</span>
                             </div>
-                            <span class="debuff-stack-label">0</span>
-                        </div>
-                        <div class="debuff-icon-wrap" id="debuff-icon-감전" data-debuff="artsAbnormal"
-                            data-abnormal-type="감전" data-stacks="0" onclick="cycleDebuffAbnormal(this)">
-                            <svg class="debuff-ring-svg" viewBox="0 0 100 100">
-                                <path class="ring-seg seg-0" d="M74.1,15.6 A42,42 0 0,0 25.9,15.6" />
-                                <path class="ring-seg seg-1" d="M84.4,74.1 A42,42 0 0,0 84.4,25.9" />
-                                <path class="ring-seg seg-2" d="M25.9,84.4 A42,42 0 0,0 74.1,84.4" />
-                                <path class="ring-seg seg-3" d="M15.6,25.9 A42,42 0 0,0 15.6,74.1" />
-                            </svg>
-                            <div class="debuff-icon-img-wrap">
-                                <img src="images/debuff/감전.png" alt="감전">
+                            <div class="debuff-icon-wrap" id="debuff-icon-감전" data-debuff="artsAbnormal"
+                                data-abnormal-type="감전" data-stacks="0" onclick="cycleDebuffAbnormal(this)">
+                                <svg class="debuff-ring-svg" viewBox="0 0 100 100">
+                                    <path class="ring-seg seg-0" d="M74.1,15.6 A42,42 0 0,0 25.9,15.6" />
+                                    <path class="ring-seg seg-1" d="M84.4,74.1 A42,42 0 0,0 84.4,25.9" />
+                                    <path class="ring-seg seg-2" d="M25.9,84.4 A42,42 0 0,0 74.1,84.4" />
+                                    <path class="ring-seg seg-3" d="M15.6,25.9 A42,42 0 0,0 15.6,74.1" />
+                                </svg>
+                                <div class="debuff-icon-img-wrap">
+                                    <img src="images/debuff/감전.png" alt="감전">
+                                </div>
+                                <span class="debuff-stack-label">0</span>
                             </div>
-                            <span class="debuff-stack-label">0</span>
-                        </div>
-                        <div class="debuff-icon-wrap" id="debuff-icon-동결" data-debuff="artsAbnormal"
-                            data-abnormal-type="동결" data-stacks="0" onclick="cycleDebuffAbnormal(this)">
-                            <svg class="debuff-ring-svg" viewBox="0 0 100 100">
-                                <path class="ring-seg seg-0" d="M74.1,15.6 A42,42 0 0,0 25.9,15.6" />
-                                <path class="ring-seg seg-1" d="M84.4,74.1 A42,42 0 0,0 84.4,25.9" />
-                                <path class="ring-seg seg-2" d="M25.9,84.4 A42,42 0 0,0 74.1,84.4" />
-                                <path class="ring-seg seg-3" d="M15.6,25.9 A42,42 0 0,0 15.6,74.1" />
-                            </svg>
-                            <div class="debuff-icon-img-wrap">
-                                <img src="images/debuff/동결.png" alt="동결">
+                            <div class="debuff-icon-wrap" id="debuff-icon-동결" data-debuff="artsAbnormal"
+                                data-abnormal-type="동결" data-stacks="0" onclick="cycleDebuffAbnormal(this)">
+                                <svg class="debuff-ring-svg" viewBox="0 0 100 100">
+                                    <path class="ring-seg seg-0" d="M74.1,15.6 A42,42 0 0,0 25.9,15.6" />
+                                    <path class="ring-seg seg-1" d="M84.4,74.1 A42,42 0 0,0 84.4,25.9" />
+                                    <path class="ring-seg seg-2" d="M25.9,84.4 A42,42 0 0,0 74.1,84.4" />
+                                    <path class="ring-seg seg-3" d="M15.6,25.9 A42,42 0 0,0 15.6,74.1" />
+                                </svg>
+                                <div class="debuff-icon-img-wrap">
+                                    <img src="images/debuff/동결.png" alt="동결">
+                                </div>
+                                <span class="debuff-stack-label">0</span>
                             </div>
-                            <span class="debuff-stack-label">0</span>
-                        </div>
-                        <div class="debuff-icon-wrap" id="debuff-icon-부식" data-debuff="artsAbnormal"
-                            data-abnormal-type="부식" data-stacks="0" onclick="cycleDebuffAbnormal(this)">
-                            <svg class="debuff-ring-svg" viewBox="0 0 100 100">
-                                <path class="ring-seg seg-0" d="M74.1,15.6 A42,42 0 0,0 25.9,15.6" />
-                                <path class="ring-seg seg-1" d="M84.4,74.1 A42,42 0 0,0 84.4,25.9" />
-                                <path class="ring-seg seg-2" d="M25.9,84.4 A42,42 0 0,0 74.1,84.4" />
-                                <path class="ring-seg seg-3" d="M15.6,25.9 A42,42 0 0,0 15.6,74.1" />
-                            </svg>
-                            <div class="debuff-icon-img-wrap">
-                                <img src="images/debuff/부식.png" alt="부식">
+                            <div class="debuff-icon-wrap" id="debuff-icon-부식" data-debuff="artsAbnormal"
+                                data-abnormal-type="부식" data-stacks="0" onclick="cycleDebuffAbnormal(this)">
+                                <svg class="debuff-ring-svg" viewBox="0 0 100 100">
+                                    <path class="ring-seg seg-0" d="M74.1,15.6 A42,42 0 0,0 25.9,15.6" />
+                                    <path class="ring-seg seg-1" d="M84.4,74.1 A42,42 0 0,0 84.4,25.9" />
+                                    <path class="ring-seg seg-2" d="M25.9,84.4 A42,42 0 0,0 74.1,84.4" />
+                                    <path class="ring-seg seg-3" d="M15.6,25.9 A42,42 0 0,0 15.6,74.1" />
+                                </svg>
+                                <div class="debuff-icon-img-wrap">
+                                    <img src="images/debuff/부식.png" alt="부식">
+                                </div>
+                                <span class="debuff-stack-label">0</span>
                             </div>
-                            <span class="debuff-stack-label">0</span>
                         </div>
                     </div>
-                </div>
 
-                <!-- 전용 스택 (오퍼레이터 종속, 메인 오퍼레이터 전용) -->
-                <div class="debuff-group" id="special-stack-group" style="display: none;">
-                    <div class="debuff-attach-row">
-                        <div class="debuff-icon-wrap" id="debuff-icon-specialStack" data-debuff="specialStack"
-                            data-stacks="0" onclick="cycleSpecialStack(this)">
-                            <svg class="debuff-ring-svg" viewBox="0 0 100 100">
-                                <path class="ring-seg seg-0" d="M74.1,15.6 A42,42 0 0,0 25.9,15.6" />
-                                <path class="ring-seg seg-1" d="M84.4,74.1 A42,42 0 0,0 84.4,25.9" />
-                                <path class="ring-seg seg-2" d="M25.9,84.4 A42,42 0 0,0 74.1,84.4" />
-                                <path class="ring-seg seg-3" d="M15.6,25.9 A42,42 0 0,0 15.6,74.1" />
-                            </svg>
-                            <div class="debuff-icon-img-wrap special-stack-bg">
-                                <img id="special-stack-bg-img" src="" alt="전용 스택">
+                    <!-- 전용 스택 (오퍼레이터 종속, 메인 오퍼레이터 전용) -->
+                    <div class="debuff-group" id="special-stack-group" style="display: none;">
+                        <div class="debuff-attach-row">
+                            <div class="debuff-icon-wrap" id="debuff-icon-specialStack" data-debuff="specialStack"
+                                data-stacks="0" onclick="cycleSpecialStack(this)">
+                                <svg class="debuff-ring-svg" viewBox="0 0 100 100">
+                                    <path class="ring-seg seg-0" d="M74.1,15.6 A42,42 0 0,0 25.9,15.6" />
+                                    <path class="ring-seg seg-1" d="M84.4,74.1 A42,42 0 0,0 84.4,25.9" />
+                                    <path class="ring-seg seg-2" d="M25.9,84.4 A42,42 0 0,0 74.1,84.4" />
+                                    <path class="ring-seg seg-3" d="M15.6,25.9 A42,42 0 0,0 15.6,74.1" />
+                                </svg>
+                                <div class="debuff-icon-img-wrap special-stack-bg">
+                                    <img id="special-stack-bg-img" src="" alt="전용 스택">
+                                </div>
+                                <span class="debuff-stack-label">0</span>
+                                <span id="special-stack-name" class="special-stack-name"></span>
                             </div>
-                            <span class="debuff-stack-label">0</span>
-                            <span id="special-stack-name" class="special-stack-name"></span>
                         </div>
                     </div>
                 </div>
