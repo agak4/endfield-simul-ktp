@@ -245,7 +245,7 @@ function initUI() {
             const skillDef = opData?.skill?.find(s => s?.skillType?.includes(type));
             if (skillDef) {
                 const content = AppTooltip.renderSkillTooltip(type, skillDef, opData, '', window.lastCalcResult?.activeEffects || [], state);
-                AppTooltip.showCustom(content, e, { width: '260px' });
+                AppTooltip.showCustom(content, e, { width: '350px' });
             }
         };
         btn.onmouseleave = () => AppTooltip.hide();

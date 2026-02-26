@@ -666,63 +666,6 @@
     color: var(--error);
 }
 
-/* ============ 반응형 추가 (대시보드 전용) ============ */
-@media (max-width: 1400px) {
-    .result-debuff-wrapper {
-        display: contents;
-    }
-
-    .debuff-icon-section {
-        flex-direction: row !important;
-        justify-content: center;
-        flex-wrap: wrap;
-    }
-}
-
-@media (max-width: 1024px) {
-    .dashboard-grid {
-        grid-template-columns: 1fr 1fr;
-    }
-
-    .sidebar {
-        max-width: 85%;
-    }
-}
-
-@media (max-width: 768px) {
-    .dashboard-grid {
-        grid-template-columns: 1fr;
-    }
-
-    #final-damage {
-        font-size: 2.5rem;
-    }
-
-    .total-dmg-box {
-        padding: 20px;
-        min-height: 120px;
-    }
-
-    .gear-sidebar-grid {
-        grid-template-columns: repeat(4, 1fr);
-    }
-
-    .result-area-row {
-        top: 20px;
-    }
-}
-
-@media (max-width: 480px) {
-    #final-damage {
-        font-size: 2rem;
-    }
-
-    .comp-settings-body {
-        flex-direction: column;
-        gap: 10px;
-    }
-}
-
 /* ============ 디버프 아이콘 섹션 ============ */
 .debuff-icon-section {
     display: flex;
@@ -1100,4 +1043,61 @@
 .skill-card-header {
     position: relative;
     z-index: 2;
+}
+
+/* ============ 반응형 추가 (대시보드 전용) ============ */
+@media (max-width: 1400px) {
+    .result-debuff-wrapper {
+        display: contents;
+    }
+
+    .debuff-icon-section {
+        flex-direction: row !important;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+}
+
+@media (max-width: 1024px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .sidebar {
+        max-width: 85%;
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+
+    #final-damage {
+        font-size: 2.5rem;
+    }
+
+    .total-dmg-box {
+        padding: 20px;
+        min-height: 120px;
+    }
+
+    .gear-sidebar-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+
+    .result-area-row {
+        top: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    #final-damage {
+        font-size: 2rem;
+    }
+
+    .comp-settings-body {
+        flex-direction: column;
+        gap: 10px;
+    }
 }

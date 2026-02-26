@@ -342,9 +342,15 @@ function applyDebuffIconState(wrap, stacks) {
 
     const bubble = wrap.querySelector('.debuff-stack-bubble');
     if (bubble) {
+        const max = wrap.dataset.max ? parseInt(wrap.dataset.max) : null;
         bubble.textContent = stacks;
-        bubble.classList.toggle('active', stacks > 0);
-        bubble.classList.toggle('zero', stacks === 0);
+        if (max === 1) {
+            bubble.style.display = 'none';
+        } else {
+            bubble.style.display = '';
+            bubble.classList.toggle('active', stacks > 0);
+            bubble.classList.toggle('zero', stacks === 0);
+        }
     }
 
     const ringSvg = wrap.querySelector('.debuff-ring-svg');
@@ -423,6 +429,7 @@ function updateUIStateVisuals() {
             wrap.id = `debuff-icon-special-${stackId}`;
             wrap.dataset.debuff = 'specialStack';
             wrap.dataset.stackId = stackId;
+            wrap.dataset.max = s.max; // Store max for UI display logic
 
             wrap.innerHTML = useSingleCircle ? `
                 <svg class="debuff-ring-svg single-ring-svg" viewBox="0 0 100 100">

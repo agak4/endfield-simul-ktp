@@ -214,7 +214,7 @@ function renderLog(id, list) {
         const uid = typeof item === 'string' ? null : item.uid;
         const isUnbalancedOff = typeof item === 'object' && item.unbalancedOff;
 
-        li.innerText = txt;
+        li.innerHTML = txt;
         if (isUnbalancedOff || item._triggerFailed) {
             li.classList.add(isUnbalancedOff ? 'unbalanced-off' : 'triggerFail-effect');
         }
@@ -623,13 +623,13 @@ function renderCyclePerSkill(cycleRes) {
                         <div class="tooltip-desc">${data.desc ? data.desc : '설명 없음'}</div>
                     `;
                 }
-                AppTooltip.showCustom(content, e, { width: '260px' });
+                AppTooltip.showCustom(content, e, { width: '350px' });
             } else {
                 const isProc = name.startsWith('재능') || name.startsWith('잠재') || name.startsWith('무기');
                 if (!isProc) {
                     const artsStrength = window.lastCalcResult?.stats?.originiumArts || 0;
                     const content = AppTooltip.renderAbnormalTooltip(name, artsStrength, state);
-                    AppTooltip.showCustom(content, e, { width: '260px' });
+                    AppTooltip.showCustom(content, e, { width: '350px' });
                 }
             }
         };
@@ -977,7 +977,7 @@ function renderDmgInc(res, cycleRes) {
 
         sortedLogs.forEach(log => {
             const li = document.createElement('li');
-            li.innerText = log.txt;
+            li.innerHTML = log.txt;
 
             const uid = log.uid;
             const uiUid = log._uiUid || uid;
@@ -1090,8 +1090,8 @@ function updateEnhancedSkillButtons(opId) {
         btn.onmouseenter = (e) => {
             const opData = DATA_OPERATORS.find(o => o.id === opId);
             const activeEffects = window.lastCalcResult ? window.lastCalcResult.activeEffects : [];
-            const content = AppTooltip.renderSkillTooltip(skillName, es, opData, '', activeEffects);
-            AppTooltip.showCustom(content, e, { width: '260px' });
+            const content = AppTooltip.renderSkillTooltip(skillName, es, opData, '', activeEffects, getTargetState());
+            AppTooltip.showCustom(content, e, { width: '350px' });
         };
         btn.onmouseleave = () => AppTooltip.hide();
 

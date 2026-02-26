@@ -592,8 +592,7 @@ const AppTooltip = {
         return `
             <div class="tooltip-title tooltip-highlight">${type}</div>
             <div class="tooltip-group">
-                <div class="tooltip-desc">
-                    피해량: <strong class="tooltip-highlight">${Math.floor(displayDmg).toLocaleString()}</strong><br>
+                <div class="tooltip-desc">피해량: <strong class="tooltip-highlight">${Math.floor(displayDmg).toLocaleString()}</strong><br>
                     데미지 배율: <strong>${rateHtml}</strong>
                 </div>
             </div>
@@ -619,12 +618,13 @@ const AppTooltip = {
         const filteredEffects = activeEffects.filter(eff => {
             const stTypes = eff.skillType || [];
             const t = Array.isArray(eff.type) ? eff.type[0] : eff.type;
+            const baseSkillType = skillType.startsWith('강화 ') ? skillType.substring(3) : skillType;
 
             if (st?.disabledEffects) {
                 if (st.disabledEffects.includes(`${eff.uid}#${catKey}`) || st.disabledEffects.includes(`${eff.uid}#common`)) return false;
             }
 
-            if (eff._isExternal && stTypes.includes(skillType)) {
+            if (eff._isExternal && (stTypes.includes(skillType) || stTypes.includes(baseSkillType))) {
                 return t.endsWith('피해') || t.includes('피해') || t.includes('공격력') || t.includes('배율') || t.includes('치명타');
             }
 
@@ -638,7 +638,7 @@ const AppTooltip = {
             if (isCombo && t === '연계 스킬 피해') return true;
             if (isUlt && t === '궁극기 피해') return true;
             if ((isBattle || isCombo || isUlt) && (t === '모든 스킬 피해' || t === '스킬 배율 증가')) {
-                return stTypes.length === 0 || stTypes.includes(skillType);
+                return stTypes.length === 0 || stTypes.includes(skillType) || stTypes.includes(baseSkillType);
             }
             return false;
         }).sort((a, b) => {

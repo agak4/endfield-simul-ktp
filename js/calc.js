@@ -630,8 +630,19 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects, act
         };
 
         if (t === '공격력 증가') {
-            if (!checkDisabled('common')) atkInc += val;
-            logs.atkBuffs.push({ txt: `[${displayName}] ${valDisplay}${eff.stack ? ` (${eff._stackCount}중첩)` : ''} (${t})`, uid: eff.uid, stack: eff.stack, stackCount: eff._stackCount, _triggerFailed: eff._triggerFailed });
+            if (eff.skillType) {
+                const skTypes = eff.skillType || [];
+                skTypes.forEach(st => {
+                    const cat = { '일반 공격': 'normal', '배틀 스킬': 'battle', '연계 스킬': 'combo', '궁극기': 'ult' }[st] || 'common';
+                    if (!checkDisabled(cat)) {
+                        skillAtkIncData[st] = (skillAtkIncData[st] || 0) + val;
+                    }
+                });
+                logs.atkBuffs.push({ txt: `[${displayName}] ${valDisplay}${eff.stack ? ` (${eff._stackCount}중첩)` : ''} (${t} / <span class="tooltip-highlight">${skTypes.join(', ')}</span>)`, uid: eff.uid, tag: 'skillAtkInc', skillType: eff.skillType, stack: eff.stack, stackCount: eff._stackCount, _triggerFailed: eff._triggerFailed });
+            } else {
+                if (!checkDisabled('common')) atkInc += val;
+                logs.atkBuffs.push({ txt: `[${displayName}] ${valDisplay}${eff.stack ? ` (${eff._stackCount}중첩)` : ''} (${t})`, uid: eff.uid, stack: eff.stack, stackCount: eff._stackCount, _triggerFailed: eff._triggerFailed });
+            }
         } else if (t === '오리지늄 아츠 강도') {
             if (!checkDisabled('common')) originiumArts += val;
             logs.arts.push({ txt: `[${displayName}] ${valDisplay}${eff.stack ? ` (${eff._stackCount}중첩)` : ''} (${t})`, uid: eff.uid, stack: eff.stack, stackCount: eff._stackCount, _triggerFailed: eff._triggerFailed });
@@ -650,7 +661,7 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects, act
                         skillCritData.rate[st] = (skillCritData.rate[st] || 0) + val;
                     }
                 });
-                logs.crit.push({ txt: `[${displayName}] ${valDisplay}${eff.stack ? ` (${eff._stackCount}중첩)` : ''} (${t} / ${skTypes.join(', ')})`, uid: eff.uid, tag: 'skillCrit', skillType: eff.skillType, stack: eff.stack, stackCount: eff._stackCount, _triggerFailed: eff._triggerFailed });
+                logs.crit.push({ txt: `[${displayName}] ${valDisplay}${eff.stack ? ` (${eff._stackCount}중첩)` : ''} (${t} / <span class="tooltip-highlight">${skTypes.join(', ')}</span>)`, uid: eff.uid, tag: 'skillCrit', skillType: eff.skillType, stack: eff.stack, stackCount: eff._stackCount, _triggerFailed: eff._triggerFailed });
             } else {
                 if (!checkDisabled('common')) critRate += val;
                 logs.crit.push({ txt: `[${displayName}] ${valDisplay}${eff.stack ? ` (${eff._stackCount}중첩)` : ''} (${t})`, uid: eff.uid, stack: eff.stack, stackCount: eff._stackCount, _triggerFailed: eff._triggerFailed });
@@ -664,7 +675,7 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects, act
                         skillCritData.dmg[st] = (skillCritData.dmg[st] || 0) + val;
                     }
                 });
-                logs.crit.push({ txt: `[${displayName}] ${valDisplay}${eff.stack ? ` (${eff._stackCount}중첩)` : ''} (${t} / ${skTypes.join(', ')})`, uid: eff.uid, tag: 'skillCrit', skillType: eff.skillType, stack: eff.stack, stackCount: eff._stackCount, _triggerFailed: eff._triggerFailed });
+                logs.crit.push({ txt: `[${displayName}] ${valDisplay}${eff.stack ? ` (${eff._stackCount}중첩)` : ''} (${t} / <span class="tooltip-highlight">${skTypes.join(', ')}</span>)`, uid: eff.uid, tag: 'skillCrit', skillType: eff.skillType, stack: eff.stack, stackCount: eff._stackCount, _triggerFailed: eff._triggerFailed });
             } else {
                 if (!checkDisabled('common')) critDmg += val;
                 logs.crit.push({ txt: `[${displayName}] ${valDisplay}${eff.stack ? ` (${eff._stackCount}중첩)` : ''} (${t})`, uid: eff.uid, stack: eff.stack, stackCount: eff._stackCount, _triggerFailed: eff._triggerFailed });
@@ -713,7 +724,7 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects, act
                 }
             }
             let typeLabel = t;
-            if (eff.skillType) typeLabel += ` (${eff.skillType.join(', ')})`;
+            if (eff.skillType) typeLabel += ` (<span class="tooltip-highlight">${eff.skillType.join(', ')}</span>)`;
             logs.crit.push({ txt: `[${displayName}] ${valDisplay}${eff.stack ? ` (${eff._stackCount}중첩)` : ''} (${typeLabel})`, uid: eff.uid, tag: 'skillCrit', skillType: eff.skillType, stack: eff.stack, stackCount: eff._stackCount, _triggerFailed: eff._triggerFailed });
         } else if (t === '스킬 배율 증가') {
             const addVal = eff.dmg ? resolveVal(eff.dmg, stats) * (eff.forgeMult || 1.0) : 0;
@@ -732,7 +743,7 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects, act
                 addSkillMult('all');
             }
             let typeLabel = t;
-            if (eff.skillType) typeLabel += ` (${eff.skillType.join(', ')})`;
+            if (eff.skillType) typeLabel += ` (<span class="tooltip-highlight">${eff.skillType.join(', ')}</span>)`;
 
             const nVal = parseFloat(eff.val !== undefined ? eff.val : (eff.dmg !== undefined ? eff.dmg : 0)) || 0;
             let multDisplay;
@@ -812,7 +823,7 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects, act
             else if (t.includes('궁극기')) tag = 'ult';
 
             let label = t;
-            if (skillTypes) label += ` (${skillTypes.join(', ')})`;
+            if (skillTypes) label += ` (<span class="tooltip-highlight">${skillTypes.join(', ')}</span>)`;
             logs.dmgInc.push({
                 txt: `[${displayName}] ${valDisplay}${eff.stack ? ` (${eff._stackCount}중첩)` : ''} (${label})`,
                 uid: eff.uid,
@@ -1370,7 +1381,12 @@ function calcSingleSkillDamage(type, state, res) {
     // 물리 이상은 스킬 배율(sMult)에 영향받지 않도록 나중에 더함
     adjDmgMult += abnormalMultTotal;
 
-    const typeMap = { '배틀 스킬': 'battle', '연계 스킬': 'combo', '궁극기': 'ult', '일반 공격': 'normal' };
+    const typeMap = {
+        '배틀 스킬': 'battle', '강화 배틀 스킬': 'battle',
+        '연계 스킬': 'combo',
+        '궁극기': 'ult',
+        '일반 공격': 'normal', '강화 일반 공격': 'normal'
+    };
     let typeInc = dmgIncData.all;
     if (baseType === '일반 공격') typeInc += dmgIncData.normal;
     else typeInc += dmgIncData.skill + (dmgIncData[typeMap[baseType]] || 0);
@@ -1674,7 +1690,12 @@ function calculateCycleDamage(currentState, baseRes, forceMaxStack = false) {
         if (!skillDef) return;
 
         let specificRes = baseRes;
-        const typeMap = { '배틀 스킬': 'battle', '연계 스킬': 'combo', '궁극기': 'ult', '일반 공격': 'normal' };
+        const typeMap = {
+            '배틀 스킬': 'battle', '강화 배틀 스킬': 'battle',
+            '연계 스킬': 'combo',
+            '궁극기': 'ult',
+            '일반 공격': 'normal', '강화 일반 공격': 'normal'
+        };
         const calculationTag = typeMap[type] || 'common';
 
         if (skillDef.element) {
@@ -1722,7 +1743,12 @@ function calculateCycleDamage(currentState, baseRes, forceMaxStack = false) {
             customStateMerged.mainOp.specialStack = itemObj.customState.specialStack;
         }
 
-        const typeMap = { '배틀 스킬': 'battle', '연계 스킬': 'combo', '궁극기': 'ult', '일반 공격': 'normal' };
+        const typeMap = {
+            '배틀 스킬': 'battle', '강화 배틀 스킬': 'battle',
+            '연계 스킬': 'combo',
+            '궁극기': 'ult',
+            '일반 공격': 'normal', '강화 일반 공격': 'normal'
+        };
         customStateMerged.calculationTag = typeMap[type] || 'common';
 
         // 스킬에 지정된 속성이 있다면 덮어쓰기를 설정합니다.
