@@ -1,5 +1,3 @@
-/* ============ 결과 대시보드 ============ */
-/* ============ 최종/사이클 계산값 가로 배치 ============ */
 .result-debuff-wrapper {
     display: flex;
     gap: 12px;
@@ -375,8 +373,12 @@
 
 .dashboard-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(3, 1fr);
     gap: 7px;
+}
+
+[data-full-row="true"] {
+    grid-column: span 2;
 }
 
 .tile {
@@ -387,6 +389,12 @@
     transition: all var(--transition-speed) ease;
     position: relative;
     overflow: hidden;
+    cursor: grab;
+    user-select: none;
+}
+
+.tile:active {
+    cursor: grabbing;
 }
 
 .tile>span,
@@ -396,9 +404,14 @@
     color: var(--accent);
 }
 
-.tile h4 {
+/* tile h4 and dmg-inc-box h4 unified */
+.tile h4,
+.dmg-inc-box h4 {
     font-size: 0.8rem;
     margin-bottom: 10px;
+    color: var(--text-muted);
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
 }
 
 .tile-main-stat-row {
@@ -694,7 +707,6 @@
     margin-top: 2px;
 }
 
-/* 아이콘 래퍼 */
 .debuff-icon-wrap {
     position: relative;
     width: 52px;
@@ -708,7 +720,6 @@
     filter: brightness(1.15);
 }
 
-/* SVG 링 (X자 4분할 호) */
 .debuff-ring-svg {
     position: absolute;
     inset: 0;
@@ -717,7 +728,6 @@
     pointer-events: none;
 }
 
-/* 호 기본 (비활성) */
 .ring-seg {
     fill: none;
     stroke: rgba(255, 255, 255, 0.15);
@@ -726,19 +736,16 @@
     transition: stroke 0.18s ease;
 }
 
-/* 활성화된 호 */
 .ring-seg.active {
     stroke: rgba(200, 200, 200, 0.9);
     filter: drop-shadow(0 0 2px rgba(200, 200, 200, 0.5));
 }
 
-/* 다른 종류가 선택된 아츠부착 아이콘: 비활성 표시 */
 .debuff-icon-wrap.attach-disabled {
     opacity: 0.35;
     pointer-events: auto;
 }
 
-/* 아이콘 이미지 래퍼 */
 .debuff-icon-img-wrap {
     position: absolute;
     inset: 8px;
@@ -756,12 +763,10 @@
     object-fit: contain;
 }
 
-/* 단계 숫자 레이블: 미표시 */
 .debuff-stack-label {
     display: none;
 }
 
-/* 전용 스택 숫자 버블 (우하단) */
 .debuff-stack-bubble {
     position: absolute;
     right: -2px;
@@ -864,26 +869,30 @@
     color: var(--text-muted);
 }
 
-/* 총합 행 스타일 조정 */
 .cycle-total-val {
     font-size: 1.4rem;
     color: var(--accent);
     font-weight: 700;
 }
 
-/* 주는 피해 2층 분할 스타일 */
+/* 주는 피해 박스 일관성 스타일 */
 .dmg-inc-box {
-    grid-column: 1 / -1;
     display: flex;
     flex-direction: column;
     gap: 6px;
     background: rgba(0, 0, 0, 0.3);
     padding: 12px;
-    border-radius: 12px;
+    border-radius: 7px;
     border: 1px solid rgba(0, 217, 255, 0.2);
     transition: all var(--transition-speed) ease;
     position: relative;
     overflow: hidden;
+    cursor: grab;
+    user-select: none;
+}
+
+.dmg-inc-box:active {
+    cursor: grabbing;
 }
 
 .dmg-inc-header-row {
@@ -942,6 +951,28 @@
     flex-direction: column;
 }
 
+.dmg-inc-col-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding-bottom: 6px;
+    margin-bottom: 6px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dmg-inc-col-header label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-align: center;
+}
+
+.dmg-inc-col-header span {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--accent);
+}
+
 .dmg-inc-column h4 {
     font-size: 0.9rem;
     color: var(--text-muted);
@@ -951,7 +982,6 @@
     padding-bottom: 5px;
 }
 
-/* 속성2가 없을 때 숨김 처리 */
 .dmg-inc-elem2-hidden {
     display: none !important;
 }
@@ -1123,4 +1153,27 @@
         flex-direction: column;
         gap: 10px;
     }
+}
+
+/* ============ 타일 드래그앤드롭 ============ */
+.tile-drag-ghost,
+.dmg-inc-box.tile-drag-ghost {
+    opacity: 0.35;
+    border: 2px dashed rgba(0, 217, 255, 0.5) !important;
+    background: rgba(0, 217, 255, 0.05) !important;
+    border-radius: 7px;
+}
+
+.tile-drag-chosen,
+.dmg-inc-box.tile-drag-chosen {
+    box-shadow: 0 0 0 2px var(--accent);
+    opacity: 0.9;
+}
+
+.tile-drag-active,
+.dmg-inc-box.tile-drag-active {
+    cursor: grabbing !important;
+    transform: scale(1.02);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    z-index: 200;
 }

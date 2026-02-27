@@ -32,6 +32,58 @@
  *   ④ 새 디버프 속성을 추가할 때 반드시 위 세 규칙을 지켜야 한다.
  */
 
+// ============ 공통 상수 ============
+
+// 스킬 타입명 → 카테고리 키 매핑 (여러 함수에서 공유)
+const SKILL_TYPE_CAT_MAP = {
+    '일반 공격': 'normal', '강화 일반 공격': 'normal',
+    '배틀 스킬': 'battle', '강화 배틀 스킬': 'battle',
+    '연계 스킬': 'combo',
+    '궁극기': 'ult'
+};
+
+// 한국어 속성 접두어 → 내부 element 키
+const KO_ELEM_MAP = {
+    '물리': 'phys', '열기': 'heat', '전기': 'elec', '냉기': 'cryo', '자연': 'nature', '아츠': 'arts'
+};
+
+// 효과 type 문자열에서 속성 element 키를 추출한다.
+// 아츠는 opData.element로 변환. 없으면 null 반환.
+function extractElemTag(typeStr, opData) {
+    for (const [ko, key] of Object.entries(KO_ELEM_MAP)) {
+        if (typeStr.includes(ko)) {
+            if (key === 'arts') return opData?.element || null;
+            return key;
+        }
+    }
+    return null;
+}
+
+// ============ 공통 헬퍼 ============
+
+// 효과 로그 항목 객체 생성 헬퍼
+// extra: 추가 필드 객체 (tag, skillType, unbalancedOff 등)
+function buildLogEntry(eff, displayName, label, extra = {}) {
+    const stackSuffix = eff.stack ? ` <span class="tooltip-highlight">(${eff._stackCount}중첩)</span>` : '';
+    return {
+        txt: `[${displayName}] ${extra.valDisplay ?? ''} ${stackSuffix} (${label})`.replace(/\s+/g, ' ').trim(),
+        uid: eff.uid,
+        stack: eff.stack,
+        stackCount: eff._stackCount,
+        _triggerFailed: eff._triggerFailed,
+        ...extra
+    };
+}
+
+// perStack + base 합산 값 계산 헬퍼 (비율 포함)
+function calcPerStackValue(perStack, base, stackCount) {
+    const nPer = parseFloat(perStack) || 0;
+    const nBase = parseFloat(base) || 0;
+    const total = parseFloat((nPer * stackCount + nBase).toPrecision(12));
+    const isPct = String(perStack).includes('%') || (base && String(base).includes('%'));
+    return isPct ? total + '%' : total;
+}
+
 // ============ 데미지 계산 엔진 ============
 
 function calculateDamage(currentState, forceMaxStack = false) {
@@ -88,10 +140,17 @@ function getAdjustedStackCount(triggerName, state, opData, skillTypes) {
         const mainOp = state.mainOp;
         const op = opData || DATA_OPERATORS.find(o => o.id === mainOp.id);
         if (op) {
+            let opPot = 0;
+            if (op.id === mainOp?.id) {
+                opPot = Number(mainOp.pot) || 0;
+            } else {
+                const subMatch = state.subOps?.find(s => s.id === op.id);
+                if (subMatch) opPot = Number(subMatch.pot) || 0;
+            }
             // 잠재/재능에서 '방어 불능 보정' 수집
             const pools = [
                 ...(op.talents || []).flat(),
-                ...((op.potential || []).slice(0, Number(mainOp.pot) || 0)).flat()
+                ...((op.potential || []).slice(0, opPot)).flat()
             ];
             pools.forEach(pEff => {
                 const pTypes = Array.isArray(pEff.type) ? pEff.type : [pEff.type];
@@ -188,10 +247,10 @@ function collectAllEffects(state, opData, wepData, stats, allEffects, forceMaxSt
 
             let baseTriggerMet = true;
             if (eff.trigger) {
-                baseTriggerMet = baseTriggerMet && evaluateTrigger(eff.trigger, state, effectiveOpData, eff.triggerType, false, eff.target);
+                baseTriggerMet = baseTriggerMet && evaluateTrigger(eff.trigger, state, effectiveOpData, eff.triggerType, false, eff.target, !!eff.sourceId);
             }
             if (eff.triggerTarget) {
-                baseTriggerMet = baseTriggerMet && evaluateTrigger(eff.triggerTarget, state, effectiveOpData, null, true, eff.target);
+                baseTriggerMet = baseTriggerMet && evaluateTrigger(eff.triggerTarget, state, effectiveOpData, null, true, eff.target, !!eff.sourceId);
             }
 
             if (eff.targetFilter === '다른 속성') {
@@ -203,7 +262,7 @@ function collectAllEffects(state, opData, wepData, stats, allEffects, forceMaxSt
             const typeArr = eff.type ? (Array.isArray(eff.type) ? eff.type : [eff.type]).map(item => typeof item === 'string' ? { type: item } : item) : [];
             const bonuses = eff.bonus || [];
 
-            const activeBonuses = bonuses.filter(b => !b.trigger || evaluateTrigger(b.trigger, state, effectiveOpData, null, false, b.target || eff.target));
+            const activeBonuses = bonuses.filter(b => !b.trigger || evaluateTrigger(b.trigger, state, effectiveOpData, null, false, b.target || eff.target, !!eff.sourceId));
 
             // [추가] 오퍼레이터 속성과 일치하는 무기 효과인지 확인 (트리거 미충족 시 표시용)
             const isMatchOpType = typeArr.some(ta => {
@@ -235,11 +294,7 @@ function collectAllEffects(state, opData, wepData, stats, allEffects, forceMaxSt
                         triggers.forEach(t => {
                             maxStackForThis = Math.max(maxStackForThis, getAdjustedStackCount(t, state, effectiveOpData, eff.skillType));
                         });
-                        const nPer = parseFloat(ps) || 0;
-                        const nBase = parseFloat(bs) || 0;
-                        const totalValue = parseFloat((nPer * maxStackForThis + nBase).toPrecision(12));
-                        const isPct = String(ps).includes('%') || (bs && String(bs).includes('%'));
-                        currentVal = isPct ? totalValue + '%' : totalValue;
+                        currentVal = calcPerStackValue(ps, bs, maxStackForThis);
                     }
 
                     // stack 처리
@@ -281,11 +336,8 @@ function collectAllEffects(state, opData, wepData, stats, allEffects, forceMaxSt
                                 bTriggers.forEach(t => {
                                     maxStackForThisBonus = Math.max(maxStackForThisBonus, getAdjustedStackCount(t, state, effectiveOpData, eff.skillType));
                                 });
-                                const bnPer = parseFloat(b.perStack) || 0;
-                                const bnBase = b.base !== undefined ? parseFloat(b.base) : (b.val !== undefined ? parseFloat(b.val) : 0);
-                                const bonusRawTotal = parseFloat((bnPer * maxStackForThisBonus + bnBase).toPrecision(12));
-                                const bisPct = String(b.perStack).includes('%') || (b.base && String(b.base).includes('%')) || (b.val && String(b.val).includes('%'));
-                                currentVal = combineValues(currentVal, bisPct ? bonusRawTotal + '%' : bonusRawTotal);
+                                const bnBase = b.base !== undefined ? b.base : (b.val !== undefined ? b.val : 0);
+                                currentVal = combineValues(currentVal, calcPerStackValue(b.perStack, bnBase, maxStackForThisBonus));
                             }
                             b._applied = true;
                         }
@@ -305,7 +357,7 @@ function collectAllEffects(state, opData, wepData, stats, allEffects, forceMaxSt
                     if (isSub && !isSubOpTargetValid(expanded)) return;
 
                     if (expanded.nonStack) {
-                        const key = `${expanded.sourceId || name}_${expanded.type}`;
+                        const key = `${expanded.sourceId || name}_${expanded.traitIdx || ''}_${expanded.type}`;
                         if (activeNonStackTypes.has(key)) return;
                         activeNonStackTypes.add(key);
                     }
@@ -388,7 +440,7 @@ function collectAllEffects(state, opData, wepData, stats, allEffects, forceMaxSt
             const traitIdx = idx + 1;
             const finalLv = calculateWeaponTraitLevel(idx, entry.state, entry.pot);
             const val = calculateWeaponTraitValue(trait, finalLv);
-            const eff = { ...trait, val, sourceId: entry.data.id };
+            const eff = { ...trait, val, sourceId: entry.data.id, traitIdx };
 
             let label = `${entry.data.name} 특성${traitIdx}(Lv${finalLv})`;
             if (!entry.isMain) label = `${entry.name} ${entry.data.name} 특성${traitIdx}`;
@@ -539,7 +591,8 @@ function applyPercentStats(effects, stats) {
 // ---- 최종 데미지 산출 ----
 function computeFinalDamageOutput(state, opData, wepData, stats, allEffects, activeEffects) {
     const baseAtk = opData.baseAtk + wepData.baseAtk;
-    let atkInc = 0, critRate = 5, critDmg = 50, dmgInc = 0, amp = 0, vuln = 0, takenDmg = 0, multiHit = 1.0, unbalanceDmg = 0, originiumArts = 0, ultRecharge = 0, ultCostReduction = 0, skillMults = { all: { mult: 0, add: 0 } }, dmgIncMap = { all: 0, skill: 0, normal: 0, battle: 0, combo: 0, ult: 0, phys: 0, heat: 0, elec: 0, cryo: 0, nature: 0 };
+    let atkInc = 0, critRate = 5, critDmg = 50, dmgInc = 0, amp = 0, multiHit = 1.0, unbalanceDmg = 0, originiumArts = 0, ultRecharge = 0, ultCostReduction = 0, skillMults = { all: { mult: 0, add: 0 } }, dmgIncMap = { all: 0, skill: 0, normal: 0, battle: 0, combo: 0, ult: 0, phys: 0, heat: 0, elec: 0, cryo: 0, nature: 0 };
+    let takenDmgMap = { all: 0, phys: 0, heat: 0, elec: 0, cryo: 0, nature: 0, arts: 0 };
     const vulnMap = { '물리 취약': 0, '아츠 취약': 0, '열기 취약': 0, '전기 취약': 0, '냉기 취약': 0, '자연 취약': 0, '취약': 0 };
     const vulnAmpEffects = [];
     const skillCritData = { rate: { all: 0 }, dmg: { all: 0 } };
@@ -560,8 +613,8 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects, act
     const abStacks = state.debuffState.physDebuff?.armorBreak || 0;
     const abVal = ARMOR_BREAK_BONUS[abStacks];
     const abDisabled = state.disabledEffects.includes('debuff_armorBreak');
-    if (abVal > 0 && opData.type === 'phys') {
-        if (!abDisabled) takenDmg += abVal;
+    if (abVal > 0) {
+        if (!abDisabled) takenDmgMap.phys += abVal;
         logs.taken.push({ txt: `[갑옷 파괴 ${abStacks}단계] 받는 물리 피해 +${abVal}%`, uid: 'debuff_armorBreak' });
     }
 
@@ -597,9 +650,12 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects, act
         if (typeof valDisplay === 'number' && valDisplay > 0) valDisplay = '+' + valDisplay;
         else if (typeof valDisplay === 'string' && !valDisplay.startsWith('-') && !valDisplay.startsWith('+')) valDisplay = '+' + valDisplay;
 
+        // 스킬타입별 분기에 사용되는 cat 계산 헬퍼
+        const getCat = (st) => SKILL_TYPE_CAT_MAP[st] || 'common';
+
         if (eff.type === '스탯' || eff.type === '스탯%') {
             const tgt = getStatName(eff.stat || eff.stats);
-            const line = `[${displayName}] ${valDisplay}${eff.stack ? ` (${eff._stackCount}중첩)` : ''} (${tgt})`;
+            const line = `[${displayName}] ${valDisplay}${eff.stack ? ` <span class="tooltip-highlight">(${eff._stackCount}중첩)</span>` : ''} (${tgt})`;
             statLogs.push({ txt: line, uid: eff.uid, stack: eff.stack, stackCount: eff._stackCount, _triggerFailed: eff._triggerFailed });
             return;
         }
@@ -628,60 +684,55 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects, act
             return false;
         };
 
+        // 스킬타입 한정 효과의 수치 반영 + 로그 공통 처리
+        const applySkillTypedEffect = (dataObj, logArr, label, extra = {}) => {
+            if (eff.skillType) {
+                const skTypes = eff.skillType;
+                skTypes.forEach(st => {
+                    const cat = getCat(st);
+                    if (!checkDisabled(cat) && dataObj) {
+                        dataObj[st] = (dataObj[st] || 0) + val;
+                    }
+                });
+                logArr.push({ txt: `[${displayName}] ${valDisplay}${eff.stack ? ` <span class="tooltip-highlight">(${eff._stackCount}중첩)</span>` : ''} (${label} / <span class="tooltip-highlight">${skTypes.join(', ')}</span>)`, uid: eff.uid, skillType: eff.skillType, stack: eff.stack, stackCount: eff._stackCount, _triggerFailed: eff._triggerFailed, ...extra });
+            } else {
+                logArr.push({ txt: `[${displayName}] ${valDisplay}${eff.stack ? ` <span class="tooltip-highlight">(${eff._stackCount}중첩)</span>` : ''} (${label})`, uid: eff.uid, stack: eff.stack, stackCount: eff._stackCount, _triggerFailed: eff._triggerFailed, ...extra });
+            }
+        };
+
         if (t === '공격력 증가') {
             if (eff.skillType) {
-                const skTypes = eff.skillType || [];
-                skTypes.forEach(st => {
-                    const cat = { '일반 공격': 'normal', '배틀 스킬': 'battle', '연계 스킬': 'combo', '궁극기': 'ult' }[st] || 'common';
-                    if (!checkDisabled(cat)) {
-                        skillAtkIncData[st] = (skillAtkIncData[st] || 0) + val;
-                    }
-                });
-                logs.atkBuffs.push({ txt: `[${displayName}] ${valDisplay}${eff.stack ? ` (${eff._stackCount}중첩)` : ''} (${t} / <span class="tooltip-highlight">${skTypes.join(', ')}</span>)`, uid: eff.uid, tag: 'skillAtkInc', skillType: eff.skillType, stack: eff.stack, stackCount: eff._stackCount, _triggerFailed: eff._triggerFailed });
+                eff.skillType.forEach(st => { if (!checkDisabled(getCat(st))) skillAtkIncData[st] = (skillAtkIncData[st] || 0) + val; });
             } else {
                 if (!checkDisabled('common')) atkInc += val;
-                logs.atkBuffs.push({ txt: `[${displayName}] ${valDisplay}${eff.stack ? ` (${eff._stackCount}중첩)` : ''} (${t})`, uid: eff.uid, stack: eff.stack, stackCount: eff._stackCount, _triggerFailed: eff._triggerFailed });
             }
+            applySkillTypedEffect(null, logs.atkBuffs, t, { tag: eff.skillType ? 'skillAtkInc' : undefined });
         } else if (t === '오리지늄 아츠 강도') {
             if (!checkDisabled('common')) originiumArts += val;
-            logs.arts.push({ txt: `[${displayName}] ${valDisplay}${eff.stack ? ` (${eff._stackCount}중첩)` : ''} (${t})`, uid: eff.uid, stack: eff.stack, stackCount: eff._stackCount, _triggerFailed: eff._triggerFailed });
+            logs.arts.push({ txt: `[${displayName}] ${valDisplay}${eff.stack ? ` <span class="tooltip-highlight">(${eff._stackCount}중첩)</span>` : ''} (${t})`, uid: eff.uid, stack: eff.stack, stackCount: eff._stackCount, _triggerFailed: eff._triggerFailed });
         } else if (t === '궁극기 충전 효율') {
             if (!checkDisabled('common')) ultRecharge += val;
-            logs.ultRecharge.push({ txt: `[${displayName}] ${valDisplay}${eff.stack ? ` (${eff._stackCount}중첩)` : ''} (${t})`, uid: eff.uid, tag: 'recharge', stack: eff.stack, stackCount: eff._stackCount, _triggerFailed: eff._triggerFailed });
+            logs.ultRecharge.push({ txt: `[${displayName}] ${valDisplay}${eff.stack ? ` <span class="tooltip-highlight">(${eff._stackCount}중첩)</span>` : ''} (${t})`, uid: eff.uid, tag: 'recharge', stack: eff.stack, stackCount: eff._stackCount, _triggerFailed: eff._triggerFailed });
         } else if (t === '궁극기 에너지 감소') {
             if (!checkDisabled('common')) ultCostReduction += val;
-            logs.ultRecharge.push({ txt: `[${displayName}] ${valDisplay}${eff.stack ? ` (${eff._stackCount}중첩)` : ''} (${t})`, uid: eff.uid, tag: 'reduction', stack: eff.stack, stackCount: eff._stackCount, _triggerFailed: eff._triggerFailed });
+            logs.ultRecharge.push({ txt: `[${displayName}] ${valDisplay}${eff.stack ? ` <span class="tooltip-highlight">(${eff._stackCount}중첩)</span>` : ''} (${t})`, uid: eff.uid, tag: 'reduction', stack: eff.stack, stackCount: eff._stackCount, _triggerFailed: eff._triggerFailed });
         } else if (t === '치명타 확률') {
             if (eff.skillType) {
-                const skTypes = eff.skillType || [];
-                skTypes.forEach(st => {
-                    const cat = { '일반 공격': 'normal', '배틀 스킬': 'battle', '연계 스킬': 'combo', '궁극기': 'ult' }[st] || 'common';
-                    if (!checkDisabled(cat)) {
-                        skillCritData.rate[st] = (skillCritData.rate[st] || 0) + val;
-                    }
-                });
-                logs.crit.push({ txt: `[${displayName}] ${valDisplay}${eff.stack ? ` (${eff._stackCount}중첩)` : ''} (${t} / <span class="tooltip-highlight">${skTypes.join(', ')}</span>)`, uid: eff.uid, tag: 'skillCrit', skillType: eff.skillType, stack: eff.stack, stackCount: eff._stackCount, _triggerFailed: eff._triggerFailed });
+                eff.skillType.forEach(st => { if (!checkDisabled(getCat(st))) skillCritData.rate[st] = (skillCritData.rate[st] || 0) + val; });
             } else {
                 if (!checkDisabled('common')) critRate += val;
-                logs.crit.push({ txt: `[${displayName}] ${valDisplay}${eff.stack ? ` (${eff._stackCount}중첩)` : ''} (${t})`, uid: eff.uid, stack: eff.stack, stackCount: eff._stackCount, _triggerFailed: eff._triggerFailed });
             }
+            applySkillTypedEffect(null, logs.crit, t, { tag: eff.skillType ? 'skillCrit' : undefined, type: 'rate' });
         } else if (t === '치명타 피해') {
             if (eff.skillType) {
-                const skTypes = eff.skillType || [];
-                skTypes.forEach(st => {
-                    const cat = { '일반 공격': 'normal', '배틀 스킬': 'battle', '연계 스킬': 'combo', '궁극기': 'ult' }[st] || 'common';
-                    if (!checkDisabled(cat)) {
-                        skillCritData.dmg[st] = (skillCritData.dmg[st] || 0) + val;
-                    }
-                });
-                logs.crit.push({ txt: `[${displayName}] ${valDisplay}${eff.stack ? ` (${eff._stackCount}중첩)` : ''} (${t} / <span class="tooltip-highlight">${skTypes.join(', ')}</span>)`, uid: eff.uid, tag: 'skillCrit', skillType: eff.skillType, stack: eff.stack, stackCount: eff._stackCount, _triggerFailed: eff._triggerFailed });
+                eff.skillType.forEach(st => { if (!checkDisabled(getCat(st))) skillCritData.dmg[st] = (skillCritData.dmg[st] || 0) + val; });
             } else {
                 if (!checkDisabled('common')) critDmg += val;
-                logs.crit.push({ txt: `[${displayName}] ${valDisplay}${eff.stack ? ` (${eff._stackCount}중첩)` : ''} (${t})`, uid: eff.uid, stack: eff.stack, stackCount: eff._stackCount, _triggerFailed: eff._triggerFailed });
             }
+            applySkillTypedEffect(null, logs.crit, t, { tag: eff.skillType ? 'skillCrit' : undefined, type: 'dmg' });
         } else if (t === '연타') {
             if (!checkDisabled('common')) multiHit = Math.max(multiHit, val || 1);
-            logs.multihit.push({ txt: `[${displayName}] x${val || 1}${eff.stack ? ` (${eff._stackCount}중첩)` : ''}`, uid: eff.uid, stack: eff.stack, stackCount: eff._stackCount, _triggerFailed: eff._triggerFailed });
+            logs.multihit.push({ txt: `[${displayName}] x${val || 1}${eff.stack ? ` <span class="tooltip-highlight">(${eff._stackCount}중첩)</span>` : ''}`, uid: eff.uid, stack: eff.stack, stackCount: eff._stackCount, _triggerFailed: eff._triggerFailed });
         } else if (t === '취약 증폭' || t === '냉기 취약 증폭') {
             vulnAmpEffects.push(eff);
             const ampFactor = (1 + val).toFixed(1);
@@ -689,46 +740,52 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects, act
             logs.vuln.push({ txt: `[${displayName}] *${ampFactor} (${targetLabel})`, uid: eff.uid, target: '적', _triggerFailed: eff._triggerFailed });
         } else if (t.endsWith('증폭')) {
             if (!checkDisabled('common')) amp += val;
-            logs.amp.push({ txt: `[${displayName}] ${valDisplay}${eff.stack ? ` (${eff._stackCount}중첩)` : ''} (${t})`, uid: eff.uid, stack: eff.stack, stackCount: eff._stackCount, _triggerFailed: eff._triggerFailed });
+            const ampElemTag = extractElemTag(t, opData);
+            logs.amp.push({ txt: `[${displayName}] ${valDisplay}${eff.stack ? ` <span class="tooltip-highlight">(${eff._stackCount}중첩)</span>` : ''} (${t})`, uid: eff.uid, tag: ampElemTag || 'all', stack: eff.stack, stackCount: eff._stackCount, _triggerFailed: eff._triggerFailed });
         } else if (t.endsWith('취약')) {
             if (!checkDisabled('common')) {
-                vuln += val;
                 if (vulnMap[t] !== undefined) vulnMap[t] += val;
                 else vulnMap['취약'] += val;
             }
-            logs.vuln.push({ txt: `[${displayName}] ${valDisplay}${eff.stack ? ` (${eff._stackCount}중첩)` : ''} (${t})`, uid: eff.uid, stack: eff.stack, stackCount: eff._stackCount, _triggerFailed: eff._triggerFailed });
+            const vulnElemTag = extractElemTag(t, opData);
+            logs.vuln.push({ txt: `[${displayName}] ${valDisplay}${eff.stack ? ` <span class="tooltip-highlight">(${eff._stackCount}중첩)</span>` : ''} (${t})`, uid: eff.uid, tag: vulnElemTag || 'all', stack: eff.stack, stackCount: eff._stackCount, _triggerFailed: eff._triggerFailed });
         } else if (t === '불균형 목표에 주는 피해') {
             if (state.enemyUnbalanced && !checkDisabled('common')) {
                 dmgInc += val;
                 dmgIncMap.all += val;
             }
-            logs.dmgInc.push({ txt: `[${displayName}] ${valDisplay}${eff.stack ? ` (${eff._stackCount}중첩)` : ''} (불균형 목표에 주는 피해)`, uid: eff.uid, unbalancedOff: !state.enemyUnbalanced, tag: 'all', stack: eff.stack, stackCount: eff._stackCount, _triggerFailed: eff._triggerFailed });
+            logs.dmgInc.push({ txt: `[${displayName}] ${valDisplay}${eff.stack ? ` <span class="tooltip-highlight">(${eff._stackCount}중첩)</span>` : ''} (불균형 목표에 주는 피해)`, uid: eff.uid, unbalancedOff: !state.enemyUnbalanced, tag: 'all', stack: eff.stack, stackCount: eff._stackCount, _triggerFailed: eff._triggerFailed });
         } else if (t.includes('받는')) {
-            if (!checkDisabled('common')) takenDmg += val;
-            logs.taken.push({ txt: `[${displayName}] ${valDisplay}${eff.stack ? ` (${eff._stackCount}중첩)` : ''} (${t})`, uid: eff.uid, stack: eff.stack, stackCount: eff._stackCount, _triggerFailed: eff._triggerFailed });
+            if (!checkDisabled('common')) {
+                let foundMatch = false;
+                for (const [ko, key] of Object.entries(KO_ELEM_MAP)) {
+                    if (t.includes(ko)) {
+                        takenDmgMap[key === 'arts' ? 'arts' : key] += val;
+                        foundMatch = true;
+                        break;
+                    }
+                }
+                if (!foundMatch) takenDmgMap.all += val;
+            }
+            const takenElemTag = extractElemTag(t, opData);
+            logs.taken.push({ txt: `[${displayName}] ${valDisplay}${eff.stack ? ` <span class="tooltip-highlight">(${eff._stackCount}중첩)</span>` : ''} (${t})`, uid: eff.uid, tag: takenElemTag || 'all', stack: eff.stack, stackCount: eff._stackCount, _triggerFailed: eff._triggerFailed });
         } else if (t === '스킬 치명타 확률' || t === '스킬 치명타 피해') {
             const isRate = (t === '스킬 치명타 확률');
             const targetObj = isRate ? skillCritData.rate : skillCritData.dmg;
             if (!checkDisabled('common')) {
                 if (eff.skillType) {
-                    const skTypes = eff.skillType || [];
-                    skTypes.forEach(st => {
-                        const cat = { '일반 공격': 'normal', '배틀 스킬': 'battle', '연계 스킬': 'combo', '궁극기': 'ult' }[st] || 'common';
-                        if (!checkDisabled(cat)) {
-                            targetObj[st] = (targetObj[st] || 0) + val;
-                        }
-                    });
+                    eff.skillType.forEach(st => { if (!checkDisabled(getCat(st))) targetObj[st] = (targetObj[st] || 0) + val; });
                 } else {
                     targetObj.all += val;
                 }
             }
             let typeLabel = t;
             if (eff.skillType) typeLabel += ` (<span class="tooltip-highlight">${eff.skillType.join(', ')}</span>)`;
-            logs.crit.push({ txt: `[${displayName}] ${valDisplay}${eff.stack ? ` (${eff._stackCount}중첩)` : ''} (${typeLabel})`, uid: eff.uid, tag: 'skillCrit', skillType: eff.skillType, stack: eff.stack, stackCount: eff._stackCount, _triggerFailed: eff._triggerFailed });
+            logs.crit.push({ txt: `[${displayName}] ${valDisplay}${eff.stack ? ` <span class="tooltip-highlight">(${eff._stackCount}중첩)</span>` : ''} (${typeLabel})`, uid: eff.uid, tag: 'skillCrit', skillType: eff.skillType, stack: eff.stack, stackCount: eff._stackCount, _triggerFailed: eff._triggerFailed, type: isRate ? 'rate' : 'dmg' });
         } else if (t === '스킬 배율 증가') {
             const addVal = eff.dmg ? resolveVal(eff.dmg, stats) * (eff.forgeMult || 1.0) : 0;
             const addSkillMult = (st) => {
-                const cat = { '일반 공격': 'normal', '배틀 스킬': 'battle', '연계 스킬': 'combo', '궁극기': 'ult' }[st] || 'common';
+                const cat = getCat(st);
                 if (!checkDisabled(cat)) {
                     if (typeof skillMults[st] === 'number') skillMults[st] = { mult: skillMults[st], add: 0 };
                     else if (!skillMults[st]) skillMults[st] = { mult: 0, add: 0 };
@@ -756,7 +813,7 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects, act
             }
 
             logs.dmgInc.push({
-                txt: `[${displayName}] ${multDisplay}${eff.stack ? ` (${eff._stackCount}중첩)` : ''} (${typeLabel})`,
+                txt: `[${displayName}] ${multDisplay}${eff.stack ? ` <span class="tooltip-highlight">(${eff._stackCount}중첩)</span>` : ''} (${typeLabel})`,
                 uid: eff.uid,
                 tag: 'skillMult',
                 skillType: eff.skillType,
@@ -831,25 +888,17 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects, act
 
             let label = t;
             if (skillTypes) label += ` (<span class="tooltip-highlight">${skillTypes.join(', ')}</span>)`;
-            logs.dmgInc.push({
-                txt: `[${displayName}] ${valDisplay}${eff.stack ? ` (${eff._stackCount}중첩)` : ''} (${label})`,
-                uid: eff.uid,
-                tag: tag,
-                skillType: skillTypes,
-                stack: eff.stack,
-                stackCount: eff._stackCount,
-                _triggerFailed: eff._triggerFailed
-            });
+            logs.dmgInc.push({ txt: `[${displayName}] ${valDisplay}${eff.stack ? ` <span class="tooltip-highlight">(${eff._stackCount}중첩)</span>` : ''} (${label})`, uid: eff.uid, tag, skillType: skillTypes, stack: eff.stack, stackCount: eff._stackCount, _triggerFailed: eff._triggerFailed });
         } else if (t.endsWith('저항 무시')) {
             if (!checkDisabled('common')) resIgnore += val;
-            logs.res.push({ txt: `[${displayName}] ${t} ${val.toFixed(1)}${eff.stack ? ` (${eff._stackCount}중첩)` : ''}`, uid: eff.uid, stack: eff.stack, stackCount: eff._stackCount, _triggerFailed: eff._triggerFailed });
+            logs.res.push({ txt: `[${displayName}] ${t} ${val.toFixed(1)}${eff.stack ? ` <span class="tooltip-highlight">(${eff._stackCount}중첩)</span>` : ''}`, uid: eff.uid, stack: eff.stack, stackCount: eff._stackCount, _triggerFailed: eff._triggerFailed });
         }
     });
 
     // [디버프 직접 적용 규칙] 로그는 항상 push, 수치 반영은 !isDisabled 시에만
     const gamsunDisabled = state.disabledEffects.includes('debuff_gamsun');
-    if (gamsunVal > 0 && opData.type === 'arts') {
-        if (!gamsunDisabled) takenDmg += gamsunVal;
+    if (gamsunVal > 0) {
+        if (!gamsunDisabled) takenDmgMap.arts += gamsunVal;
         logs.taken.push({ txt: `[감전 ${gamsunStacks}단계] 받는 아츠 피해 +${gamsunVal}%`, uid: 'debuff_gamsun' });
     }
 
@@ -883,7 +932,19 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects, act
     const defVal = state.enemyDefense !== undefined ? state.enemyDefense : 100;
     const defMult = 1 / (0.01 * defVal + 1);
 
-    let finalDmg = finalAtk * critExp * (1 + dmgInc / 100) * (1 + amp / 100) * (1 + takenDmg / 100) * (1 + vuln / 100) * multiHit * (1 + finalUnbal / 100) * resMult * defMult;
+    let opVuln = vulnMap['취약'] || 0;
+    if (activeResKey) opVuln += (vulnMap[`${activeResKey} 취약`] || 0);
+
+    let opTakenDmg = takenDmgMap.all || 0;
+    if (opData.type === 'phys') opTakenDmg += takenDmgMap.phys;
+    else if (opData.type === 'arts') {
+        opTakenDmg += takenDmgMap.arts;
+        if (opData.element && takenDmgMap[opData.element]) {
+            opTakenDmg += takenDmgMap[opData.element];
+        }
+    }
+
+    let finalDmg = finalAtk * critExp * (1 + dmgInc / 100) * (1 + amp / 100) * (1 + opTakenDmg / 100) * (1 + opVuln / 100) * multiHit * (1 + finalUnbal / 100) * resMult * defMult;
 
     const swordsman = allEffects.find(e => e.setId === 'set_swordsman' && e.triggered);
     if (swordsman) {
@@ -907,9 +968,9 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects, act
             mainStatName: STAT_NAME_MAP[opData.mainStat], mainStatVal: stats[opData.mainStat],
             subStatName: STAT_NAME_MAP[opData.subStat], subStatVal: stats[opData.subStat],
             str: stats.str, agi: stats.agi, int: stats.int, wil: stats.wil,
-            critExp, finalCritRate, critDmg, dmgInc, amp, vuln, takenDmg, unbalanceDmg: finalUnbal, originiumArts, skillMults, dmgIncData: dmgIncMap,
-            skillCritData, resistance: activeResVal, resMult, defMult, enemyDefense: defVal, ultRecharge, finalUltCost, vulnMap, vulnAmpEffects,
-            allRes: resistance, armorBreakVal: abVal, gamsunVal: gamsunVal, baseTakenDmg: (takenDmg - (opData.type === 'phys' ? abVal : (opData.type === 'arts' ? gamsunVal : 0))),
+            critExp, finalCritRate, critDmg, dmgInc, amp, vuln: opVuln, takenDmg: opTakenDmg, unbalanceDmg: finalUnbal, originiumArts, skillMults, dmgIncData: dmgIncMap,
+            skillCritData, resistance: activeResVal, resMult, defMult, enemyDefense: defVal, ultRecharge, finalUltCost, vulnMap, takenDmgMap, vulnAmpEffects,
+            allRes: resistance, armorBreakVal: abVal, gamsunVal: gamsunVal, baseTakenDmg: takenDmgMap.all,
             resIgnore: resIgnore
         },
         logs
@@ -1161,7 +1222,7 @@ function evaluateTrigger(trigger, state, opData, triggerType, isTargetOnly = fal
             };
 
             if (checkOpCapability(opData)) return true;
-            if (effectTarget === '팀') {
+            if (effectTarget === '팀' && !strictMode) {
                 const mainOpData = DATA_OPERATORS.find(o => o.id === (state.mainOp?.id));
                 if (mainOpData && mainOpData.id !== opData.id && checkOpCapability(mainOpData)) return true;
             }
@@ -1197,7 +1258,7 @@ function calcSingleSkillDamage(type, state, res) {
     const skillDef = skillMap[type];
     if (!skillDef) return null;
 
-    const { finalAtk, atkInc, baseAtk, statBonusPct, skillAtkIncData = { all: 0 }, critExp, finalCritRate, critDmg, amp, takenDmg, vuln, unbalanceDmg, resMult, defMult = 1, originiumArts = 0, skillMults = { all: { mult: 0, add: 0 } }, dmgIncData = { all: 0, skill: 0, normal: 0, battle: 0, combo: 0, ult: 0 }, skillCritData = { rate: { all: 0 }, dmg: { all: 0 } }, vulnMap = {}, vulnAmpEffects = [] } = res.stats;
+    const { finalAtk, atkInc, baseAtk, statBonusPct, skillAtkIncData = { all: 0 }, critExp, finalCritRate, critDmg, amp, vuln, takenDmg, unbalanceDmg, resMult, defMult = 1, originiumArts = 0, skillMults = { all: { mult: 0, add: 0 } }, dmgIncData = { all: 0, skill: 0, normal: 0, battle: 0, combo: 0, ult: 0 }, skillCritData = { rate: { all: 0 }, dmg: { all: 0 } }, vulnMap = {}, takenDmgMap = { all: 0, phys: 0, arts: 0, heat: 0, elec: 0, cryo: 0, nature: 0 }, vulnAmpEffects = [] } = res.stats;
 
     // dmg 파싱
     const parseDmgPct = (v) => {
@@ -1412,15 +1473,9 @@ function calcSingleSkillDamage(type, state, res) {
     // 물리 이상은 스킬 배율(sMult)에 영향받지 않도록 adjDmgMult에 합산하지 않음
     // 대신 abnormalMultTotal로 관리하여 나중에 별도 계산 및 표시함
 
-    const typeMap = {
-        '배틀 스킬': 'battle', '강화 배틀 스킬': 'battle',
-        '연계 스킬': 'combo',
-        '궁극기': 'ult',
-        '일반 공격': 'normal', '강화 일반 공격': 'normal'
-    };
     let typeInc = dmgIncData.all;
     if (baseType === '일반 공격') typeInc += dmgIncData.normal;
-    else typeInc += dmgIncData.skill + (dmgIncData[typeMap[baseType]] || 0);
+    else typeInc += dmgIncData.skill + (dmgIncData[SKILL_TYPE_CAT_MAP[baseType]] || 0);
 
     // [Fix] 속성별 주는 피해(물리/열기 등)가 스킬 계산에서 누락되던 문제 수정
     const skillElement = skillDef.element || (opData.type === 'phys' ? 'phys' : opData.element);
@@ -1446,7 +1501,24 @@ function calcSingleSkillDamage(type, state, res) {
 
     const baseMultOnly = adjDmgMult;
 
-    let finalVuln = vuln;
+    let finalVuln = res.stats.vulnMap['취약'] || 0;
+    const elMapKO = { 'phys': '물리', 'heat': '열기', 'elec': '전기', 'cryo': '냉기', 'nature': '자연' };
+    const skillElementKO = elMapKO[skillElement];
+    if (skillElementKO) {
+        finalVuln += (res.stats.vulnMap[`${skillElementKO} 취약`] || 0);
+    }
+    if (skillElement && skillElement !== 'phys') {
+        finalVuln += (res.stats.vulnMap['아츠 취약'] || 0);
+    }
+
+    let finalTakenDmg = res.stats.takenDmgMap.all || 0;
+    if (skillElement === 'phys') {
+        finalTakenDmg += res.stats.takenDmgMap.phys;
+    } else {
+        finalTakenDmg += res.stats.takenDmgMap.arts;
+        if (skillElement && res.stats.takenDmgMap[skillElement]) finalTakenDmg += res.stats.takenDmgMap[skillElement];
+    }
+
     vulnAmpEffects.forEach(eff => {
         const isTypeMatch = !eff.skillType || (eff.skillType && eff.skillType.includes(baseType));
         if (isTypeMatch && !state.disabledEffects.includes(eff.uid)) {
@@ -1454,7 +1526,7 @@ function calcSingleSkillDamage(type, state, res) {
             targets.forEach(tKey => {
                 const vVal = vulnMap[tKey] || 0;
                 if (vVal > 0) {
-                    const ampVal = vVal * (resolveVal(eff.val) * (eff.forgeMult || 1.0));
+                    const ampVal = vVal * (resolveVal(eff.val, res.stats) * (eff.forgeMult || 1.0));
                     finalVuln += ampVal;
                     const label = (eff.type === '취약 증폭' ? '취약 증폭' : '냉기 취약 증폭') + ` (${tKey})`;
                     bonusList.push({ name: label, val: ampVal / 100 });
@@ -1463,7 +1535,7 @@ function calcSingleSkillDamage(type, state, res) {
         }
     });
 
-    const commonMults = adjCritExp * (1 + typeInc / 100) * (1 + amp / 100) * (1 + takenDmg / 100) * (1 + finalVuln / 100) * (1 + unbalanceDmg / 100) * resMult * defMult;
+    const commonMults = adjCritExp * (1 + typeInc / 100) * (1 + amp / 100) * (1 + finalTakenDmg / 100) * (1 + finalVuln / 100) * (1 + unbalanceDmg / 100) * resMult * defMult;
 
     // 물리 이상용 공통 승수 (스킬 관련 피해 증가 제외) + 아츠 강도 보너스
     const artsStrengthMult = 1 + (originiumArts / 100);
@@ -1496,11 +1568,18 @@ function calcSingleSkillDamage(type, state, res) {
             const eKey = aElem === 'phys' ? '물리' : (resKeyMap[aElem] || null);
             if (eKey) {
                 aVuln = (res.stats.vulnMap['취약'] || 0) + (res.stats.vulnMap[eKey + ' 취약'] || 0);
+                if (aElem !== 'phys') {
+                    aVuln += (res.stats.vulnMap['아츠 취약'] || 0);
+                }
 
                 const isArts = (aElem !== 'phys');
-                const abVal = res.stats.armorBreakVal || 0;
-                const gsVal = res.stats.gamsunVal || 0;
-                aTaken = (res.stats.baseTakenDmg || 0) + (isArts ? gsVal : abVal);
+                aTaken = (res.stats.takenDmgMap.all || 0);
+                if (aElem === 'phys') {
+                    aTaken += (res.stats.takenDmgMap.phys || 0);
+                } else {
+                    aTaken += (res.stats.takenDmgMap.arts || 0);
+                    if (res.stats.takenDmgMap[aElem]) aTaken += res.stats.takenDmgMap[aElem];
+                }
 
                 // 속성별 피해 증가 적용 (예: 물리 피해 증가, 열기 피해 증가)
                 const elKey = aElem; // phys, heat, elec, cryo, nature
@@ -1530,7 +1609,7 @@ function calcSingleSkillDamage(type, state, res) {
             return arr.includes(baseType) || arr.includes(type);
         }
         if (baseType === '일반 공격' && l.tag === 'normal') return true;
-        if (baseType !== '일반 공격' && (l.tag === 'skill' || l.tag === typeMap[baseType])) return true;
+        if (baseType !== '일반 공격' && (l.tag === 'skill' || l.tag === SKILL_TYPE_CAT_MAP[baseType])) return true;
         return false;
     });
 
@@ -1555,12 +1634,12 @@ function calcSingleSkillDamage(type, state, res) {
 
     if (comboMult > 1) {
         const tag = baseType === '배틀 스킬' ? 'battle' : 'ult';
-        myLogs.dmgInc.push({ txt: `[연타 ${comboStacks}단계] x${comboMult.toFixed(2)} (곱연산)`, uid: 'combo_buff', tag: tag });
+        myLogs.dmgInc.push({ txt: `[연타 ${comboStacks}단계] x${comboMult.toFixed(2)} (곱연산)`, uid: 'combo_buff', tag });
     }
 
     // 판 전용 강타 로그 추가
     if (state.mainOp.id === 'Da Pan' && abnormalDmgMap['강타'] !== undefined) {
-        myLogs.dmgInc.push({ txt: `[판 고유 특성] 강타 피해 x1.20 (곱연산)`, uid: 'fan_smash_bonus', tag: typeMap[baseType] });
+        myLogs.dmgInc.push({ txt: `[판 고유 특성] 강타 피해 x1.20 (곱연산)`, uid: 'fan_smash_bonus', tag: SKILL_TYPE_CAT_MAP[baseType] });
     }
 
     // 아츠 강도 로그 추가 (이상 데미지가 있는 경우에만)
@@ -1624,6 +1703,65 @@ function calcSingleSkillDamage(type, state, res) {
     };
 }
 
+// ---- Proc 효과 수집 ----
+// 재능/잠재/무기/세트에서 dmg+trigger를 가진 추가 피해 효과를 수집한다.
+function collectProcEffects(opData, currentState) {
+    const procEffects = [];
+
+    // 재능
+    if (opData.talents) {
+        opData.talents.forEach((tArr, i) => {
+            tArr.forEach(eff => {
+                if (eff.dmg && eff.trigger) procEffects.push({ ...eff, label: `재능${i + 1}` });
+            });
+        });
+    }
+
+    // 잠재
+    const mainPot = Number(currentState.mainOp.pot) || 0;
+    for (let p = 0; p < mainPot; p++) {
+        if (opData.potential?.[p]) {
+            opData.potential[p].forEach(eff => {
+                if (eff.dmg && eff.trigger) procEffects.push({ ...eff, label: `잠재${p + 1}` });
+            });
+        }
+    }
+
+    // 무기 특성
+    if (currentState.mainOp?.wepId) {
+        const wepData = DATA_WEAPONS.find(w => w.id === currentState.mainOp.wepId);
+        const wepRefine = Math.max(0, (Number(currentState.mainOp.wepRefine) || 1) - 1);
+        if (wepData?.traits) {
+            wepData.traits.forEach(trait => {
+                const isProcType = trait.dmg || (Array.isArray(trait.type) && trait.type.includes('물리 데미지'));
+                if (isProcType && trait.trigger) {
+                    let dmgValue = trait.dmg;
+                    if (!dmgValue && trait.valByLevel) dmgValue = trait.valByLevel[wepRefine];
+                    if (dmgValue) procEffects.push({ ...trait, dmg: dmgValue, label: `무기:${wepData.name}` });
+                }
+            });
+        }
+    }
+
+    // 세트 효과
+    if (currentState.activeSetId) {
+        const setData = DATA_SETS.find(s => s.id === currentState.activeSetId);
+        if (setData?.effects) {
+            setData.effects.forEach(eff => {
+                const isProcType = eff.dmg || (Array.isArray(eff.type) && eff.type.includes('물리 데미지'));
+                if (isProcType && eff.trigger) {
+                    let dmgValue = eff.dmg;
+                    // dmg가 배열인 경우 첫 번째 값 사용 (예: ['250%'])
+                    if (Array.isArray(dmgValue)) dmgValue = dmgValue[0];
+                    if (dmgValue) procEffects.push({ ...eff, dmg: dmgValue, label: `세트:${setData.name}` });
+                }
+            });
+        }
+    }
+
+    return procEffects;
+}
+
 /**
  * 사이클 데미지를 계산한다.
  * 각 스킬을 sequence 순서대로 순회하며, 스킬 타입별 dmg(배율%)로 데미지를 구한다.
@@ -1634,85 +1772,15 @@ function calculateCycleDamage(currentState, baseRes, forceMaxStack = false) {
 
     const opData = DATA_OPERATORS.find(o => o.id === currentState.mainOp.id);
     const skillMap = {};
-    if (opData && opData.skill) {
+    if (opData?.skill) {
         opData.skill.forEach(s => {
-            if (s?.skillType) {
-                s.skillType.forEach(st => skillMap[st] = s);
-            }
+            if (s?.skillType) s.skillType.forEach(st => skillMap[st] = s);
         });
     }
 
     const perSkill = {};
     const perAbnormal = {};
-
-    // 추가 피해(Proc) 효과 수집 (재능/잠재 중 dmg와 trigger가 있는 항목)
-    const procEffects = [];
-    if (opData.talents) {
-        opData.talents.forEach((tArr, i) => {
-            tArr.forEach(eff => {
-                if (eff.dmg && eff.trigger) {
-                    procEffects.push({ ...eff, label: `재능${i + 1}` });
-                }
-            });
-        });
-    }
-    const mainPot = Number(currentState.mainOp.pot) || 0;
-    for (let p = 0; p < mainPot; p++) {
-        if (opData.potential?.[p]) {
-            opData.potential[p].forEach(eff => {
-                if (eff.dmg && eff.trigger) {
-                    procEffects.push({ ...eff, label: `잠재${p + 1}` });
-                }
-            });
-        }
-    }
-
-    // 무기 특성 Proc 효과 수집
-    if (currentState.mainOp?.wepId) {
-        const wepData = DATA_WEAPONS.find(w => w.id === currentState.mainOp.wepId);
-        const wepRefine = Math.max(0, (Number(currentState.mainOp.wepRefine) || 1) - 1);
-        if (wepData && wepData.traits) {
-            wepData.traits.forEach(trait => {
-                const isProcType = trait.dmg || (Array.isArray(trait.type) && trait.type.includes('물리 데미지'));
-                if (isProcType && trait.trigger) {
-                    let dmgValue = trait.dmg;
-                    if (!dmgValue && trait.valByLevel) {
-                        dmgValue = trait.valByLevel[wepRefine];
-                    }
-                    if (dmgValue) {
-                        procEffects.push({
-                            ...trait,
-                            dmg: dmgValue,
-                            label: `무기:${wepData.name}`
-                        });
-                    }
-                }
-            });
-        }
-    }
-
-    // 세트 효과 Proc 수집
-    if (currentState.activeSetId) {
-        const setData = DATA_SETS.find(s => s.id === currentState.activeSetId);
-        if (setData && setData.effects) {
-            setData.effects.forEach(eff => {
-                const isProcType = eff.dmg || (Array.isArray(eff.type) && eff.type.includes('물리 데미지'));
-                if (isProcType && eff.trigger) {
-                    let dmgValue = eff.dmg;
-                    // dmg가 배열인 경우 첫 번째 값 사용 (예: ['250%'])
-                    if (Array.isArray(dmgValue)) dmgValue = dmgValue[0];
-
-                    if (dmgValue) {
-                        procEffects.push({
-                            ...eff,
-                            dmg: dmgValue,
-                            label: `세트:${setData.name}`
-                        });
-                    }
-                }
-            });
-        }
-    }
+    const procEffects = collectProcEffects(opData, currentState);
 
     // 1. 모든 스킬 타입(강화 스킬 포함)의 기본 데미지
     Object.keys(skillMap).forEach(type => {
@@ -1721,13 +1789,7 @@ function calculateCycleDamage(currentState, baseRes, forceMaxStack = false) {
         if (!skillDef) return;
 
         let specificRes = baseRes;
-        const typeMap = {
-            '배틀 스킬': 'battle', '강화 배틀 스킬': 'battle',
-            '연계 스킬': 'combo',
-            '궁극기': 'ult',
-            '일반 공격': 'normal', '강화 일반 공격': 'normal'
-        };
-        const calculationTag = typeMap[type] || 'common';
+        const calculationTag = SKILL_TYPE_CAT_MAP[type] || 'common';
 
         if (skillDef.element) {
             specificRes = calculateDamage({ ...currentState, overrideSkillElement: skillDef.element, calculationTag }, forceMaxStack);
@@ -1774,13 +1836,7 @@ function calculateCycleDamage(currentState, baseRes, forceMaxStack = false) {
             customStateMerged.mainOp.specialStack = itemObj.customState.specialStack;
         }
 
-        const typeMap = {
-            '배틀 스킬': 'battle', '강화 배틀 스킬': 'battle',
-            '연계 스킬': 'combo',
-            '궁극기': 'ult',
-            '일반 공격': 'normal', '강화 일반 공격': 'normal'
-        };
-        customStateMerged.calculationTag = typeMap[type] || 'common';
+        customStateMerged.calculationTag = SKILL_TYPE_CAT_MAP[type] || 'common';
 
         // 스킬에 지정된 속성이 있다면 덮어쓰기를 설정합니다.
         if (skillDef && skillDef.element) {

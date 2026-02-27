@@ -23,6 +23,106 @@
 
 // ============ 결과 렌더링 ============
 
+// ---- 공통 헬퍼 ----
+
+// customState가 있으면 state와 병합한 타겟 state를 반환한다.
+function buildTargetState(customState) {
+    if (!customState) return state;
+    return {
+        ...state,
+        disabledEffects: customState.disabledEffects,
+        debuffState: customState.debuffState,
+        enemyUnbalanced: customState.enemyUnbalanced,
+        mainOp: { ...state.mainOp, specialStack: customState.specialStack }
+    };
+}
+
+// FLIP 애니메이션을 컨테이너에 적용한다.
+// firstPositions: Map<key, DOMRect>, attrName: data-* 속성 이름
+function applyFlipAnimation(container, firstPositions, attrName) {
+    requestAnimationFrame(() => {
+        Array.from(container.children).forEach(child => {
+            const key = child.getAttribute(attrName);
+            const firstRect = firstPositions.get(key);
+            if (firstRect) {
+                const lastRect = child.getBoundingClientRect();
+                const deltaY = firstRect.top - lastRect.top;
+                if (deltaY !== 0) {
+                    child.style.transition = 'none';
+                    child.style.transform = `translateY(${deltaY}px)`;
+                    requestAnimationFrame(() => {
+                        child.style.transition = 'transform 0.3s ease';
+                        child.style.transform = '';
+                    });
+                }
+            } else {
+                requestAnimationFrame(() => {
+                    child.style.transition = 'opacity 0.3s ease';
+                    child.style.opacity = child.classList.contains('abnormal-row') ? '0.9' : '1';
+                });
+            }
+        });
+    });
+}
+
+// 스킬 아이콘 HTML 문자열을 반환한다.
+function buildSkillIconHtml(imgSrc, color, altText) {
+    return `<div class="skill-icon-frame" style="border-color: ${color}"><img src="${imgSrc}" alt="${altText}"></div>`;
+}
+
+// 클릭으로 효과를 비활성화할 수 있는 <li> 요소를 생성한다.
+// options: { isProtected, log, uid, uiUid }
+function createEffectListItem(log, options = {}) {
+    const PROTECTED_UIDS = ['base_op_atk', 'base_wep_atk', 'stat_bonus_atk', 'unbalance_base'];
+    const uid = options.uid || log.uid;
+    const uiUid = options.uiUid || uid;
+    const isProtected = options.isProtected || PROTECTED_UIDS.includes(uid);
+
+    const li = document.createElement('li');
+    li.innerHTML = log.txt;
+
+    const isUnbalancedOff = log.unbalancedOff;
+    if (isUnbalancedOff) li.classList.add('unbalanced-off');
+    if (log._triggerFailed) li.classList.add('triggerFail-effect');
+
+    if (!uid) return li;
+
+    li.dataset.uid = uiUid;
+
+    if (isProtected) {
+        li.style.cursor = 'default';
+        return li;
+    }
+
+    li.style.cursor = 'pointer';
+    const ts = getTargetState();
+    if (log.stack) {
+        if ((ts.effectStacks?.[uid] ?? 1) === 0) li.classList.add('disabled-effect');
+    } else {
+        if (ts.disabledEffects?.includes(uiUid)) li.classList.add('disabled-effect');
+    }
+
+    li.onclick = (e) => {
+        if (e) e.stopPropagation();
+        ensureCustomState();
+        const ts2 = getTargetState();
+        if (log.stack) {
+            if (!ts2.effectStacks) ts2.effectStacks = {};
+            let cur = ts2.effectStacks[uid] !== undefined ? ts2.effectStacks[uid] : 1;
+            cur = (cur >= log.stack) ? 0 : cur + 1;
+            ts2.effectStacks[uid] = cur;
+        } else {
+            if (!ts2.disabledEffects) ts2.disabledEffects = [];
+            const idx = ts2.disabledEffects.indexOf(uiUid);
+            if (idx > -1) ts2.disabledEffects.splice(idx, 1);
+            else ts2.disabledEffects.push(uiUid);
+        }
+        if (!state.selectedSeqId) propagateGlobalStateToCustom('effects');
+        updateState();
+    };
+
+    return li;
+}
 
 /**
  * 정적 사이클 버튼(일반, 배틀, 연계, 궁극기)의 테두리 색상을 오퍼레이터 속성에 맞춰 업데이트
@@ -89,9 +189,6 @@ function renderResult(res) {
         'val-crit-rate': displayRes.stats.finalCritRate + '%',
         'val-crit-dmg': displayRes.stats.critDmg + '%',
         'stat-dmg-inc': displayRes.stats.dmgInc.toFixed(1) + '%',
-        'stat-amp': displayRes.stats.amp.toFixed(1) + '%',
-        'stat-vuln': displayRes.stats.vuln.toFixed(1) + '%',
-        'stat-taken': displayRes.stats.takenDmg.toFixed(1) + '%',
         'stat-unbal': displayRes.stats.unbalanceDmg.toFixed(1) + '%',
         'stat-ult-recharge': (displayRes.stats.ultRecharge || 0).toFixed(1) + '%',
         'stat-ult-cost': Math.ceil(displayRes.stats.finalUltCost || 0),
@@ -122,10 +219,10 @@ function renderResult(res) {
     // 로그 목록 업데이트
     const logMapping = {
         'list-atk': displayRes.logs.atk,
-        'list-crit': displayRes.logs.crit,
-        'list-amp': displayRes.logs.amp,
-        'list-vuln': displayRes.logs.vuln,
-        'list-taken': displayRes.logs.taken,
+        'list-crit': (displayRes.logs.crit || []).sort((a, b) => {
+            const order = { 'rate': 1, 'dmg': 2 };
+            return (order[a.type] || 99) - (order[b.type] || 99);
+        }),
         'list-unbal': displayRes.logs.unbal,
         'list-ult-recharge': (displayRes.logs.ultRecharge || []).sort((a, b) => {
             if (a.tag === 'reduction' && b.tag !== 'reduction') return -1;
@@ -148,6 +245,11 @@ function renderResult(res) {
     // 이펙트 다이얼리스트는 개별 설정 결과
     renderDmgInc(displayRes, cycleRes);
 
+    // 증폭/받는피해/취약 속성 분리 렌더링
+    renderElemSplit('amp-container', displayRes.logs.amp, '증폭');
+    renderElemSplit('taken-container', displayRes.logs.taken, '적이 받는 피해');
+    renderElemSplit('vuln-container', displayRes.logs.vuln, '취약');
+
     // 전용 스택 등 가시성 동기화
     if (typeof updateUIStateVisuals === 'function') {
         updateUIStateVisuals();
@@ -155,6 +257,91 @@ function renderResult(res) {
 
     // 무기 비교 렌더링 (사이클 데미지 우선)
     renderWeaponComparison(res, cycleRes);
+}
+
+/**
+ * 로그 배열을 오퍼레이터 속성(elem1/elem2)에 따라 분리하여 statsEl/listEl에 렌더링한다.
+ * 주는 피해 박스와 동일한 속성 분리 패턴을 사용한다.
+ * @param {string} containerId - 컬럼들을 삽입할 flex container 요소 id
+ * @param {Array}  logs        - calc.js 로그 배열 (각 항목에 tag 속성 있음)
+ * @param {string} label       - 전체 카테고리 표시명 (예: '증폭')
+ */
+function renderElemSplit(containerId, logs, label) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    container.innerHTML = '';
+
+    const opData = DATA_OPERATORS.find(o => o.id === state.mainOp.id);
+
+    // 오퍼레이터 스킬에서 고유 element 목록 추출 (최대 2개)
+    const skillElements = [];
+    if (opData?.skill) {
+        opData.skill.forEach(s => {
+            if (s.element && !skillElements.includes(s.element)) skillElements.push(s.element);
+        });
+    }
+
+    const ELEMENT_LABEL_MAP = { phys: '물리', heat: '열기', elec: '전기', cryo: '냉기', nature: '자연' };
+    const elem1Key = skillElements[0] || null;
+    const elem2Key = skillElements[1] || null;
+
+    // 카테고리 목록 (속성1 + 속성2, 전역 없음)
+    const cats = [
+        ...(elem1Key ? [{ id: 'elem1', title: (ELEMENT_LABEL_MAP[elem1Key] || elem1Key) + ' ' + label }] : []),
+        ...(elem2Key ? [{ id: 'elem2', title: (ELEMENT_LABEL_MAP[elem2Key] || elem2Key) + ' ' + label }] : [])
+    ];
+    if (cats.length === 0) return;
+
+    // 로그 분류
+    const catLogs = { elem1: [], elem2: [] };
+    const catSums = { elem1: 0, elem2: 0 };
+    const targetState = getTargetState();
+
+    (logs || []).forEach(log => {
+        let val = 0;
+        const valMatch = log.txt?.match(/([+-]?\s*\d+(\.\d+)?)\s*%/);
+        if (valMatch) val = parseFloat(valMatch[1].replace(/\s/g, ''));
+
+        const tag = log.tag || 'all';
+        const uiLog = { ...log, _uiUid: log.uid };
+        const isDisabled = targetState.disabledEffects?.includes(log.uid) || !!log._triggerFailed;
+
+        if (tag === 'all') {
+            // 전역 로그 → 존재하는 모든 속성 칸에 복사 (uid 공유, 동시 토글)
+            cats.forEach(cat => {
+                catLogs[cat.id].push(uiLog);
+                if (!isDisabled) catSums[cat.id] += val;
+            });
+        } else {
+            const catId = (tag === elem1Key) ? 'elem1' : (tag === elem2Key) ? 'elem2' : null;
+            if (catId && catLogs[catId]) {
+                catLogs[catId].push(uiLog);
+                if (!isDisabled) catSums[catId] += val;
+            }
+        }
+    });
+
+    // 각 카테고리를 하나의 컬럼(제목+수치+리스트)으로 좌우 배치
+    cats.forEach(cat => {
+        const col = document.createElement('div');
+        col.className = 'dmg-inc-column';
+
+        // 제목 + 수치 헤더
+        const header = document.createElement('div');
+        header.className = 'dmg-inc-col-header';
+        header.innerHTML = `<label>${cat.title}</label><span>${catSums[cat.id].toFixed(1)}%</span>`;
+        col.appendChild(header);
+
+        // 로그 리스트
+        const ul = document.createElement('ul');
+        ul.className = 'detail-list';
+        catLogs[cat.id].forEach(log => {
+            ul.appendChild(createEffectListItem(log, { uid: log.uid, uiUid: log._uiUid }));
+        });
+        col.appendChild(ul);
+
+        container.appendChild(col);
+    });
 }
 
 /**
@@ -205,67 +392,9 @@ function renderLog(id, list) {
     if (!ul) return;
     ul.innerHTML = '';
 
-    // 이 uid들은 클릭으로 비활성화할 수 없다 (항상 계산에 포함되어야 함)
-    const PROTECTED_UIDS = ['base_op_atk', 'base_wep_atk', 'stat_bonus_atk', 'unbalance_base'];
-
     list.forEach(item => {
-        const li = document.createElement('li');
-        const txt = typeof item === 'string' ? item : item.txt;
-        const uid = typeof item === 'string' ? null : item.uid;
-        const isUnbalancedOff = typeof item === 'object' && item.unbalancedOff;
-
-        li.innerHTML = txt;
-        if (isUnbalancedOff || item._triggerFailed) {
-            li.classList.add(isUnbalancedOff ? 'unbalanced-off' : 'triggerFail-effect');
-        }
-
-        if (uid) {
-            li.dataset.uid = uid;
-            const isProtected = PROTECTED_UIDS.includes(uid);
-            if (!isProtected) {
-                li.style.cursor = 'pointer';
-                const targetState = getTargetState();
-
-                // 이미 비활성화된 효과는 취소선 클래스 적용
-                // stack이 있는 경우는 count가 0일 때 비활성화 처리
-                const stackCount = targetState.effectStacks?.[uid];
-                if (item.stack) {
-                    if (stackCount === 0) li.classList.add('disabled-effect');
-                } else {
-                    if (targetState.disabledEffects?.includes(uid)) li.classList.add('disabled-effect');
-                }
-
-                li.onclick = () => {
-                    ensureCustomState();
-                    const ts = getTargetState();
-                    let newVal = null;
-                    let isStack = !!item.stack;
-
-                    if (isStack) {
-                        if (!ts.effectStacks) ts.effectStacks = {};
-                        let cur = ts.effectStacks[uid] !== undefined ? ts.effectStacks[uid] : 1;
-                        cur++;
-                        if (cur > item.stack) cur = 0;
-                        ts.effectStacks[uid] = cur;
-                        newVal = cur;
-                    } else {
-                        if (!ts.disabledEffects) ts.disabledEffects = [];
-                        const idx = ts.disabledEffects.indexOf(uid);
-                        if (idx > -1) ts.disabledEffects.splice(idx, 1);
-                        else ts.disabledEffects.push(uid);
-                        newVal = ts.disabledEffects.includes(uid);
-                    }
-
-                    // 전역 모드(선택된 시퀀스 없음)인 경우, 이미 개별 설정이 들어간 모든 항목에도 동일하게 반영
-                    if (!state.selectedSeqId) {
-                        propagateGlobalStateToCustom('effects');
-                    }
-                    updateState();
-                };
-            } else {
-                li.style.cursor = 'default';
-            }
-        }
+        const log = typeof item === 'string' ? { txt: item } : item;
+        const li = createEffectListItem(log, { uid: log.uid, uiUid: log.uid });
         ul.appendChild(li);
     });
 }
@@ -327,11 +456,7 @@ function renderCycleSequence(cycleRes) {
         const color = AppTooltip.getSkillElementColor(opData, type);
 
         const imgSrc = imgMap[baseType] || imgMap['일반 공격'];
-        const iconHtml = `
-            <div class="skill-icon-frame" style="border-color: ${color}">
-                <img src="${imgSrc}" alt="${baseType}">
-            </div>
-        `;
+        const iconHtml = buildSkillIconHtml(imgSrc, color, baseType);
         const iconWrapper = document.createElement('div');
         iconWrapper.style.position = 'relative';
         iconWrapper.style.zIndex = '1';
@@ -426,16 +551,7 @@ function renderCycleSequence(cycleRes) {
 
             const opData = DATA_OPERATORS.find(o => o.id === (state.mainOp?.id || ''));
             const activeEffects = item.activeEffects || (window.lastCalcResult ? window.lastCalcResult.activeEffects : []);
-            let targetSt = state;
-            if (item.customState) {
-                targetSt = {
-                    ...state,
-                    disabledEffects: item.customState.disabledEffects,
-                    debuffState: item.customState.debuffState,
-                    enemyUnbalanced: item.customState.enemyUnbalanced,
-                    mainOp: { ...state.mainOp, specialStack: item.customState.specialStack }
-                };
-            }
+            const targetSt = buildTargetState(item.customState);
 
             const content = AppTooltip.renderSequenceTooltip(type, displayDmg, rateHtml, activeEffects, targetSt, opData);
             AppTooltip.showCustom(content, e, { width: '260px' });
@@ -605,16 +721,7 @@ function renderCyclePerSkill(cycleRes) {
                     const activeEffects = window.lastCalcResult ? window.lastCalcResult.activeEffects : [];
                     const extraHtml = '';
 
-                    let targetSt = state;
-                    if (data.customState) {
-                        targetSt = {
-                            ...state,
-                            disabledEffects: data.customState.disabledEffects,
-                            debuffState: data.customState.debuffState,
-                            enemyUnbalanced: data.customState.enemyUnbalanced,
-                            mainOp: { ...state.mainOp, specialStack: data.customState.specialStack }
-                        };
-                    }
+                    let targetSt = buildTargetState(data.customState);
 
                     content = AppTooltip.renderSkillTooltip(name, skillDef, opData, extraHtml, activeEffects, targetSt);
                 } else {
@@ -654,34 +761,7 @@ function renderCyclePerSkill(cycleRes) {
     existingNodes.forEach(node => node.remove());
 
     // 5. FLIP 애니메이션 적용
-    requestAnimationFrame(() => {
-        Array.from(list.children).forEach(child => {
-            const key = child.getAttribute('data-item-key');
-            const firstRect = firstPositions.get(key);
-
-            if (firstRect) {
-                // 기존 요소: 이동 애니메이션
-                const lastRect = child.getBoundingClientRect();
-                const deltaY = firstRect.top - lastRect.top;
-
-                if (deltaY !== 0) {
-                    child.style.transition = 'none';
-                    child.style.transform = `translateY(${deltaY}px)`;
-
-                    requestAnimationFrame(() => {
-                        child.style.transition = 'transform 0.3s ease';
-                        child.style.transform = '';
-                    });
-                }
-            } else {
-                // 신규 요소: 페이드인
-                requestAnimationFrame(() => {
-                    child.style.transition = 'opacity 0.3s ease';
-                    child.style.opacity = child.classList.contains('abnormal-row') ? '0.9' : '1';
-                });
-            }
-        });
-    });
+    applyFlipAnimation(list, firstPositions, 'data-item-key');
 }
 
 function initCycleSortButton() {
@@ -797,25 +877,7 @@ function renderWeaponComparison(res, cycleRes) {
     });
 
     // FLIP 애니메이션: Last 위치와 비교하여 변위(delta) 계산 후 트랜지션
-    requestAnimationFrame(() => {
-        Array.from(box.children).forEach(child => {
-            const name = child.getAttribute('data-weapon-name');
-            const firstRect = firstPositions.get(name);
-            if (firstRect) {
-                const lastRect = child.getBoundingClientRect();
-                const deltaY = firstRect.top - lastRect.top;
-                if (deltaY !== 0) {
-                    child.style.transition = 'none';
-                    child.style.transform = `translateY(${deltaY}px)`;
-                    requestAnimationFrame(() => { child.style.transition = ''; child.style.transform = ''; });
-                }
-            } else {
-                // 새로 추가된 항목은 페이드인
-                child.style.opacity = '0';
-                requestAnimationFrame(() => { child.style.opacity = '1'; });
-            }
-        });
-    });
+    applyFlipAnimation(box, firstPositions, 'data-weapon-name');
 }
 /**
  * 주는 피해 세부 정보를 2층(상단: 주는피해+속성1+2, 하단: 4스킬)으로 나누어 렌더링한다.
@@ -881,9 +943,8 @@ function renderDmgInc(res, cycleRes) {
         return null;
     }
 
-    // 7개 카테고리 정의
+    // 쳤테고리: 주는피해 단일 속성 오퍼레이터는 elem1만, 다속성은 elem1+elem2
     const topCats = [
-        { id: 'deal', title: '주는 피해' },
         { id: 'elem1', title: elem1Key ? ELEMENT_LABEL_MAP[elem1Key] : '속성 피해' },
         ...(hasElem2 ? [{ id: 'elem2', title: ELEMENT_LABEL_MAP[elem2Key] }] : [])
     ];
@@ -895,8 +956,8 @@ function renderDmgInc(res, cycleRes) {
     ];
 
     // 로그 분류 저장소
-    const catLogs = { deal: [], elem1: [], elem2: [], normal: [], battle: [], combo: [], ult: [] };
-    const catSums = { deal: 0, elem1: 0, elem2: 0, normal: 0, battle: 0, combo: 0, ult: 0 };
+    const catLogs = { elem1: [], elem2: [], normal: [], battle: [], combo: [], ult: [] };
+    const catSums = { elem1: 0, elem2: 0, normal: 0, battle: 0, combo: 0, ult: 0 };
 
     // 로그 분류
     (res.logs.dmgInc || []).forEach(log => {
@@ -941,19 +1002,19 @@ function renderDmgInc(res, cycleRes) {
                 });
             }
         } else if (tag === 'all') {
-            // 주는 피해: _uiUid = uid 자체 (calc.js disabledEffects 체크 호환)
+            // 전역 피해 → elem1, elem2 모두에 복사 (공유 uid로 동시 토글)
             const uiLog = { ...log, _uiUid: log.uid };
-            catLogs.deal.push(uiLog);
             const isUiDisabled = (targetState.disabledEffects && targetState.disabledEffects.includes(log.uid)) || !!uiLog._triggerFailed;
-            if (!isUiDisabled) catSums.deal += val;
+            topCats.forEach(tc => {
+                catLogs[tc.id].push(uiLog);
+                if (!isUiDisabled) catSums[tc.id] += val;
+            });
         } else if (elem1Key && tag === elem1Key) {
-            // 속성1 피해: _uiUid = uid 자체
             const uiLog = { ...log, _uiUid: log.uid };
             catLogs.elem1.push(uiLog);
             const isUiDisabled = (targetState.disabledEffects && targetState.disabledEffects.includes(log.uid)) || !!uiLog._triggerFailed;
             if (!isUiDisabled) catSums.elem1 += val;
         } else if (elem2Key && tag === elem2Key) {
-            // 속성2 피해: _uiUid = uid 자체
             const uiLog = { ...log, _uiUid: log.uid };
             catLogs.elem2.push(uiLog);
             const isUiDisabled = (targetState.disabledEffects && targetState.disabledEffects.includes(log.uid)) || !!uiLog._triggerFailed;
@@ -964,8 +1025,6 @@ function renderDmgInc(res, cycleRes) {
             catLogs.deal.push(uiLog);
         }
     });
-
-    const PROTECTED_UIDS = ['base_op_atk', 'base_wep_atk', 'stat_bonus_atk', 'unbalance_base'];
 
     // 컬럼 생성 헬퍼
     function buildColumn(cat, statsContainer, listContainer, statVal) {
@@ -997,59 +1056,16 @@ function renderDmgInc(res, cycleRes) {
         });
 
         sortedLogs.forEach(log => {
-            const li = document.createElement('li');
-            li.innerHTML = log.txt;
+            const uiUid = log._uiUid || log.uid;
+            const li = createEffectListItem(log, { uid: log.uid, uiUid });
 
-            const uid = log.uid;
-            const uiUid = log._uiUid || uid;
-            if (uid) {
-                li.dataset.uid = uiUid;
-                const isProtected = PROTECTED_UIDS.includes(uid);
-                if (!isProtected) {
-                    li.style.cursor = 'pointer';
-                    const ts = getTargetState();
-                    const stackCount = ts.effectStacks?.[uid] !== undefined ? ts.effectStacks[uid] : 1;
-                    if (log.stack) {
-                        if (stackCount === 0) li.classList.add('disabled-effect');
-                    } else {
-                        if (ts.disabledEffects && ts.disabledEffects.includes(uiUid)) li.classList.add('disabled-effect');
-                    }
-                } else {
-                    li.style.cursor = 'default';
-                }
+            if (log._inactiveElement) {
+                li.classList.add('disabled-effect');
+                li.title = '오퍼레이터 속성과 일치하지 않아 적용되지 않습니다.';
+                li.style.cursor = 'default';
+                li.onclick = (e) => e.stopPropagation();
+            }
 
-                if (log._inactiveElement) {
-                    li.classList.add('disabled-effect');
-                    li.title = '오퍼레이터 속성과 일치하지 않아 적용되지 않습니다.';
-                    li.style.cursor = 'default';
-                    li.onclick = (e) => e.stopPropagation();
-                } else if (li.style.cursor !== 'default') {
-                    li.onclick = (e) => {
-                        e.stopPropagation();
-                        ensureCustomState();
-                        const ts = getTargetState();
-                        if (log.stack) {
-                            if (!ts.effectStacks) ts.effectStacks = {};
-                            let cur = ts.effectStacks[uid] !== undefined ? ts.effectStacks[uid] : 1;
-                            cur++;
-                            if (cur > log.stack) cur = 0;
-                            ts.effectStacks[uid] = cur;
-                        } else {
-                            if (!ts.disabledEffects) ts.disabledEffects = [];
-                            const idx = ts.disabledEffects.indexOf(uiUid);
-                            if (idx > -1) ts.disabledEffects.splice(idx, 1);
-                            else ts.disabledEffects.push(uiUid);
-                        }
-                        if (!state.selectedSeqId) {
-                            propagateGlobalStateToCustom('effects');
-                        }
-                        updateState();
-                    };
-                }
-            }
-            if (log._triggerFailed) {
-                li.classList.add('triggerFail-effect');
-            }
             ul.appendChild(li);
         });
 
@@ -1102,9 +1118,7 @@ function updateEnhancedSkillButtons(opId) {
 
         // 버튼 디자인: 오퍼이미지 + 타이틀
         btn.innerHTML = `
-            <div class="skill-icon-frame" style="border-color: ${color}">
-                <img src="images/operators/${opData.name}.webp" alt="${skillName}">
-            </div>
+            ${buildSkillIconHtml(`images/operators/${opData.name}.webp`, color, skillName)}
             <span>${skillName}</span>
         `;
 
