@@ -871,11 +871,12 @@
     font-weight: 700;
 }
 
-/* 주는 피해 5분할 스타일 */
+/* 주는 피해 2층 분할 스타일 */
 .dmg-inc-box {
     grid-column: 1 / -1;
     display: flex;
     flex-direction: column;
+    gap: 6px;
     background: rgba(0, 0, 0, 0.3);
     padding: 12px;
     border-radius: 12px;
@@ -885,11 +886,52 @@
     overflow: hidden;
 }
 
+.dmg-inc-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2px;
+}
+
+.dmg-inc-header-row h4 {
+    margin: 0;
+}
+
+.dmg-inc-total-val {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--accent);
+}
+
+.dmg-inc-stats-row {
+    display: flex;
+    gap: 10px;
+}
+
+.dmg-inc-stats-row .sub-stat-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.dmg-inc-stats-row .sub-stat-item span {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--accent);
+}
+
+.dmg-inc-divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.08);
+    margin: 2px 0;
+}
+
 .dmg-inc-container {
     display: flex;
     flex-direction: row;
     gap: 10px;
-    flex: 1;
     position: relative;
     overflow: hidden;
 }
@@ -909,28 +951,9 @@
     padding-bottom: 5px;
 }
 
-/* 상단 통계와 하단 리스트 정렬 맞춤 */
-#dmg-inc-stats-container {
-    display: flex;
-    gap: 10px;
-    /* .dmg-inc-container와 동일한 gap */
-    flex: 1;
-    /* 남은 공간 차지 */
-}
-
-#dmg-inc-stats-container .sub-stat-item {
-    flex: 1;
-    /* 5개 항목 등분 */
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-}
-
-#dmg-inc-stats-container .sub-stat-item span {
-    font-size: 1rem;
-    font-weight: 700;
-    color: var(--accent);
+/* 속성2가 없을 때 숨김 처리 */
+.dmg-inc-elem2-hidden {
+    display: none !important;
 }
 
 /* ============ 전용 스택 토글 ============ */

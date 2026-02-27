@@ -624,7 +624,6 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects, act
         const checkDisabled = (cat) => {
             if (state.disabledEffects.includes(eff.uid) || !!eff._triggerFailed) return true;
             if (cat && state.disabledEffects.includes(`${eff.uid}#${cat}`)) return true;
-            // 실시간 동기화: 현재 계산 컨텍스트(calculationTag)가 있으면 해당 카테고리 태그도 체크
             if (state.calculationTag && state.disabledEffects.includes(`${eff.uid}#${state.calculationTag}`)) return true;
             return false;
         };
@@ -784,22 +783,30 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects, act
                 } else if (t.includes('궁극기')) {
                     if (!checkDisabled('ult')) dmgIncMap.ult += val;
                 } else {
-                    const elMap = { '물리': 'phys', '열기': 'heat', '전기': 'elec', '냉기': 'cryo', '자연': 'nature' };
+                    const elMap = { '물리': 'phys', '열기': 'heat', '전기': 'elec', '냉기': 'cryo', '자연': 'nature', '아츠': null };
                     let foundEl = null;
                     for (const [ek, ev] of Object.entries(elMap)) {
-                        if (t.includes(ek)) { foundEl = ev; break; }
+                        if (t.includes(ek)) {
+                            if (ek === '아츠') {
+                                // 아츠 피해: 오퍼레이터의 실제 속성 element로 매핑
+                                foundEl = opData.element || null;
+                            } else {
+                                foundEl = ev;
+                            }
+                            break;
+                        }
                     }
 
-                    if (foundEl) {
+                    if (foundEl && dmgIncMap[foundEl] !== undefined) {
                         if (!checkDisabled('common')) {
                             dmgIncMap[foundEl] += val;
-                            // 오퍼레이터의 주 속성과 일치하는 경우 기본 dmgInc에도 합산 (스킬 데미지용)
-                            const opElKey = opData.type === 'phys' ? 'phys' : opData.element;
-                            if (foundEl === opElKey) {
+                            // 오퍼레이터의 스킬 속성에 포함되는 경우 기본 dmgInc에도 합산
+                            const opSkillElements = opData.skill ? [...new Set(opData.skill.map(s => s.element).filter(Boolean))] : [];
+                            if (opSkillElements.includes(foundEl)) {
                                 dmgInc += val;
                             }
                         }
-                        // 속성 태그 할당 (render.js에서 분류용으로 사용)
+                        // 속성 태그 할당
                         tag = foundEl;
                     } else {
                         if (!checkDisabled('common')) {
@@ -973,12 +980,18 @@ function isApplicableEffect(opData, effectType, effectName) {
     const checkElement = (prefix) => {
         const p = prefix ? prefix.trim() : '';
         if (!p || p === '피해' || p === '모든' || p === '취약') return true;
-        if (p === '물리' && opData.type === 'phys') return true;
         if (p === '아츠' && opData.type === 'arts') return true;
+        if (p === '물리' && opData.type === 'phys') return true;
+        // 오퍼레이터 메인 속성 일치
         if (p === '열기' && opData.element === 'heat') return true;
         if (p === '냉기' && opData.element === 'cryo') return true;
         if (p === '전기' && opData.element === 'elec') return true;
         if (p === '자연' && opData.element === 'nature') return true;
+        // 오퍼레이터 스킬 속성과 일치 (에스텔라처럼 다른 속성 스킬 보유 시)
+        const skillElements = opData.skill ? opData.skill.map(s => s.element).filter(Boolean) : [];
+        const elPrefixMap = { '물리': 'phys', '열기': 'heat', '전기': 'elec', '냉기': 'cryo', '자연': 'nature' };
+        const mappedEl = elPrefixMap[p];
+        if (mappedEl && skillElements.includes(mappedEl)) return true;
         return false;
     };
 
@@ -1263,6 +1276,23 @@ function calcSingleSkillDamage(type, state, res) {
             abnormalMultTotal += addMult;
         }
 
+        // --- 쇄빙 (Shatter) 구현 ---
+        const freezeStacks = state.debuffState?.artsAbnormal?.['동결'] || 0;
+        const isPhysAnomaly = ['강타', '띄우기', '넘어뜨리기', '강제 띄우기', '강제 넘어뜨리기', '갑옷 파괴', '방어 불능 부여', '방어 불능'].includes(typeName);
+
+        if (freezeStacks > 0 && isPhysAnomaly) {
+            const shatterMult = 1.2 + (freezeStacks * 1.2);
+            abnormalList.push({
+                name: '쇄빙',
+                mult: shatterMult,
+                triggerName: '동결',
+                stackCount: freezeStacks,
+                isShatter: true,
+                originalType: typeName
+            });
+            abnormalMultTotal += shatterMult;
+        }
+
         // --- 아츠 이상 및 아츠 폭발 구현 ---
         const artsAttach = state.debuffState?.artsAttach || { type: null, stacks: 0 };
         const currentAttachType = artsAttach.type;
@@ -1298,7 +1328,7 @@ function calcSingleSkillDamage(type, state, res) {
 
             if (currentAttachType && currentBase === nextBase) {
                 // 1. 아츠 폭발 (동일 속성)
-                artsName = currentBase + ' 폭발';
+                artsName = '아츠 폭발';
                 // 강제 부여로 인한 폭발은 데미지 0
                 artsMult = isForcedAbnormal ? 0 : 1.6;
                 shouldTrigger = true;
@@ -1334,7 +1364,8 @@ function calcSingleSkillDamage(type, state, res) {
                     triggerName: currentAttachType || '없음',
                     stackCount: currentStacks,
                     isArts: true,
-                    originalType: typeName // 트리거 연동용
+                    element: (artsName === '아츠 폭발') ? (currentBase === '열기' ? 'heat' : (currentBase === '전기' ? 'elec' : (currentBase === '냉기' ? 'cryo' : (currentBase === '자연' ? 'nature' : null)))) : null,
+                    originalType: typeName
                 });
                 abnormalMultTotal += artsMult;
             }
@@ -1378,8 +1409,8 @@ function calcSingleSkillDamage(type, state, res) {
         ? (dmgMult + sAdd / 100) * (1 + sMult / 100)
         : dmgMult;
 
-    // 물리 이상은 스킬 배율(sMult)에 영향받지 않도록 나중에 더함
-    adjDmgMult += abnormalMultTotal;
+    // 물리 이상은 스킬 배율(sMult)에 영향받지 않도록 adjDmgMult에 합산하지 않음
+    // 대신 abnormalMultTotal로 관리하여 나중에 별도 계산 및 표시함
 
     const typeMap = {
         '배틀 스킬': 'battle', '강화 배틀 스킬': 'battle',
@@ -1413,7 +1444,7 @@ function calcSingleSkillDamage(type, state, res) {
         adjFinalAtk = baseAtk * (1 + (atkInc + sAtkIncBoost) / 100) * (1 + statBonusPct);
     }
 
-    const baseMultOnly = adjDmgMult - abnormalMultTotal;
+    const baseMultOnly = adjDmgMult;
 
     let finalVuln = vuln;
     vulnAmpEffects.forEach(eff => {
@@ -1454,7 +1485,7 @@ function calcSingleSkillDamage(type, state, res) {
         let aInc = abnormalInc; // 기본은 dmgIncData.all
 
         if (aData) {
-            const aElem = aData.element;
+            const aElem = a.element || aData.element;
             const activeResKey = aElem === 'phys' ? '물리' : (resKeyMap[aElem] || null);
 
             if (activeResKey && res.stats.allRes) {
@@ -1485,7 +1516,7 @@ function calcSingleSkillDamage(type, state, res) {
             aDmg *= 1.2;
         }
 
-        abnormalDmgMap[a.name] = Math.floor(aDmg);
+        abnormalDmgMap[a.name] = (abnormalDmgMap[a.name] || 0) + Math.floor(aDmg);
     });
 
     const myLogs = JSON.parse(JSON.stringify(res.logs));
@@ -1836,9 +1867,17 @@ function calculateCycleDamage(currentState, baseRes, forceMaxStack = false) {
                     skillTotal -= aDmg; // skillTotal에서 해당 데미지 차감
                     return;
                 }
-                if (!perAbnormal[aName]) perAbnormal[aName] = { dmg: 0, count: 0 };
+                if (!perAbnormal[aName]) perAbnormal[aName] = { dmg: 0, count: 0, elements: [] };
                 perAbnormal[aName].dmg += aDmg;
                 perAbnormal[aName].count += 1;
+
+                // 해당 이상 상태의 속성 정보 수집 (아츠 폭발 등 동적 속성 대응)
+                if (skillData.abnormalList) {
+                    const info = skillData.abnormalList.find(a => a.name === aName);
+                    if (info && info.element && !perAbnormal[aName].elements.includes(info.element)) {
+                        perAbnormal[aName].elements.push(info.element);
+                    }
+                }
             });
         }
 

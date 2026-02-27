@@ -102,7 +102,7 @@ body {
 
 .container {
     display: grid;
-    grid-template-columns: 8fr 16fr 9fr;
+    grid-template-columns: 6fr 16fr 6fr;
     flex: 1;
     gap: 5px;
     padding: 5px;

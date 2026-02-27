@@ -29,6 +29,7 @@ const AppTooltip = {
         '열기 부착': 'kw-heat', '전기 부착': 'kw-elec', '냉기 부착': 'kw-cryo', '자연 부착': 'kw-nature',
         '연소': 'kw-heat', '감전': 'kw-elec', '동결': 'kw-cryo', '부식': 'kw-nature',
         '방어 불능': 'kw-phys', '강타': 'kw-phys', '띄우기': 'kw-phys', '넘어뜨리기': 'kw-phys', '강제 띄우기': 'kw-phys', '강제 넘어뜨리기': 'kw-phys', '갑옷 파괴': 'kw-phys', '오리지늄 결정': 'kw-phys',
+        '쇄빙': 'kw-phys',
         '일반 공격': 'kw-special', '배틀 스킬': 'kw-special', '연계 스킬': 'kw-special', '궁극기': 'kw-special',
         '불균형': 'kw-special', '치유': 'kw-nature', '보호': 'kw-nature', '비호': 'kw-nature', '연타': 'kw-special', '스킬 게이지': 'kw-special', '소모': 'kw-special', '궁극기 에너지': 'kw-special', '치명타 확률': 'kw-special', '치명타 피해': 'kw-special',
         '녹아내린 불꽃': 'kw-heat', '썬더랜스': 'kw-elec', '강력한 썬더랜스': 'kw-elec',
@@ -717,7 +718,7 @@ const AppTooltip = {
      * @param {object|null} st - 현재 state (디버프 표시용)
      * @returns {string}
      */
-    renderAbnormalTooltip(aName, artsStrength = 0, st = null) {
+    renderAbnormalTooltip(aName, artsStrength = 0, st = null, overrideElements = null) {
         /**
          * 이상 상태 이름으로 DATA_ABNORMALS에서 데이터를 찾는다.
          * '(이상)' 접미사를 제거한 이름으로 재시도한다.
@@ -733,8 +734,15 @@ const AppTooltip = {
 
         if (data) {
             const elementMap = { phys: '물리', heat: '열기', elec: '전기', cryo: '냉기', nature: '자연', arts: '아츠(속성 일치)' };
-            const elName = elementMap[data.element];
-            if (elName) attrLines.push(this.makeBulletLine(`공격 속성: ${elName}`, 'var(--accent)'));
+
+            // 아츠 폭발 등 동적 속성 대응
+            if (aName === '아츠 폭발' && overrideElements && overrideElements.length > 0) {
+                const elNames = overrideElements.map(el => elementMap[el] || el).join(', ');
+                attrLines.push(this.makeBulletLine(`공격 속성: ${elNames}`, 'var(--accent)'));
+            } else {
+                const elName = elementMap[data.element];
+                if (elName) attrLines.push(this.makeBulletLine(`공격 속성: ${elName}`, 'var(--accent)'));
+            }
 
             if (data.base) {
                 const multiplier = 1 + (artsStrength / 100);

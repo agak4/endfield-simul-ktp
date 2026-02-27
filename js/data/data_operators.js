@@ -136,7 +136,7 @@ const DATA_OPERATORS = [
         skill: [
             { skillType: ['일반 공격'], element: 'phys', dmg: '293%', desc: '적에게 최대 4단 공격을 하여 물리 피해를 줍니다.' },
             { skillType: ['배틀 스킬'], element: 'cryo', dmg: '350%', type: ['냉기 부착'], target: '적', desc: '전방으로 장창을 찔러 냉기 음파를 방출합니다. 일직선상의 적에게 냉기 피해를 주고 냉기 부착 상태를 부여합니다.' },
-            { skillType: ['연계 스킬'], element: 'phys', dmg: '360%', type: [{ type: '물리 취약', val: '15%', target: '적' }, { type: '강제 띄우기', target: '적' }], bonus: [{ trigger: ['동결'], val: '630%' }], desc: '적이 동결 상태일 때 사용할 수 있습니다. 빠르게 적에게 접근하여 좁은 범위 내의 적에게 물리 피해를 주고, 강제 띄우기 상태로 만듭니다. 동결 상태의 적에게 명중했을 경우, 추가로 피해를 주고 6초간 물리 취약 상태를 부여합니다.' },
+            { skillType: ['연계 스킬'], element: 'phys', dmg: '360%', type: [{ type: '물리 취약', val: '15%', target: '적' }, { type: '강제 띄우기', target: '적' }], bonus: [{ trigger: ['동결'], val: '270%' }], desc: '적이 동결 상태일 때 사용할 수 있습니다. 빠르게 적에게 접근하여 좁은 범위 내의 적에게 물리 피해를 주고, 강제 띄우기 상태로 만듭니다. 동결 상태의 적에게 명중했을 경우, 추가로 피해를 주고 6초간 물리 취약 상태를 부여합니다.' },
             { skillType: ['궁극기'], element: 'phys', cost: 70, dmg: '1100%', bonus: [{ trigger: ['물리 취약'], type: ['강제 띄우기'], target: '적' }], desc: '모든 힘을 쏟아 창을 힘껏 내려찍어 주변 원형 범위 내의 적에게 물리 피해를 줍니다. 적이 물리 취약 상태라면, 대상을 강제 띄우기 상태로 만듭니다.' }
         ],
         talents: [

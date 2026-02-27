@@ -1,10 +1,10 @@
 /* ============ 이미지 컨테이너 ============ */
 .op-image-container,
 .wep-image-container {
+    aspect-ratio: 1/1;
     display: flex;
     justify-content: center;
     align-items: center;
-    width: var(--img-size);
     height: var(--img-size);
     background: #000;
     border: 2px solid #333;
@@ -16,14 +16,24 @@
     cursor: pointer;
 }
 
+.gear-image-container {
+    aspect-ratio: 1/1;
+    height: auto;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 2px solid var(--border);
+}
+
 .op-image-container:hover,
-.wep-image-container:hover {
+.wep-image-container:hover,
+.gear-image-container:hover {
     border-color: var(--accent);
     box-shadow: 0 0 15px rgba(88, 155, 255, 0.3);
 }
 
 .op-image-container img,
-.wep-image-container img {
+.wep-image-container img,
+.gear-image-container img {
     max-width: 90%;
     max-height: 90%;
     object-fit: contain;
@@ -379,19 +389,6 @@
     flex: 1;
 }
 
-.gear-image-container {
-    aspect-ratio: 1/1;
-    height: auto;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    border: 2px solid var(--border);
-}
-
-.gear-image-container:hover {
-    border-color: var(--accent);
-    box-shadow: 0 0 15px rgba(88, 155, 255, 0.3);
-}
-
 .forge-toggle-wrapper {
     width: 100%;
     display: flex;
@@ -400,7 +397,7 @@
 
 .forge-toggle-wrapper .toggle-btn {
     width: 100%;
-    padding: 6px 0;
+    padding: 6px;
     font-size: 0.9rem;
 }
 

@@ -214,7 +214,7 @@ function setupGearForgeToggles() {
  */
 function updateToggleButton(btn, isChecked, label) {
     btn.classList.toggle('active', isChecked);
-    btn.innerText = `${label}: ${isChecked ? 'ON' : 'OFF'}`;
+    btn.innerText = `${label}`;
 }
 
 // ============================================================

@@ -628,7 +628,7 @@ function renderCyclePerSkill(cycleRes) {
                 const isProc = name.startsWith('재능') || name.startsWith('잠재') || name.startsWith('무기');
                 if (!isProc) {
                     const artsStrength = window.lastCalcResult?.stats?.originiumArts || 0;
-                    const content = AppTooltip.renderAbnormalTooltip(name, artsStrength, state);
+                    const content = AppTooltip.renderAbnormalTooltip(name, artsStrength, state, data.elements);
                     AppTooltip.showCustom(content, e, { width: '350px' });
                 }
             }
@@ -818,96 +818,118 @@ function renderWeaponComparison(res, cycleRes) {
     });
 }
 /**
- * 주는 피해 세부 정보를 5개 컬럼으로 나누어 렌더링한다.
+ * 주는 피해 세부 정보를 2층(상단: 주는피해+속성1+2, 하단: 4스킬)으로 나누어 렌더링한다.
  * @param {object} res - calculateDamage 결과
  * @param {object} cycleRes - calculateCycleDamage 결과 (지분율 계산용)
  */
 function renderDmgInc(res, cycleRes) {
-    const statsContainer = document.getElementById('dmg-inc-stats-container');
-    const listContainer = document.getElementById('dmg-inc-list-container');
-    const totalEl = document.getElementById('dmg-inc-value');
+    const statsTopEl = document.getElementById('dmg-inc-stats-top');
+    const listTopEl = document.getElementById('dmg-inc-list-top');
+    const statsBotEl = document.getElementById('dmg-inc-stats-bottom');
+    const listBotEl = document.getElementById('dmg-inc-list-bottom');
 
-    // 헤더 총 합계 표시
-    if (totalEl) {
-        // [Fix] 속성 보너스가 포함된 최종 dmgInc 수치를 사용
-        const totalVal = res.stats.dmgInc;
-        totalEl.innerText = (totalVal || 0).toFixed(1) + '%';
+    if (!statsTopEl || !listTopEl || !statsBotEl || !listBotEl) return;
+
+    statsTopEl.innerHTML = '';
+    listTopEl.innerHTML = '';
+    statsBotEl.innerHTML = '';
+    listBotEl.innerHTML = '';
+
+    const opData = DATA_OPERATORS.find(o => o.id === state.mainOp.id);
+
+    // 오퍼레이터 스킬에서 고유 element 목록 추출 (최대 2개)
+    const skillElements = [];
+    if (opData && opData.skill) {
+        opData.skill.forEach(s => {
+            if (s.element && !skillElements.includes(s.element)) {
+                skillElements.push(s.element);
+            }
+        });
     }
 
-    if (!statsContainer || !listContainer) return;
+    // 속성 내부 키 → 표시명 매핑
+    const ELEMENT_LABEL_MAP = {
+        phys: '물리 피해',
+        heat: '열기 피해',
+        elec: '전기 피해',
+        cryo: '냉기 피해',
+        nature: '자연 피해'
+    };
 
-    statsContainer.innerHTML = '';
-    listContainer.innerHTML = '';
+    const elem1Key = skillElements[0] || null;
+    const elem2Key = skillElements[1] || null;
+    const hasElem2 = !!elem2Key;
 
-    const totalCycleDmg = cycleRes ? cycleRes.total : 0;
-    const opData = DATA_OPERATORS.find(o => o.id === state.mainOp.id);
-    const opElement = opData ? (opData.type === 'phys' ? 'phys' : opData.element) : null;
+    // 스킬타입별 element 맵 (정확한 합산에 사용)
+    // 일반공격/배틀/연계/궁극기 각각이 어떤 속성을 쓰는지
+    const SKILL_TYPE_NAMES = ['일반 공격', '배틀 스킬', '연계 스킬', '궁극기'];
+    const SKILL_CAT_NAMES = ['normal', 'battle', 'combo', 'ult'];
+    const skillTypeElems = { normal: null, battle: null, combo: null, ult: null };
+    const SKILL_CAT_MAP = { '일반 공격': 'normal', '배틀 스킬': 'battle', '연계 스킬': 'combo', '궁극기': 'ult' };
+    if (opData && opData.skill) {
+        opData.skill.forEach(s => {
+            const cat = SKILL_CAT_MAP[s.skillType?.[0]];
+            if (cat && !skillTypeElems[cat]) skillTypeElems[cat] = s.element || null;
+        });
+    }
 
-    // 5개 카테고리 정의
-    const categories = [
-        { id: 'common', title: '공통', filter: (t) => t === 'all' },
-        { id: 'normal', title: '일반 공격', type: '일반 공격' },
-        { id: 'battle', title: '배틀 스킬', type: '배틀 스킬' },
-        { id: 'combo', title: '연계 스킬', type: '연계 스킬' },
-        { id: 'ult', title: '궁극기', type: '궁극기' }
+    // 스킬 element → catId 매핑 헬퍼 (elem1/elem2)
+    function getElemCatForKey(elKey) {
+        if (!elKey) return null;
+        if (elKey === elem1Key) return 'elem1';
+        if (elKey === elem2Key) return 'elem2';
+        return null;
+    }
+
+    // 7개 카테고리 정의
+    const topCats = [
+        { id: 'deal', title: '주는 피해' },
+        { id: 'elem1', title: elem1Key ? ELEMENT_LABEL_MAP[elem1Key] : '속성 피해' },
+        ...(hasElem2 ? [{ id: 'elem2', title: ELEMENT_LABEL_MAP[elem2Key] }] : [])
+    ];
+    const botCats = [
+        { id: 'normal', title: '일반 공격', elemKey: skillTypeElems.normal },
+        { id: 'battle', title: '배틀 스킬', elemKey: skillTypeElems.battle },
+        { id: 'combo', title: '연계 스킬', elemKey: skillTypeElems.combo },
+        { id: 'ult', title: '궁극기', elemKey: skillTypeElems.ult }
     ];
 
-    // 로그 분류를 위한 임시 저장소
-    const catLogs = { common: [], normal: [], battle: [], combo: [], ult: [] };
-    const catSums = { common: 0, normal: 0, battle: 0, combo: 0, ult: 0 };
+    // 로그 분류 저장소
+    const catLogs = { deal: [], elem1: [], elem2: [], normal: [], battle: [], combo: [], ult: [] };
+    const catSums = { deal: 0, elem1: 0, elem2: 0, normal: 0, battle: 0, combo: 0, ult: 0 };
 
-    // 1. 로그 분류
+    // 로그 분류
     (res.logs.dmgInc || []).forEach(log => {
         let val = 0;
         const isMult = (log.tag === 'skillMult' || log.txt.includes('*'));
-
-        // 배율 증가(곱셈 형식)는 퍼센트 합계에서 제외
         if (!isMult) {
             if (log.val !== undefined) {
                 val = log.val;
             } else {
                 const valMatch = log.txt.match(/([+-]?\s*\d+(\.\d+)?)\s*%/);
-                if (valMatch) {
-                    val = parseFloat(valMatch[1].replace(/\s/g, ''));
-                }
+                if (valMatch) val = parseFloat(valMatch[1].replace(/\s/g, ''));
             }
         }
         const targetState = getTargetState();
 
-        // 태그 기반 분류
-        // opElement와 일치하는 속성 태그이거나, 'all' 태그인 경우
-        if (log.tag === 'all' || log.tag === opElement) {
-            if (log.txt.includes('스킬')) {
-                // 스킬 관련 공통 요소 -> 배틀, 연계, 궁극기에 복사
-                ['battle', 'combo', 'ult'].forEach(k => {
-                    const uiLog = { ...log, txt: (log.tag === opElement ? log.txt : `(공통) ${log.txt}`), _uiUid: `${log.uid}#${k}` };
-                    catLogs[k].push(uiLog);
-                    const isUiDisabled = (targetState.disabledEffects && targetState.disabledEffects.includes(uiLog._uiUid)) || !!uiLog._triggerFailed;
-                    if (!isUiDisabled) catSums[k] += val;
-                });
-            } else {
-                // 순수 공통
-                const uiLog = { ...log, _uiUid: `${log.uid}#common` };
-                catLogs.common.push(uiLog);
-                const isUiDisabled = (targetState.disabledEffects && targetState.disabledEffects.includes(uiLog._uiUid)) || !!uiLog._triggerFailed;
-                if (!isUiDisabled) catSums.common += val;
-            }
-        } else if (log.tag === 'normal') {
-            const uiLog = { ...log, _uiUid: `${log.uid}#normal` };
-            catLogs.normal.push(uiLog);
-            const isUiDisabled = (targetState.disabledEffects && targetState.disabledEffects.includes(uiLog._uiUid)) || !!uiLog._triggerFailed;
-            if (!isUiDisabled) catSums.normal += val;
-        } else if (log.tag === 'skill' || log.tag === 'skillMult') {
-            const skillTypes = Array.isArray(log.skillType) ? log.skillType : (log.skillType ? [log.skillType] : []);
+        const tag = log.tag;
+        const skillTypes = log.skillType ? (Array.isArray(log.skillType) ? log.skillType : [log.skillType]) : null;
 
-            if (skillTypes.length > 0) {
+        // 스킬 타입별 분류 (normal/battle/combo/ult)
+        if (tag === 'normal' || tag === 'battle' || tag === 'combo' || tag === 'ult') {
+            const uiLog = { ...log, _uiUid: `${log.uid}#${tag}` };
+            catLogs[tag].push(uiLog);
+            const isUiDisabled = (targetState.disabledEffects && targetState.disabledEffects.includes(uiLog._uiUid)) || !!uiLog._triggerFailed;
+            if (!isUiDisabled) catSums[tag] += val;
+        } else if (tag === 'skill' || tag === 'skillMult') {
+            if (skillTypes && skillTypes.length > 0) {
                 skillTypes.forEach(stName => {
-                    const key = categories.find(c => c.type === stName)?.id;
-                    if (key) {
-                        const uiLog = { ...log, _uiUid: `${log.uid}#${key}` };
-                        catLogs[key].push(uiLog);
+                    const k = SKILL_CAT_MAP[stName];
+                    if (k) {
+                        const uiLog = { ...log, _uiUid: `${log.uid}#${k}` };
+                        catLogs[k].push(uiLog);
                         const isUiDisabled = (targetState.disabledEffects && targetState.disabledEffects.includes(uiLog._uiUid)) || !!uiLog._triggerFailed;
-                        if (!isUiDisabled) catSums[key] += val;
+                        if (!isUiDisabled && !isMult) catSums[k] += val;
                     }
                 });
             } else {
@@ -915,49 +937,49 @@ function renderDmgInc(res, cycleRes) {
                     const uiLog = { ...log, _uiUid: `${log.uid}#${k}` };
                     catLogs[k].push(uiLog);
                     const isUiDisabled = (targetState.disabledEffects && targetState.disabledEffects.includes(uiLog._uiUid)) || !!uiLog._triggerFailed;
-                    if (!isUiDisabled) catSums[k] += val;
+                    if (!isUiDisabled && !isMult) catSums[k] += val;
                 });
             }
+        } else if (tag === 'all') {
+            // 주는 피해: _uiUid = uid 자체 (calc.js disabledEffects 체크 호환)
+            const uiLog = { ...log, _uiUid: log.uid };
+            catLogs.deal.push(uiLog);
+            const isUiDisabled = (targetState.disabledEffects && targetState.disabledEffects.includes(log.uid)) || !!uiLog._triggerFailed;
+            if (!isUiDisabled) catSums.deal += val;
+        } else if (elem1Key && tag === elem1Key) {
+            // 속성1 피해: _uiUid = uid 자체
+            const uiLog = { ...log, _uiUid: log.uid };
+            catLogs.elem1.push(uiLog);
+            const isUiDisabled = (targetState.disabledEffects && targetState.disabledEffects.includes(log.uid)) || !!uiLog._triggerFailed;
+            if (!isUiDisabled) catSums.elem1 += val;
+        } else if (elem2Key && tag === elem2Key) {
+            // 속성2 피해: _uiUid = uid 자체
+            const uiLog = { ...log, _uiUid: log.uid };
+            catLogs.elem2.push(uiLog);
+            const isUiDisabled = (targetState.disabledEffects && targetState.disabledEffects.includes(log.uid)) || !!uiLog._triggerFailed;
+            if (!isUiDisabled) catSums.elem2 += val;
         } else {
-            // 다른 속성이거나 특수 태그
-            const key = Object.keys(catLogs).find(k => k === log.tag);
-            if (key) {
-                const uiLog = { ...log, _uiUid: `${log.uid}#${key}` };
-                catLogs[key].push(uiLog);
-                const isUiDisabled = (targetState.disabledEffects && targetState.disabledEffects.includes(uiLog._uiUid)) || !!uiLog._triggerFailed;
-                if (!isUiDisabled) catSums[key] += val;
-            } else {
-                // 분류되지 않은 속성 버프 (비활성 상태로 리스트에만 표시)
-                const uiLog = { ...log, _uiUid: `${log.uid}#inactive`, _inactiveElement: true };
-                // 어디에도 속하지 않지만 리스트 확인용으로 common에 넣어두되 sum에는 포함하지 않음
-                catLogs.common.push(uiLog);
-            }
+            // 매핑되지 않은 속성 피해 → 비활성으로 deal에 표시
+            const uiLog = { ...log, _uiUid: log.uid, _inactiveElement: true };
+            catLogs.deal.push(uiLog);
         }
     });
 
     const PROTECTED_UIDS = ['base_op_atk', 'base_wep_atk', 'stat_bonus_atk', 'unbalance_base'];
 
-    categories.forEach(cat => {
-        // 1. 상단 통계 (Flex Item)
+    // 컬럼 생성 헬퍼
+    function buildColumn(cat, statsContainer, listContainer, statVal) {
+        // 통계 아이템
         const statItem = document.createElement('div');
         statItem.className = 'sub-stat-item';
-
-        if (cat.id === 'common') {
-            statItem.innerHTML = `<label>총 합계</label>`;
-            if (totalEl) {
-                totalEl.style.fontSize = '1.1rem';
-                totalEl.style.color = 'var(--accent)';
-                statItem.appendChild(totalEl);
-            }
-        } else {
-            statItem.innerHTML = `
-                <label>${cat.title}</label>
-                <span>${catSums[cat.id].toFixed(1)}%</span>
-            `;
-        }
+        const displayVal = statVal !== undefined ? statVal : catSums[cat.id];
+        statItem.innerHTML = `
+            <label>${cat.title}</label>
+            <span>${displayVal.toFixed(1)}%</span>
+        `;
         statsContainer.appendChild(statItem);
 
-        // 2. 하단 리스트 (Column)
+        // 리스트 컬럼
         const col = document.createElement('div');
         col.className = 'dmg-inc-column';
 
@@ -969,7 +991,6 @@ function renderDmgInc(res, cycleRes) {
             const isAllSkillB = b.txt.includes('모든 스킬 피해');
             if (isAllSkillA && !isAllSkillB) return -1;
             if (!isAllSkillA && isAllSkillB) return 1;
-
             if (a.tag === 'skillMult' && b.tag !== 'skillMult') return 1;
             if (a.tag !== 'skillMult' && b.tag === 'skillMult') return -1;
             return 0;
@@ -987,32 +1008,26 @@ function renderDmgInc(res, cycleRes) {
                 if (!isProtected) {
                     li.style.cursor = 'pointer';
                     const ts = getTargetState();
-
                     const stackCount = ts.effectStacks?.[uid] !== undefined ? ts.effectStacks[uid] : 1;
                     if (log.stack) {
                         if (stackCount === 0) li.classList.add('disabled-effect');
                     } else {
-                        const targetUid = log._uiUid || uid;
-                        if (ts.disabledEffects && ts.disabledEffects.includes(targetUid)) li.classList.add('disabled-effect');
+                        if (ts.disabledEffects && ts.disabledEffects.includes(uiUid)) li.classList.add('disabled-effect');
                     }
                 } else {
                     li.style.cursor = 'default';
                 }
 
-                // [Fix] 오퍼레이터 속성과 맞지 않는 버프는 비활성 표시 (취소선)
                 if (log._inactiveElement) {
                     li.classList.add('disabled-effect');
                     li.title = '오퍼레이터 속성과 일치하지 않아 적용되지 않습니다.';
                     li.style.cursor = 'default';
-                    // 비활성 속성 버프는 클릭 방지
                     li.onclick = (e) => e.stopPropagation();
                 } else if (li.style.cursor !== 'default') {
-                    // 기존 클릭 핸들러 (inactive가 아닐 때만)
                     li.onclick = (e) => {
                         e.stopPropagation();
                         ensureCustomState();
                         const ts = getTargetState();
-                        const targetToggleUid = log._uiUid || uid;
                         if (log.stack) {
                             if (!ts.effectStacks) ts.effectStacks = {};
                             let cur = ts.effectStacks[uid] !== undefined ? ts.effectStacks[uid] : 1;
@@ -1021,12 +1036,10 @@ function renderDmgInc(res, cycleRes) {
                             ts.effectStacks[uid] = cur;
                         } else {
                             if (!ts.disabledEffects) ts.disabledEffects = [];
-                            const idx = ts.disabledEffects.indexOf(targetToggleUid);
+                            const idx = ts.disabledEffects.indexOf(uiUid);
                             if (idx > -1) ts.disabledEffects.splice(idx, 1);
-                            else ts.disabledEffects.push(targetToggleUid);
+                            else ts.disabledEffects.push(uiUid);
                         }
-
-                        // 전역 모드(선택된 시퀀스 없음)인 경우, 이미 개별 설정이 들어간 모든 항목에도 동일하게 반영
                         if (!state.selectedSeqId) {
                             propagateGlobalStateToCustom('effects');
                         }
@@ -1042,8 +1055,20 @@ function renderDmgInc(res, cycleRes) {
 
         col.appendChild(ul);
         listContainer.appendChild(col);
+    }
+
+    // 상단 행 렌더링
+    topCats.forEach(cat => buildColumn(cat, statsTopEl, listTopEl));
+
+    // 하단 행 렌더링: 합계 = 해당 스킬타입 피해 전용
+    botCats.forEach(cat => {
+        buildColumn(cat, statsBotEl, listBotEl, catSums[cat.id]);
     });
 }
+
+
+
+
 
 /**
  * 메인 오퍼레이터 변경 시, 해당 오퍼레이터의 '강화' 스킬들에 대한 동기식 버튼을 추가합니다.

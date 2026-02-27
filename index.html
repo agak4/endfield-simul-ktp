@@ -605,18 +605,23 @@
                     </div>
                     <ul id="list-crit" class="detail-list"></ul>
                 </div>
-                <!-- 주는 피해 (5분할 확장) -->
+                <!-- 주는 피해 (7분할, 2층) -->
                 <div class="result-box dmg-inc-box" id="dmg-inc-box">
                     <h4>주는 피해</h4>
-                    <div class="tile-main-stat-row">
-                        <span id="dmg-inc-value">0%</span>
-                        <div id="dmg-inc-stats-container" class="tile-sub-stats"
-                            style="border:none; padding:0; margin-left: auto;">
-                            <!-- JS로 생성: sub-stat-item 5개 -->
-                        </div>
+                    <!-- 상단 행: 주는피해 + 속성1 + 속성2 -->
+                    <div id="dmg-inc-stats-top" class="dmg-inc-stats-row">
+                        <!-- JS로 생성 -->
                     </div>
-                    <div id="dmg-inc-list-container" class="dmg-inc-container">
-                        <!-- JS로 생성: 5개 컬럼 (리스트만 포함) -->
+                    <div id="dmg-inc-list-top" class="dmg-inc-container dmg-inc-list-row">
+                        <!-- JS로 생성: deal/elem1/elem2 컬럼 -->
+                    </div>
+                    <div class="dmg-inc-divider"></div>
+                    <!-- 하단 행: 일반공격 + 배틀스킬 + 연계스킬 + 궁극기 -->
+                    <div id="dmg-inc-stats-bottom" class="dmg-inc-stats-row">
+                        <!-- JS로 생성 -->
+                    </div>
+                    <div id="dmg-inc-list-bottom" class="dmg-inc-container dmg-inc-list-row">
+                        <!-- JS로 생성: normal/battle/combo/ult 컬럼 -->
                     </div>
                 </div>
                 <div class="tile">
