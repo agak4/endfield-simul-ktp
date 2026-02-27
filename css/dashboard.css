@@ -1,14 +1,13 @@
 .result-debuff-wrapper {
     display: flex;
     gap: 12px;
-    align-items: flex-start;
+    align-items: stretch;
 }
 
 .result-area-row {
     display: flex;
     gap: 12px;
     flex: 1;
-    height: -webkit-fill-available;
 }
 
 .result-box {
@@ -389,12 +388,13 @@
     transition: all var(--transition-speed) ease;
     position: relative;
     overflow: hidden;
-    cursor: grab;
     user-select: none;
 }
 
-.tile:active {
-    cursor: grabbing;
+.tile-drag-swap {
+    outline: 2px dashed var(--accent);
+    outline-offset: -2px;
+    background: rgba(0, 217, 255, 0.15) !important;
 }
 
 .tile>span,
@@ -414,10 +414,58 @@
     text-transform: uppercase;
 }
 
+h4.has-drag-handle {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.tile-drag-handle {
+    cursor: grab;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    padding: 2px;
+    border-radius: 4px;
+    transition: all 0.2s;
+    margin-left: auto;
+}
+
+.tile-drag-handle:hover {
+    color: var(--accent);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.tile-drag-handle:active {
+    cursor: grabbing;
+}
+
 .tile-main-stat-row {
     display: flex;
     align-items: center;
     gap: 15px;
+}
+
+.tile-placeholder {
+    opacity: 0.5;
+    border: 1px dashed rgba(255, 255, 255, 0.2);
+    background: transparent !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tile-placeholder span {
+    color: var(--text-muted) !important;
+    font-size: 0.9rem !important;
+    font-weight: normal !important;
+}
+
+.tile-placeholder .tile-drag-handle {
+    position: absolute;
+    top: 10px;
+    right: 10px;
 }
 
 .tile-sub-stats {
@@ -887,12 +935,7 @@
     transition: all var(--transition-speed) ease;
     position: relative;
     overflow: hidden;
-    cursor: grab;
     user-select: none;
-}
-
-.dmg-inc-box:active {
-    cursor: grabbing;
 }
 
 .dmg-inc-header-row {
@@ -1104,6 +1147,10 @@
         display: contents;
     }
 
+    .result-area-row {
+        flex: none;
+    }
+
     .debuff-icon-section {
         flex-direction: row !important;
         justify-content: center;
@@ -1172,7 +1219,6 @@
 
 .tile-drag-active,
 .dmg-inc-box.tile-drag-active {
-    cursor: grabbing !important;
     transform: scale(1.02);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
     z-index: 200;

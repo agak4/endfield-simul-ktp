@@ -570,6 +570,21 @@ input[type="range"]::-webkit-slider-thumb {
         border-radius: 12px;
     }
 
+    .gear-image-container {
+        width: 80px;
+        height: 80px !important;
+    }
+
+    .gear-flex-row {
+        gap: 8px;
+        justify-content: center;
+    }
+
+    .gear-slot {
+        flex: none;
+        gap: 4px;
+    }
+
     #app-tooltip {
         display: none !important;
     }

@@ -1,1727 +1,836 @@
 <!DOCTYPE html>
-
 <html lang="ko">
 
-
-
 <head>
-
     <meta charset="UTF-8">
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-
     <title>엔드필드 세팅 시뮬레이터</title>
-
     <link rel="icon" type="image/x-icon" href="images/favicon.ico">
-
-
-
     <!-- 리소스 우선순위 최적화 (Preload) -->
-
     <link rel="preload" href="css/base.css" as="style">
-
     <link rel="preload" href="css/components.css" as="style">
-
     <link rel="preload" href="css/dashboard.css" as="style">
-
     <link rel="preload" href="js/data/data_operators.js" as="script">
-
     <link rel="preload" href="js/state.js" as="script">
-
-
-
     <link rel="stylesheet" href="css/base.css">
-
     <link rel="stylesheet" href="css/components.css">
-
     <link rel="stylesheet" href="css/dashboard.css">
-
-<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.3/Sortable.min.js"></script>
-<script src="js/ui/sortable-grid.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.3/Sortable.min.js"></script>
+    <script src="js/ui/sortable-grid.js" defer></script>
 </head>
 
-
-
 <body>
-
     <!-- 상단 헤더 -->
-
     <header class="app-header">
-
         <div class="header-content">
-
             <div class="header-logo">
-
                 <span class="logo-icon">✦</span>
-
                 <h1 class="header-title">엔드필드 세팅 시뮬레이터 Beta</h1>
-
             </div>
-
             <div class="header-nav">
-
                 <span class="nav-item active">시뮬레이터</span>
-
                 <span class="nav-item" id="nav-guide">가이드</span>
-
             </div>
-
         </div>
-
     </header>
-
-
-
     <div class="container">
-
         <section class="panel left-panel">
-
             <h2>오퍼레이터</h2>
-
             <div class="main-op-row">
-
                 <div class="main-op-left">
-
                     <div id="main-op-image-container" class="op-image-container"
-
                         onclick="document.getElementById('main-op-select-btn').click()">
-
                         <img id="main-op-image" src="" alt="오퍼레이터 이미지">
-
                     </div>
-
                 </div>
-
                 <div class="main-op-right">
-
                     <div class="control-row">
-
                         <select id="main-op-select" class="u-display-none"></select>
-
                         <button id="main-op-select-btn" class="visual-select-btn btn-select">== 선택 해제 ==</button>
-
                     </div>
-
                     <div class="control-row potency-row">
-
                         <label>잠재효과</label>
-
                         <div class="potency-group" id="main-op-pot-group"></div>
-
                         <input type="hidden" id="main-op-pot" value="0">
-
                     </div>
-
                 </div>
-
             </div>
-
-
-
             <div class="wep-row">
-
                 <div class="wep-left">
-
                     <div id="main-wep-image-container" class="op-image-container wep-image-container"
-
                         onclick="document.getElementById('main-wep-select-btn').click()">
-
                         <img id="main-wep-image" src="" alt="무기 이미지">
-
                     </div>
-
                 </div>
-
                 <div class="wep-right">
-
                     <div class="control-row">
-
                         <select id="main-wep-select" class="u-display-none"></select>
-
                         <button id="main-wep-select-btn" class="visual-select-btn btn-select">== 선택 해제 ==</button>
-
                     </div>
-
                     <div class="control-row potency-row">
-
                         <label>잠재효과</label>
-
                         <div class="u-flex-center-wrap">
-
                             <div class="potency-group" id="main-wep-pot-group"></div>
-
                             <input type="checkbox" id="main-wep-state" class="hidden-checkbox">
-
                         </div>
-
                         <input type="hidden" id="main-wep-pot" value="0">
-
                     </div>
-
                 </div>
-
             </div>
-
-
-
             <!-- 장비 슬롯 (Flex Layout) -->
-
             <div id="main-gear-slots" class="gear-flex-row">
-
                 <div class="gear-slot" data-slot="gloves">
-
                     <div class="gear-image-container op-image-container"
-
                         onclick="openGearSidebar('gear-gloves-select', 'gloves')">
-
                         <img id="gear-gloves-image" src="" alt="글러브">
-
                     </div>
-
                     <input type="hidden" id="gear-gloves-select" value="">
-
                     <div class="forge-toggle-wrapper">
-
                         <input type="checkbox" id="gear-gloves-forge" class="hidden-checkbox">
-
                     </div>
-
                 </div>
-
                 <div class="gear-slot" data-slot="armor">
-
                     <div class="gear-image-container op-image-container"
-
                         onclick="openGearSidebar('gear-armor-select', 'armor')">
-
                         <img id="gear-armor-image" src="" alt="방어구">
-
                     </div>
-
                     <input type="hidden" id="gear-armor-select" value="">
-
                     <div class="forge-toggle-wrapper">
-
                         <input type="checkbox" id="gear-armor-forge" class="hidden-checkbox">
-
                     </div>
-
                 </div>
-
                 <div class="gear-slot" data-slot="kit1">
-
                     <div class="gear-image-container op-image-container"
-
                         onclick="openGearSidebar('gear-kit1-select', 'kit')">
-
                         <img id="gear-kit1-image" src="" alt="부품">
-
                     </div>
-
                     <input type="hidden" id="gear-kit1-select" value="">
-
                     <div class="forge-toggle-wrapper">
-
                         <input type="checkbox" id="gear-kit1-forge" class="hidden-checkbox">
-
                     </div>
-
                 </div>
-
                 <div class="gear-slot" data-slot="kit2">
-
                     <div class="gear-image-container op-image-container"
-
                         onclick="openGearSidebar('gear-kit2-select', 'kit')">
-
                         <img id="gear-kit2-image" src="" alt="부품">
-
                     </div>
-
                     <input type="hidden" id="gear-kit2-select" value="">
-
                     <div class="forge-toggle-wrapper">
-
                         <input type="checkbox" id="gear-kit2-forge" class="hidden-checkbox">
-
                     </div>
-
                 </div>
-
             </div>
-
-
-
             <div class="u-flex-row u-gap-15">
-
                 <div id="main-active-set" class="active-set-container u-flex-1"></div>
-
                 <div class="control-group u-flex-1" id="main-forge-wrapper">
-
                     <input type="checkbox" id="main-gear-forge" class="hidden-checkbox">
-
                 </div>
-
             </div>
-
-
-
             <!-- 서브 오퍼레이터 -->
-
             <div style="margin-top: 20px;">
-
                 <h2>서브 오퍼레이터</h2>
-
             </div>
-
             <div id="sub-ops-container">
-
                 <!-- Sub Op 1~3은 JS로 제어되나 HTML 구조는 유지 -->
-
                 <div class="sub-op-card" id="sub-op-card-0">
-
                     <div class="sub-op-header" onclick="toggleSubOp(0)">
-
                         <span>서브 오퍼레이터 1</span>
-
                         <span id="sub-0-summary" class="sub-op-summary-text"></span>
-
                         <span class="toggle-icon">▼</span>
-
                     </div>
-
                     <div class="sub-op-content collapsed" id="sub-op-content-0">
-
                         <div class="sub-char-row">
-
                             <div class="sub-char-left">
-
                                 <div class="op-image-container"
-
                                     onclick="document.getElementById('sub-0-op-btn').click()">
-
                                     <img id="sub-0-image" src="" alt="서브1">
-
                                 </div>
-
                             </div>
-
                             <div class="sub-char-right">
-
                                 <div class="control-row">
-
                                     <select id="sub-0-op" class="u-display-none"></select>
-
                                     <button id="sub-0-op-btn" class="visual-select-btn btn-select">== 선택 해제 ==</button>
-
                                 </div>
-
                                 <div class="control-row potency-row">
-
                                     <label>잠재효과</label>
-
                                     <div class="potency-group" id="sub-0-pot-group"></div>
-
                                     <input type="hidden" id="sub-0-pot" value="0">
-
                                 </div>
-
                             </div>
-
                         </div>
-
                         <div class="sub-wep-row">
-
                             <div class="sub-wep-left">
-
                                 <div class="op-image-container"
-
                                     onclick="document.getElementById('sub-0-wep-btn').click()">
-
                                     <img id="sub-0-wep-image" src="" alt="무기">
-
                                 </div>
-
                             </div>
-
                             <div class="sub-wep-right">
-
                                 <div class="control-row">
-
                                     <select id="sub-0-wep" class="u-display-none"></select>
-
                                     <button id="sub-0-wep-btn" class="visual-select-btn btn-select">== 선택 해제 ==</button>
-
                                 </div>
-
                                 <div class="control-row potency-row">
-
                                     <label>잠재효과</label>
-
                                     <div class="u-flex-center-wrap">
-
                                         <div class="potency-group" id="sub-0-wep-pot-group"></div>
-
                                         <input type="checkbox" id="sub-0-wep-state" class="hidden-checkbox">
-
                                     </div>
-
                                     <input type="hidden" id="sub-0-wep-pot" value="0">
-
                                 </div>
-
                             </div>
-
                         </div>
-
                         <div class="sub-set-row" style="margin-top:10px">
-
                             <label>장비 세트</label>
-
                             <select id="sub-0-set" class="visual-select-btn btn-select">
-
                                 <option value="">(세트 없음)</option>
-
                             </select>
-
                         </div>
-
                     </div>
-
                 </div>
-
-
-
                 <!-- Sub Op 2 (생략된 구조 복구) -->
-
                 <div class="sub-op-card" id="sub-op-card-1">
-
                     <div class="sub-op-header" onclick="toggleSubOp(1)">
-
                         <span>서브 오퍼레이터 2</span>
-
                         <span id="sub-1-summary" class="sub-op-summary-text"></span>
-
                         <span class="toggle-icon">▼</span>
-
                     </div>
-
                     <div class="sub-op-content collapsed" id="sub-op-content-1">
-
                         <div class="sub-char-row">
-
                             <div class="sub-char-left">
-
                                 <div class="op-image-container"
-
                                     onclick="document.getElementById('sub-1-op-btn').click()">
-
                                     <img id="sub-1-image" src="" alt="서브2">
-
                                 </div>
-
                             </div>
-
                             <div class="sub-char-right">
-
                                 <div class="control-row">
-
                                     <select id="sub-1-op" class="u-display-none"></select>
-
                                     <button id="sub-1-op-btn" class="visual-select-btn btn-select">== 선택 해제 ==</button>
-
                                 </div>
-
                                 <div class="control-row potency-row">
-
                                     <label>잠재효과</label>
-
                                     <div class="potency-group" id="sub-1-pot-group"></div>
-
                                     <input type="hidden" id="sub-1-pot" value="0">
-
                                 </div>
-
                             </div>
-
                         </div>
-
                         <div class="sub-wep-row">
-
                             <div class="sub-wep-left">
-
                                 <div class="op-image-container"
-
                                     onclick="document.getElementById('sub-1-wep-btn').click()">
-
                                     <img id="sub-1-wep-image" src="" alt="무기">
-
                                 </div>
-
                             </div>
-
                             <div class="sub-wep-right">
-
                                 <div class="control-row">
-
                                     <select id="sub-1-wep" class="u-display-none"></select>
-
                                     <button id="sub-1-wep-btn" class="visual-select-btn btn-select">== 선택 해제 ==</button>
-
                                 </div>
-
                                 <div class="control-row potency-row">
-
                                     <label>잠재효과</label>
-
                                     <div class="u-flex-center-wrap">
-
                                         <div class="potency-group" id="sub-1-wep-pot-group"></div>
-
                                         <input type="checkbox" id="sub-1-wep-state" class="hidden-checkbox">
-
                                     </div>
-
                                     <input type="hidden" id="sub-1-wep-pot" value="0">
-
                                 </div>
-
                             </div>
-
                         </div>
-
                         <div class="sub-set-row u-mt-10">
-
                             <label>장비 세트</label>
-
                             <select id="sub-1-set" class="visual-select-btn btn-select">
-
                                 <option value="">(세트 없음)</option>
-
                             </select>
-
                         </div>
-
                     </div>
-
                 </div>
-
-
-
                 <!-- Sub Op 3 (생략된 구조 복구) -->
-
                 <div class="sub-op-card" id="sub-op-card-2">
-
                     <div class="sub-op-header" onclick="toggleSubOp(2)">
-
                         <span>서브 오퍼레이터 3</span>
-
                         <span id="sub-2-summary" class="sub-op-summary-text"></span>
-
                         <span class="toggle-icon">▼</span>
-
                     </div>
-
                     <div class="sub-op-content collapsed" id="sub-op-content-2">
-
                         <div class="sub-char-row">
-
                             <div class="sub-char-left">
-
                                 <div class="op-image-container"
-
                                     onclick="document.getElementById('sub-2-op-btn').click()">
-
                                     <img id="sub-2-image" src="" alt="서브3">
-
                                 </div>
-
                             </div>
-
                             <div class="sub-char-right">
-
                                 <div class="control-row">
-
                                     <select id="sub-2-op" class="u-display-none"></select>
-
                                     <button id="sub-2-op-btn" class="visual-select-btn btn-select">== 선택 해제 ==</button>
-
                                 </div>
-
                                 <div class="control-row potency-row">
-
                                     <label>잠재효과</label>
-
                                     <div class="potency-group" id="sub-2-pot-group"></div>
-
                                     <input type="hidden" id="sub-2-pot" value="0">
-
                                 </div>
-
                             </div>
-
                         </div>
-
                         <div class="sub-wep-row">
-
                             <div class="sub-wep-left">
-
                                 <div class="op-image-container"
-
                                     onclick="document.getElementById('sub-2-wep-btn').click()">
-
                                     <img id="sub-2-wep-image" src="" alt="무기">
-
                                 </div>
-
                             </div>
-
                             <div class="sub-wep-right">
-
                                 <div class="control-row">
-
                                     <select id="sub-2-wep" class="u-display-none"></select>
-
                                     <button id="sub-2-wep-btn" class="visual-select-btn btn-select">== 선택 해제 ==</button>
-
                                 </div>
-
                                 <div class="control-row potency-row">
-
                                     <label>잠재효과</label>
-
                                     <div class="u-flex-center-wrap">
-
                                         <div class="potency-group" id="sub-2-wep-pot-group"></div>
-
                                         <input type="checkbox" id="sub-2-wep-state" class="hidden-checkbox">
-
                                     </div>
-
                                     <input type="hidden" id="sub-2-wep-pot" value="0">
-
                                 </div>
-
                             </div>
-
                         </div>
-
                         <div class="sub-set-row u-mt-10">
-
                             <label>장비 세트</label>
-
                             <select id="sub-2-set" class="visual-select-btn btn-select">
-
                                 <option value="">(세트 없음)</option>
-
                             </select>
-
                         </div>
-
                     </div>
-
                 </div>
-
             </div>
-
         </section>
-
-
-
         <section class="panel right-panel">
-
             <h2>스킬 사이클 및 특성 설정</h2>
-
             <!-- 사이클 보드와 디버프 아이콘 구역 (가로 배치 래퍼 추가) -->
-
             <div class="result-debuff-wrapper">
-
                 <div class="result-area-row">
-
-
-
                     <!-- 스킬 사이클 입력 및 순서 (통합) -->
-
                     <div class="result-box cycle-board-box">
-
                         <div
-
                             style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-
                             <h3 style="margin: 0;">스킬 사이클</h3>
-
                             <div style="display: flex; align-items: center; gap: 15px;">
-
                                 <button id="clear-cycle-btn" class="btn-select"
-
                                     style="padding: 4px 10px; font-size: 0.9rem;">전체 초기화</button>
-
                             </div>
-
                         </div>
-
                         <!-- SVG 아이콘 버튼 그룹 -->
-
                         <div class="cycle-add-buttons">
-
                             <div class="cycle-btn" data-type="일반 공격" title="일반 공격">
-
                                 <div class="skill-icon-frame">
-
                                     <img src="images/skills/기본 공격.webp" alt="일반 공격">
-
                                 </div>
-
                                 <span>일반 공격</span>
-
                             </div>
-
                             <div class="cycle-btn" data-type="배틀 스킬" title="배틀 스킬">
-
                                 <div class="skill-icon-frame">
-
                                     <img src="images/skills/배틀 스킬.webp" alt="배틀 스킬">
-
                                 </div>
-
                                 <span>배틀 스킬</span>
-
                             </div>
-
                             <div class="cycle-btn" data-type="연계 스킬" title="연계 스킬">
-
                                 <div class="skill-icon-frame">
-
                                     <img src="images/skills/연계 스킬.webp" alt="연계 스킬">
-
                                 </div>
-
                                 <span>연계 스킬</span>
-
                             </div>
-
                             <div class="cycle-btn cycle-btn-ult" data-type="궁극기" title="궁극기">
-
                                 <div class="skill-icon-frame">
-
                                     <img src="images/skills/궁극기.webp" alt="궁극기">
-
                                 </div>
-
                                 <span>궁극기</span>
-
                             </div>
-
                         </div>
-
-
-
                         <!-- 클릭한 순서대로 보여주는 디스플레이 영역 (가로 스크롤) -->
-
                         <div class="cycle-sequence-container" style="margin-top: 15px;">
-
                             <h4 style="color: var(--text-muted); margin-bottom: 8px;">현재 사이클 순서</h4>
-
                             <div id="cycle-sequence-display" class="cycle-sequence-display">
-
                                 <!-- JS에서 동적으로 아이템 채움 -->
-
                             </div>
-
                         </div>
-
                     </div>
-
-
-
                 </div>
-
-
-
                 <!-- 디버프 상태 아이콘 (방어불능 / 아츠부착 / 아츠이상) -->
-
                 <div class="debuff-icon-section">
-
                     <!-- 방어불능 -->
-
                     <div class="debuff-group">
-
                         <div class="debuff-attach-row">
-
                             <!-- 연타: 0~4단계 토글 -->
-
                             <div class="debuff-icon-wrap" id="debuff-icon-combo" data-debuff="combo"
-
                                 onclick="cycleDebuff(this)">
-
                                 <svg class="debuff-ring-svg" viewBox="0 0 100 100">
-
                                     <path class="ring-seg seg-0" d="M74.1,15.6 A42,42 0 0,0 25.9,15.6" />
-
                                     <path class="ring-seg seg-1" d="M84.4,74.1 A42,42 0 0,0 84.4,25.9" />
-
                                     <path class="ring-seg seg-2" d="M25.9,84.4 A42,42 0 0,0 74.1,84.4" />
-
                                     <path class="ring-seg seg-3" d="M15.6,25.9 A42,42 0 0,0 15.6,74.1" />
-
                                 </svg>
-
                                 <div class="debuff-icon-img-wrap">
-
                                     <img src="images/buff/연타.webp" alt="연타">
-
                                 </div>
-
                                 <span class="debuff-stack-label">0</span>
-
                             </div>
-
-
-
                             <div class="debuff-icon-wrap" id="debuff-icon-defenseless" data-debuff="defenseless"
-
                                 onclick="cycleDebuff(this)">
-
                                 <svg class="debuff-ring-svg" viewBox="0 0 100 100">
-
                                     <!-- X자 분할 4개 호 (비활성) -->
-
                                     <path class="ring-seg seg-0" d="M74.1,15.6 A42,42 0 0,0 25.9,15.6" />
-
                                     <path class="ring-seg seg-1" d="M84.4,74.1 A42,42 0 0,0 84.4,25.9" />
-
                                     <path class="ring-seg seg-2" d="M25.9,84.4 A42,42 0 0,0 74.1,84.4" />
-
                                     <path class="ring-seg seg-3" d="M15.6,25.9 A42,42 0 0,0 15.6,74.1" />
-
                                 </svg>
-
                                 <div class="debuff-icon-img-wrap">
-
                                     <img src="images/debuff/방어불능.png" alt="방어불능">
-
                                 </div>
-
                                 <span class="debuff-stack-label">0</span>
-
                             </div>
-
-
-
                             <div class="debuff-icon-wrap" id="debuff-icon-armorBreak" data-debuff="armorBreak"
-
                                 onclick="cycleDebuff(this)">
-
                                 <svg class="debuff-ring-svg" viewBox="0 0 100 100">
-
                                     <path class="ring-seg seg-0" d="M74.1,15.6 A42,42 0 0,0 25.9,15.6" />
-
                                     <path class="ring-seg seg-1" d="M84.4,74.1 A42,42 0 0,0 84.4,25.9" />
-
                                     <path class="ring-seg seg-2" d="M25.9,84.4 A42,42 0 0,0 74.1,84.4" />
-
                                     <path class="ring-seg seg-3" d="M15.6,25.9 A42,42 0 0,0 15.6,74.1" />
-
                                 </svg>
-
                                 <div class="debuff-icon-img-wrap">
-
                                     <img src="images/debuff/갑옷 파괴.png" alt="갑옷 파괴">
-
                                 </div>
-
                                 <span class="debuff-stack-label">0</span>
-
                             </div>
-
                         </div>
-
                     </div>
-
-
-
                     <!-- 아츠 부착 (4종, 한 번에 한 종류) -->
-
                     <div class="debuff-group">
-
                         <div class="debuff-attach-row">
-
                             <div class="debuff-icon-wrap" id="debuff-icon-열기 부착" data-debuff="artsAttach"
-
                                 data-attach-type="열기 부착" data-stacks="0" onclick="cycleDebuffAttach(this)">
-
                                 <svg class="debuff-ring-svg" viewBox="0 0 100 100">
-
                                     <path class="ring-seg seg-0" d="M74.1,15.6 A42,42 0 0,0 25.9,15.6" />
-
                                     <path class="ring-seg seg-1" d="M84.4,74.1 A42,42 0 0,0 84.4,25.9" />
-
                                     <path class="ring-seg seg-2" d="M25.9,84.4 A42,42 0 0,0 74.1,84.4" />
-
                                     <path class="ring-seg seg-3" d="M15.6,25.9 A42,42 0 0,0 15.6,74.1" />
-
                                 </svg>
-
                                 <div class="debuff-icon-img-wrap">
-
                                     <img src="images/debuff/열기 부착.png" alt="열기 부착">
-
                                 </div>
-
                                 <span class="debuff-stack-label">0</span>
-
                             </div>
-
                             <div class="debuff-icon-wrap" id="debuff-icon-전기 부착" data-debuff="artsAttach"
-
                                 data-attach-type="전기 부착" data-stacks="0" onclick="cycleDebuffAttach(this)">
-
                                 <svg class="debuff-ring-svg" viewBox="0 0 100 100">
-
                                     <path class="ring-seg seg-0" d="M74.1,15.6 A42,42 0 0,0 25.9,15.6" />
-
                                     <path class="ring-seg seg-1" d="M84.4,74.1 A42,42 0 0,0 84.4,25.9" />
-
                                     <path class="ring-seg seg-2" d="M25.9,84.4 A42,42 0 0,0 74.1,84.4" />
-
                                     <path class="ring-seg seg-3" d="M15.6,25.9 A42,42 0 0,0 15.6,74.1" />
-
                                 </svg>
-
                                 <div class="debuff-icon-img-wrap">
-
                                     <img src="images/debuff/전기 부착.png" alt="전기 부착">
-
                                 </div>
-
                                 <span class="debuff-stack-label">0</span>
-
                             </div>
-
                             <div class="debuff-icon-wrap" id="debuff-icon-냉기 부착" data-debuff="artsAttach"
-
                                 data-attach-type="냉기 부착" data-stacks="0" onclick="cycleDebuffAttach(this)">
-
                                 <svg class="debuff-ring-svg" viewBox="0 0 100 100">
-
                                     <path class="ring-seg seg-0" d="M74.1,15.6 A42,42 0 0,0 25.9,15.6" />
-
                                     <path class="ring-seg seg-1" d="M84.4,74.1 A42,42 0 0,0 84.4,25.9" />
-
                                     <path class="ring-seg seg-2" d="M25.9,84.4 A42,42 0 0,0 74.1,84.4" />
-
                                     <path class="ring-seg seg-3" d="M15.6,25.9 A42,42 0 0,0 15.6,74.1" />
-
                                 </svg>
-
                                 <div class="debuff-icon-img-wrap">
-
                                     <img src="images/debuff/냉기 부착.png" alt="냉기 부착">
-
                                 </div>
-
                                 <span class="debuff-stack-label">0</span>
-
                             </div>
-
                             <div class="debuff-icon-wrap" id="debuff-icon-자연 부착" data-debuff="artsAttach"
-
                                 data-attach-type="자연 부착" data-stacks="0" onclick="cycleDebuffAttach(this)">
-
                                 <svg class="debuff-ring-svg" viewBox="0 0 100 100">
-
                                     <path class="ring-seg seg-0" d="M74.1,15.6 A42,42 0 0,0 25.9,15.6" />
-
                                     <path class="ring-seg seg-1" d="M84.4,74.1 A42,42 0 0,0 84.4,25.9" />
-
                                     <path class="ring-seg seg-2" d="M25.9,84.4 A42,42 0 0,0 74.1,84.4" />
-
                                     <path class="ring-seg seg-3" d="M15.6,25.9 A42,42 0 0,0 15.6,74.1" />
-
                                 </svg>
-
                                 <div class="debuff-icon-img-wrap">
-
                                     <img src="images/debuff/자연 부착.png" alt="자연 부착">
-
                                 </div>
-
                                 <span class="debuff-stack-label">0</span>
-
                             </div>
-
                         </div>
-
                     </div>
-
-
-
                     <!-- 아츠 이상 (4종, 각각 독립) -->
-
                     <div class="debuff-group">
-
                         <div class="debuff-attach-row">
-
                             <div class="debuff-icon-wrap" id="debuff-icon-연소" data-debuff="artsAbnormal"
-
                                 data-abnormal-type="연소" data-stacks="0" onclick="cycleDebuffAbnormal(this)">
-
                                 <svg class="debuff-ring-svg" viewBox="0 0 100 100">
-
                                     <path class="ring-seg seg-0" d="M74.1,15.6 A42,42 0 0,0 25.9,15.6" />
-
                                     <path class="ring-seg seg-1" d="M84.4,74.1 A42,42 0 0,0 84.4,25.9" />
-
                                     <path class="ring-seg seg-2" d="M25.9,84.4 A42,42 0 0,0 74.1,84.4" />
-
                                     <path class="ring-seg seg-3" d="M15.6,25.9 A42,42 0 0,0 15.6,74.1" />
-
                                 </svg>
-
                                 <div class="debuff-icon-img-wrap">
-
                                     <img src="images/debuff/연소.png" alt="연소">
-
                                 </div>
-
                                 <span class="debuff-stack-label">0</span>
-
                             </div>
-
                             <div class="debuff-icon-wrap" id="debuff-icon-감전" data-debuff="artsAbnormal"
-
                                 data-abnormal-type="감전" data-stacks="0" onclick="cycleDebuffAbnormal(this)">
-
                                 <svg class="debuff-ring-svg" viewBox="0 0 100 100">
-
                                     <path class="ring-seg seg-0" d="M74.1,15.6 A42,42 0 0,0 25.9,15.6" />
-
                                     <path class="ring-seg seg-1" d="M84.4,74.1 A42,42 0 0,0 84.4,25.9" />
-
                                     <path class="ring-seg seg-2" d="M25.9,84.4 A42,42 0 0,0 74.1,84.4" />
-
                                     <path class="ring-seg seg-3" d="M15.6,25.9 A42,42 0 0,0 15.6,74.1" />
-
                                 </svg>
-
                                 <div class="debuff-icon-img-wrap">
-
                                     <img src="images/debuff/감전.png" alt="감전">
-
                                 </div>
-
                                 <span class="debuff-stack-label">0</span>
-
                             </div>
-
                             <div class="debuff-icon-wrap" id="debuff-icon-동결" data-debuff="artsAbnormal"
-
                                 data-abnormal-type="동결" data-stacks="0" onclick="cycleDebuffAbnormal(this)">
-
                                 <svg class="debuff-ring-svg" viewBox="0 0 100 100">
-
                                     <path class="ring-seg seg-0" d="M74.1,15.6 A42,42 0 0,0 25.9,15.6" />
-
                                     <path class="ring-seg seg-1" d="M84.4,74.1 A42,42 0 0,0 84.4,25.9" />
-
                                     <path class="ring-seg seg-2" d="M25.9,84.4 A42,42 0 0,0 74.1,84.4" />
-
                                     <path class="ring-seg seg-3" d="M15.6,25.9 A42,42 0 0,0 15.6,74.1" />
-
                                 </svg>
-
                                 <div class="debuff-icon-img-wrap">
-
                                     <img src="images/debuff/동결.png" alt="동결">
-
                                 </div>
-
                                 <span class="debuff-stack-label">0</span>
-
                             </div>
-
                             <div class="debuff-icon-wrap" id="debuff-icon-부식" data-debuff="artsAbnormal"
-
                                 data-abnormal-type="부식" data-stacks="0" onclick="cycleDebuffAbnormal(this)">
-
                                 <svg class="debuff-ring-svg" viewBox="0 0 100 100">
-
                                     <path class="ring-seg seg-0" d="M74.1,15.6 A42,42 0 0,0 25.9,15.6" />
-
                                     <path class="ring-seg seg-1" d="M84.4,74.1 A42,42 0 0,0 84.4,25.9" />
-
                                     <path class="ring-seg seg-2" d="M25.9,84.4 A42,42 0 0,0 74.1,84.4" />
-
                                     <path class="ring-seg seg-3" d="M15.6,25.9 A42,42 0 0,0 15.6,74.1" />
-
                                 </svg>
-
                                 <div class="debuff-icon-img-wrap">
-
                                     <img src="images/debuff/부식.png" alt="부식">
-
                                 </div>
-
                                 <span class="debuff-stack-label">0</span>
-
                             </div>
-
                         </div>
-
                     </div>
-
-
-
                     <!-- 전용 스택 (오퍼레이터 종속, 메인 오퍼레이터 전용) -->
-
                     <div class="debuff-group" id="special-stack-group" style="display: none;">
-
                         <div class="debuff-attach-row">
-
                             <div class="debuff-icon-wrap" id="debuff-icon-specialStack" data-debuff="specialStack"
-
                                 data-stacks="0" onclick="cycleSpecialStack(this)">
-
                                 <svg class="debuff-ring-svg" viewBox="0 0 100 100">
-
                                     <path class="ring-seg seg-0" d="M74.1,15.6 A42,42 0 0,0 25.9,15.6" />
-
                                     <path class="ring-seg seg-1" d="M84.4,74.1 A42,42 0 0,0 84.4,25.9" />
-
                                     <path class="ring-seg seg-2" d="M25.9,84.4 A42,42 0 0,0 74.1,84.4" />
-
                                     <path class="ring-seg seg-3" d="M15.6,25.9 A42,42 0 0,0 15.6,74.1" />
-
                                 </svg>
-
                                 <div class="debuff-icon-img-wrap special-stack-bg">
-
                                     <img id="special-stack-bg-img" src="" alt="전용 스택">
-
                                 </div>
-
                                 <span class="debuff-stack-label">0</span>
-
                                 <span id="special-stack-name" class="special-stack-name"></span>
-
                             </div>
-
                         </div>
-
                     </div>
-
                 </div>
-
             </div>
-
-
-
             <!-- 이전 횟수 입력 타일 자리 (삭제됨) -->
-
             <div class="dashboard-grid">
-
-
-
                 <div class="tile" data-tile-id="atk">
-
                     <h4>공격력</h4>
-
                     <div class="tile-main-stat-row">
-
                         <span id="stat-atk">0</span>
-
                         <div class="tile-sub-stats">
-
                             <div class="sub-stat-item">
-
                                 <label>공격력%</label>
-
                                 <span id="stat-atk-inc">0%</span>
-
                             </div>
-
                             <div class="sub-stat-item">
-
                                 <label>힘</label>
-
                                 <span id="stat-str-val">0</span>
-
                             </div>
-
                             <div class="sub-stat-item">
-
                                 <label>민첩</label>
-
                                 <span id="stat-agi-val">0</span>
-
                             </div>
-
                             <div class="sub-stat-item">
-
                                 <label>지능</label>
-
                                 <span id="stat-int-val">0</span>
-
                             </div>
-
                             <div class="sub-stat-item">
-
                                 <label>의지</label>
-
                                 <span id="stat-wil-val">0</span>
-
                             </div>
-
                         </div>
-
                     </div>
-
                     <ul id="list-atk" class="detail-list"></ul>
-
                 </div>
-
-                <div class="tile">
-
+                <div class="tile" data-tile-id="crit">
                     <h4>치명타 기대값</h4>
-
                     <div class="tile-main-stat-row">
-
                         <span id="stat-crit">0</span>
-
                         <div class="tile-sub-stats">
-
                             <div class="sub-stat-item">
-
                                 <label>치명타 확률</label>
-
                                 <span id="val-crit-rate">0%</span>
-
                             </div>
-
                             <div class="sub-stat-item">
-
                                 <label>치명타 피해</label>
-
                                 <span id="val-crit-dmg">0%</span>
-
                             </div>
-
                         </div>
-
                     </div>
-
                     <ul id="list-crit" class="detail-list"></ul>
-
                 </div>
-
                 <!-- 주는 피해 (7분할, 2층) -->
-
                 <div class="result-box dmg-inc-box" id="dmg-inc-box" data-tile-id="dmg-inc" data-full-row="true">
-
                     <h4>주는 피해</h4>
-
                     <!-- 상단 행: 주는피해 + 속성1 + 속성2 -->
-
                     <div id="dmg-inc-stats-top" class="dmg-inc-stats-row">
-
                         <!-- JS로 생성 -->
-
                     </div>
-
                     <div id="dmg-inc-list-top" class="dmg-inc-container dmg-inc-list-row">
-
                         <!-- JS로 생성: deal/elem1/elem2 컬럼 -->
-
                     </div>
-
                     <div class="dmg-inc-divider"></div>
-
                     <!-- 하단 행: 일반공격 + 배틀스킬 + 연계스킬 + 궁극기 -->
-
                     <div id="dmg-inc-stats-bottom" class="dmg-inc-stats-row">
-
                         <!-- JS로 생성 -->
-
                     </div>
-
                     <div id="dmg-inc-list-bottom" class="dmg-inc-container dmg-inc-list-row">
-
                         <!-- JS로 생성: normal/battle/combo/ult 컬럼 -->
-
                     </div>
-
                 </div>
-
                 <div class="result-box dmg-inc-box" id="amp-box" data-tile-id="amp">
-
                     <h4>증폭</h4>
-
                     <div id="amp-container" class="dmg-inc-container"></div>
-
                 </div>
-
                 <div class="result-box dmg-inc-box" id="taken-box" data-tile-id="taken">
-
                     <h4>적이 받는 피해</h4>
-
                     <div id="taken-container" class="dmg-inc-container"></div>
-
                 </div>
-
                 <div class="result-box dmg-inc-box" id="vuln-box" data-tile-id="vuln">
-
                     <h4>취약</h4>
-
                     <div id="vuln-container" class="dmg-inc-container"></div>
-
                 </div>
-
                 <div class="tile" data-tile-id="unbal">
-
                     <div class="tile-header-row">
-
                         <h4>불균형 피해</h4>
-
                         <div class="tile-ctrl-group">
-
                             <input type="checkbox" id="enemy-unbalanced" class="hidden-checkbox">
-
                             <button id="enemy-unbalanced-toggle" class="toggle-btn enemy-toggle-btn">OFF</button>
-
                         </div>
-
                     </div>
-
                     <span id="stat-unbal">0%</span>
-
                     <ul id="list-unbal" class="detail-list"></ul>
-
                 </div>
-
                 <div class="tile" data-tile-id="ult-recharge">
-
                     <h4>궁극기 충전 효율</h4>
-
                     <div class="tile-main-stat-row">
-
                         <span id="stat-ult-recharge">0%</span>
-
                         <div class="tile-sub-stats">
-
                             <div class="sub-stat-item">
-
                                 <label>필요 궁극기 게이지</label>
-
                                 <span id="stat-ult-cost">0</span>
-
                             </div>
-
                         </div>
-
                     </div>
-
                     <ul id="list-ult-recharge" class="detail-list"></ul>
-
                 </div>
-
                 <div class="tile" data-tile-id="arts">
-
                     <h4>오리지늄 아츠 강도</h4>
-
                     <div class="tile-main-stat-row">
-
                         <span id="stat-arts">0</span>
-
                         <div class="tile-sub-stats">
-
                             <div class="sub-stat-item">
-
                                 <label>이상/폭발 피해</label>
-
                                 <span id="stat-arts-bonus">+0%</span>
-
                             </div>
-
                         </div>
-
                     </div>
-
                     <ul id="list-arts" class="detail-list"></ul>
-
                 </div>
-
+                <div class="result-box dmg-inc-box" id="lv-coeff-box" data-tile-id="lv-coeff">
+                    <h4>레벨 계수</h4>
+                    <div id="lv-coeff-container" class="dmg-inc-container"></div>
+                </div>
                 <div class="tile" data-tile-id="def">
-
                     <h4>적 방어력</h4>
-
                     <div class="tile-main-stat-row">
-
                         <span id="enemy-defense">100</span>
-
                         <div class="tile-sub-stats">
-
                             <div class="sub-stat-item">
-
                                 <label>피해 감소</label>
-
                                 <span id="stat-def-red">0%</span>
-
                             </div>
-
                         </div>
-
                     </div>
-
                 </div>
-
                 <div class="tile" data-tile-id="res">
-
                     <h4>적의 저항</h4>
-
                     <div class="tile-main-stat-row">
-
                         <span id="stat-res">0</span>
-
                         <div class="tile-sub-stats">
-
                             <div class="sub-stat-item">
-
                                 <label>피해 배율</label>
-
                                 <span id="stat-res-mult">+0.0%</span>
-
                             </div>
-
                         </div>
-
                         <div class="res-btn-group" style="margin-left: auto; display: flex; gap: 4px;">
-
                             <button class="res-btn" data-val="70">A</button>
-
                             <button class="res-btn" data-val="50">B</button>
-
                             <button class="res-btn" data-val="20">C</button>
-
                             <button class="res-btn active" data-val="0">D</button>
-
                         </div>
-
                     </div>
-
                     <ul id="list-res" class="detail-list"></ul>
-
                 </div>
-
             </div>
-
         </section>
-
-
-
         <section class="panel analysis-panel">
-
             <h2>전투 분석</h2>
-
-
-
             <!-- 사이클 계산값 (3) -->
-
             <div class="result-box cycle-dmg-box">
-
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-
                     <h3 style="margin: 0;">사이클 상세 합산</h3>
-
                     <button id="btn-sort-cycle" class="icon-btn" title="데미지 순 정렬">⇅</button>
-
                 </div>
-
                 <div class="cycle-row"
-
                     style="margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;">
-
                     <div style="display: flex; align-items: center; gap: 6px; position: relative;">
-
                         <span class="cycle-label" style="font-weight: bold; color: var(--text-muted);">최종 계산값
-
                             (100%)</span>
-
                         <span class="info-icon" id="formula-info-btn"
-
                             style="width: 16px; height: 16px; font-size: 0.6rem;">ⓘ</span>
-
                         <div id="formula-tooltip" class="formula-tooltip" style="left: 0; top: 25px; z-index: 200;">
-
                             <div class="formula-title">데미지 계산 공식</div>
-
                             <div class="formula-content">
-
                                 공격력*치명타 기대값(*주는 피해+스킬 피해)*증폭*적이 받는 피해*취약*불균형*적 방어력*적의 저항
-
                             </div>
-
                         </div>
-
                     </div>
-
                     <span id="final-damage" class="cycle-val" style="color: var(--accent); font-size: 1.1rem;">0</span>
-
                 </div>
-
                 <div id="cycle-dmg-list" class="cycle-dmg-list"></div>
-
                 <div class="cycle-total-row">
-
                     <span class="cycle-label">총합</span>
-
                     <span id="cycle-dmg-total" class="cycle-val cycle-total-val">0</span>
-
                 </div>
-
             </div>
-
-
-
             <h3>무기 비교</h3>
-
             <div class="comparison-settings comp-settings-panel">
-
                 <div class="comp-settings-header">
-
                     <span class="comp-settings-indicator"></span>
-
                     비교 대상 설정 (일괄 적용)
-
                 </div>
-
                 <div class="comp-settings-body">
-
                     <div class="control-row potency-row">
-
                         <label class="u-font-xsmall">무기 잠재</label>
-
                         <div class="potency-group" id="comp-wep-pot-group"></div>
-
                         <input type="hidden" id="comp-wep-pot" value="0">
-
                     </div>
-
                     <div class="u-flex-column-center">
-
                         <label class="u-font-xsmall">기질 여부</label>
-
                         <input type="checkbox" id="comp-wep-state" class="hidden-checkbox">
-
                     </div>
-
                 </div>
-
             </div>
-
             <div id="weapon-comparison" class="comparison-list"></div>
-
         </section>
-
     </div>
-
-
-
     <!-- 오퍼레이터 선택 모달 -->
-
     <div id="op-selector-modal" class="modal-overlay">
-
         <div class="modal-content">
-
             <div class="modal-header">
-
                 <span class="modal-header-title">오퍼레이터 선택</span>
-
                 <button class="modal-close"
-
                     onclick="document.getElementById('op-selector-modal').classList.remove('open')">&times;</button>
-
             </div>
-
             <div class="modal-grid" id="op-modal-grid"></div>
-
         </div>
-
     </div>
-
-
-
     <!-- 무기 선택 모달 -->
-
     <div id="wep-selector-modal" class="modal-overlay">
-
         <div class="modal-content">
-
             <div class="modal-header">
-
                 <span class="modal-header-title">무기 선택</span>
-
                 <button class="modal-close"
-
                     onclick="document.getElementById('wep-selector-modal').classList.remove('open')">&times;</button>
-
             </div>
-
             <div class="modal-grid" id="wep-modal-grid"></div>
-
         </div>
-
     </div>
-
-
-
     <!-- 장비 선택 사이드바 (Hidden) -->
-
     <div id="gear-sidebar" class="sidebar">
-
         <div class="sidebar-header">
-
             <h3>장비 선택</h3>
-
             <button class="sidebar-close" onclick="closeGearSidebar()">&times;</button>
-
         </div>
-
         <div class="sidebar-content">
-
             <div id="gear-sidebar-grid" class="gear-sidebar-grid"></div>
-
         </div>
-
     </div>
-
-
-
     <!-- 가이드 모달 -->
-
     <div id="guide-modal" class="modal-overlay">
-
         <div class="modal-content guide-content">
-
             <div class="modal-header">
-
                 <span class="modal-header-title">사용 가이드</span>
-
                 <button class="modal-close"
-
                     onclick="document.getElementById('guide-modal').classList.remove('open')">&times;</button>
-
             </div>
-
             <div class="guide-body">
-
                 <h3>개요</h3>
-
                 <p>이 시뮬레이터는 오퍼레이터의 세팅에 따른 이론적인 데미지 기댓값을 산출하기 위해 제작되었습니다. 실제 게임 내 데미지와는 차이가 있을 수 있습니다.</p>
-
-
-
                 <h3>기본 스펙 기준</h3>
-
                 <ul>
-
                     <li><strong>오퍼레이터:</strong> 90레벨, 신뢰도 100, 모든 스킬 마스터리(3레벨) 완료</li>
-
                     <li><strong>무기:</strong> 90레벨 기준</li>
-
                 </ul>
-
-
-
                 <h3>계산 제외 항목</h3>
-
                 <ul>
-
                     <li>버프 및 디버프의 지속 시간 (상시 적용으로 가정)</li>
-
                     <li>데미지에 직접적인 영향이 없는 유틸리티 능력치 (예: 궁극기 충전 효율, 궁극기 에너지 감소 등)</li>
-
                 </ul>
-
-
-
                 <h3>주의사항</h3>
-
                 <ul>
-
                     <li>오류가 있을 수 있으니 계산 정보는 반드시 맹신하지 마시고 참고용으로만 사용하여 주시기 바랍니다.</li>
-
                 </ul>
-
             </div>
-
         </div>
-
     </div>
-
-
-
     <!-- 푸터 -->
-
     <footer class="app-footer">
-
         <div class="footer-content">
-
             <div class="footer-info">
-
                 <span>Endfield Simulator</span>
-
                 <span class="divider">|</span>
-
                 <span>Powered by Antigravity</span>
-
             </div>
-
             <!-- <div class="footer-links">
-
                 <span class="footer-link">Github</span>
-
                 <span class="footer-link">Discord</span>
-
             </div> -->
-
         </div>
-
     </footer>
-
-
-
     <!-- 툴팁 컨테이너 -->
-
     <div id="app-tooltip" class="app-tooltip"></div>
-
     <!-- 스크립트 로드 최적화 (병렬 로드 및 실행 순서 보장) -->
-
-    <script src="js/data/data_operators.js?v=20240223" defer></script>
-
-    <script src="js/data/data_weapons.js?v=20240223" defer></script>
-
-    <script src="js/data/data_gears.js?v=20240223" defer></script>
-
-    <script src="js/data/data_abnormals.js?v=20240223" defer></script>
-
-    <script src="js/state.js?v=20240223" defer></script>
-
-    <script src="js/calc.js?v=20240223" defer></script>
-
-    <script src="js/ui/controls.js?v=20240223" defer></script>
-
-    <script src="js/ui/sidebar.js?v=20240223" defer></script>
-
-    <script src="js/ui/modal.js?v=20240223" defer></script>
-
-    <script src="js/ui/render.js?v=20240223" defer></script>
-
-    <script src="js/ui/tooltip.js?v=20240223" defer></script>
-
-    <script src="js/ui/init.js?v=20240223" defer></script>
-
+    <script src="js/data/data_operators.js" defer></script>
+    <script src="js/data/data_weapons.js" defer></script>
+    <script src="js/data/data_gears.js" defer></script>
+    <script src="js/data/data_abnormals.js" defer></script>
+    <script src="js/state.js" defer></script>
+    <script src="js/calc.js" defer></script>
+    <script src="js/ui/controls.js" defer></script>
+    <script src="js/ui/sidebar.js" defer></script>
+    <script src="js/ui/modal.js" defer></script>
+    <script src="js/ui/render.js" defer></script>
+    <script src="js/ui/tooltip.js" defer></script>
+    <script src="js/ui/init.js" defer></script>
 </body>
-
-
 
 </html>

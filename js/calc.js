@@ -261,8 +261,11 @@ function collectAllEffects(state, opData, wepData, stats, allEffects, forceMaxSt
 
             const typeArr = eff.type ? (Array.isArray(eff.type) ? eff.type : [eff.type]).map(item => typeof item === 'string' ? { type: item } : item) : [];
             const bonuses = eff.bonus || [];
-
-            const activeBonuses = bonuses.filter(b => !b.trigger || evaluateTrigger(b.trigger, state, effectiveOpData, null, false, b.target || eff.target, !!eff.sourceId));
+            const activeBonuses = bonuses.filter(b => {
+                const triggerMet = !b.trigger || evaluateTrigger(b.trigger, state, effectiveOpData, null, false, b.target || eff.target, !!eff.sourceId);
+                const targetMet = !b.triggerTarget || evaluateTrigger(b.triggerTarget, state, effectiveOpData, null, true, b.target || eff.target, !!eff.sourceId);
+                return triggerMet && targetMet;
+            });
 
             // [추가] 오퍼레이터 속성과 일치하는 무기 효과인지 확인 (트리거 미충족 시 표시용)
             const isMatchOpType = typeArr.some(ta => {
@@ -589,6 +592,11 @@ function applyPercentStats(effects, stats) {
 }
 
 // ---- 최종 데미지 산출 ----
+
+// 레벨 계수 상수 (고정값, 클릭 비활성화 불가)
+const LEVEL_COEFF_PHYS = 89 / 392; // ≈ 22.70%
+const LEVEL_COEFF_ARTS = 89 / 196; // ≈ 45.41%
+
 function computeFinalDamageOutput(state, opData, wepData, stats, allEffects, activeEffects) {
     const baseAtk = opData.baseAtk + wepData.baseAtk;
     let atkInc = 0, critRate = 5, critDmg = 50, dmgInc = 0, amp = 0, multiHit = 1.0, unbalanceDmg = 0, originiumArts = 0, ultRecharge = 0, ultCostReduction = 0, skillMults = { all: { mult: 0, add: 0 } }, dmgIncMap = { all: 0, skill: 0, normal: 0, battle: 0, combo: 0, ult: 0, phys: 0, heat: 0, elec: 0, cryo: 0, nature: 0 };
@@ -615,7 +623,7 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects, act
     const abDisabled = state.disabledEffects.includes('debuff_armorBreak');
     if (abVal > 0) {
         if (!abDisabled) takenDmgMap.phys += abVal;
-        logs.taken.push({ txt: `[갑옷 파괴 ${abStacks}단계] 받는 물리 피해 +${abVal}%`, uid: 'debuff_armorBreak' });
+        logs.taken.push({ txt: `[갑옷 파괴 ${abStacks}단계] 받는 물리 피해 +${abVal}%`, uid: 'debuff_armorBreak', tag: 'phys' });
     }
 
     // 부식 디버프: 모든 저항 감소
@@ -899,7 +907,7 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects, act
     const gamsunDisabled = state.disabledEffects.includes('debuff_gamsun');
     if (gamsunVal > 0) {
         if (!gamsunDisabled) takenDmgMap.arts += gamsunVal;
-        logs.taken.push({ txt: `[감전 ${gamsunStacks}단계] 받는 아츠 피해 +${gamsunVal}%`, uid: 'debuff_gamsun' });
+        logs.taken.push({ txt: `[감전 ${gamsunStacks}단계] 받는 아츠 피해 +${gamsunVal}%`, uid: 'debuff_gamsun', tag: 'arts' });
     }
 
     const statBonusPct = (stats[opData.mainStat] * 0.005) + (stats[opData.subStat] * 0.002);
@@ -960,6 +968,10 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects, act
     }
     const finalUltCost = Math.max(0, (baseUltCost * (1 + ultCostReduction / 100)) / (1 + ultRecharge / 100));
 
+    // 레벨 계수 고정 로그 (항상 추가, PROTECTED)
+    logs.dmgInc.push({ txt: `레벨 계수: +${(LEVEL_COEFF_PHYS * 100).toFixed(1)}% (물리 이상)`, uid: 'level_coeff_phys', tag: 'phys' });
+    logs.dmgInc.push({ txt: `레벨 계수: +${(LEVEL_COEFF_ARTS * 100).toFixed(1)}% (아츠 이상/폭발)`, uid: 'level_coeff_arts', tag: 'arts' });
+
     return {
         finalDmg,
         activeEffects,
@@ -971,7 +983,7 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects, act
             critExp, finalCritRate, critDmg, dmgInc, amp, vuln: opVuln, takenDmg: opTakenDmg, unbalanceDmg: finalUnbal, originiumArts, skillMults, dmgIncData: dmgIncMap,
             skillCritData, resistance: activeResVal, resMult, defMult, enemyDefense: defVal, ultRecharge, finalUltCost, vulnMap, takenDmgMap, vulnAmpEffects,
             allRes: resistance, armorBreakVal: abVal, gamsunVal: gamsunVal, baseTakenDmg: takenDmgMap.all,
-            resIgnore: resIgnore
+            resIgnore: resIgnore, levelCoeffPhys: LEVEL_COEFF_PHYS, levelCoeffArts: LEVEL_COEFF_ARTS
         },
         logs
     };
@@ -1152,7 +1164,6 @@ function evaluateTrigger(trigger, state, opData, triggerType, isTargetOnly = fal
 
         const TRIGGER_MAP = {
             '방어 불능': () => getAdjustedStackCount('방어 불능', state, opData, triggerType) > 0,
-            // '오리지늄 결정' removed to use generic specialStack logic (like Levatain)
             '갑옷 파괴': () => getAdjustedStackCount('갑옷 파괴', state, opData, triggerType) > 0,
             '열기 부착': () => state.debuffState?.artsAttach?.type === '열기 부착',
             '냉기 부착': () => state.debuffState?.artsAttach?.type === '냉기 부착',
@@ -1167,6 +1178,12 @@ function evaluateTrigger(trigger, state, opData, triggerType, isTargetOnly = fal
             '넘어뜨리기': () => state.triggerActive?.['넘어뜨리기'] || state.triggerActive?.['강제 넘어뜨리기'],
             '강타': () => state.triggerActive?.['강타'],
             '허약': () => state.triggerActive?.['허약'],
+            '물리 취약': () => state.triggerActive?.['물리 취약'],
+            '아츠 취약': () => state.triggerActive?.['아츠 취약'],
+            '열기 취약': () => state.triggerActive?.['열기 취약'],
+            '냉기 취약': () => state.triggerActive?.['냉기 취약'],
+            '전기 취약': () => state.triggerActive?.['전기 취약'],
+            '자연 취약': () => state.triggerActive?.['자연 취약']
         };
 
         const evalFn = TRIGGER_MAP[t];
@@ -1272,15 +1289,39 @@ function calcSingleSkillDamage(type, state, res) {
     const specialStackVal = state.getSpecialStack ? state.getSpecialStack() : (state.mainOp?.specialStack || 0);
 
     const bonusList = [];
+    const skillTypes = skillDef.type ? (Array.isArray(skillDef.type) ? skillDef.type : [skillDef.type]) : [];
+
     if (skillDef.bonus) {
         skillDef.bonus.forEach(b => {
-            if (evaluateTrigger(b.trigger, state, opData, b.triggerType, false, b.target, true)) {
+            const opTriggerMet = !b.trigger || evaluateTrigger(b.trigger, state, opData, b.triggerType, false, b.target, true);
+            const targetTriggerMet = !b.triggerTarget || evaluateTrigger(b.triggerTarget, state, opData, b.triggerType, true, b.target, true);
+            let triggerMet = opTriggerMet && targetTriggerMet;
+
+            const combinedTriggers = [
+                ...(Array.isArray(b.trigger) ? b.trigger : (b.trigger ? [b.trigger] : [])),
+                ...(Array.isArray(b.triggerTarget) ? b.triggerTarget : (b.triggerTarget ? [b.triggerTarget] : []))
+            ];
+
+            if (!triggerMet && (b.trigger || b.triggerTarget) && vulnMap) {
+                if (combinedTriggers.some(t => vulnMap[t] > 0 || vulnMap['취약'] > 0)) {
+                    triggerMet = true;
+                }
+            }
+
+            if (triggerMet) {
+                if (b.type) {
+                    const bTypes = Array.isArray(b.type) ? b.type : [b.type];
+                    bTypes.forEach(bt => {
+                        if (!skillTypes.includes(bt)) skillTypes.push(bt);
+                    });
+                }
+
                 const parsePct = (v) => v ? parseFloat(String(v)) / 100 : 0;
+                const trName = combinedTriggers.join(', ');
+
                 if (b.base !== undefined || b.perStack !== undefined) {
                     let stackCount = 0;
-                    const triggers = Array.isArray(b.trigger) ? b.trigger : [b.trigger];
-
-                    for (const t of triggers) {
+                    for (const t of combinedTriggers) {
                         const count = getAdjustedStackCount(t, state, opData, skillDef.skillType);
                         stackCount = Math.max(stackCount, count);
                     }
@@ -1292,7 +1333,7 @@ function calcSingleSkillDamage(type, state, res) {
                     if (bonusVal > 0) {
                         dmgMult += bonusVal;
                         bonusList.push({
-                            name: triggers.join(', '),
+                            name: trName,
                             val: bonusVal,
                             stack: stackCount
                         });
@@ -1301,7 +1342,7 @@ function calcSingleSkillDamage(type, state, res) {
                     const bonusVal = parsePct(b.val);
                     dmgMult += bonusVal;
                     bonusList.push({
-                        name: Array.isArray(b.trigger) ? b.trigger.join(', ') : b.trigger,
+                        name: trName,
                         val: bonusVal
                     });
                 }
@@ -1316,7 +1357,6 @@ function calcSingleSkillDamage(type, state, res) {
     const hasDefenseless = defenselessStacks > 0;
 
     let abnormalMultTotal = 0;
-    const skillTypes = skillDef.type ? (Array.isArray(skillDef.type) ? skillDef.type : [skillDef.type]) : [];
     skillTypes.forEach(t => {
         if (!t) return;
         const typeName = typeof t === 'string' ? t : t.type;
@@ -1587,7 +1627,8 @@ function calcSingleSkillDamage(type, state, res) {
             }
         }
 
-        const aCommonMults = adjCritExp * (1 + aInc / 100) * (1 + amp / 100) * (1 + aTaken / 100) * (1 + aVuln / 100) * (1 + unbalanceDmg / 100) * aResMult * defMult * artsStrengthMult;
+        const aLevelCoeff = (a.element === 'phys' || a.name === '강타') ? (1 + LEVEL_COEFF_PHYS) : (1 + LEVEL_COEFF_ARTS);
+        const aCommonMults = adjCritExp * (1 + aInc / 100) * (1 + amp / 100) * (1 + aTaken / 100) * (1 + aVuln / 100) * (1 + unbalanceDmg / 100) * aResMult * defMult * artsStrengthMult * aLevelCoeff;
         let aDmg = adjFinalAtk * a.mult * aCommonMults;
 
         // 판(Da Pan) 전용 강타 보너스 (1.2배 곱연산)
@@ -1602,6 +1643,7 @@ function calcSingleSkillDamage(type, state, res) {
 
     // 스킬 전용 로그 필터링
     myLogs.dmgInc = (res.logs.dmgInc || []).filter(l => {
+        if (l.uid === 'level_coeff_phys' || l.uid === 'level_coeff_arts') return false;
         if (l.tag === 'all') return false;
         if (l.tag === 'skillMult') {
             const arr = l.skillType || [];
@@ -1644,7 +1686,7 @@ function calcSingleSkillDamage(type, state, res) {
 
     // 아츠 강도 로그 추가 (이상 데미지가 있는 경우에만)
     if (originiumArts > 0 && abnormalList.length > 0) {
-        myLogs.arts.push({ txt: `오리지늄 아츠 강도: +${originiumArts.toFixed(1)}% (이상 데미지에 적용)`, uid: 'skill_arts_strength', tag: typeMap[baseType] });
+        myLogs.arts.push({ txt: `오리지늄 아츠 강도: +${originiumArts.toFixed(1)}% (이상 데미지에 적용)`, uid: 'skill_arts_strength', tag: SKILL_TYPE_CAT_MAP[baseType] });
     }
 
     // 취약 증폭 로그 추가

@@ -46,18 +46,69 @@
         });
     }
 
+    /** 3x3 그리드 규격에 맞춰 빈 칸(Placeholder) 더미 타일 생성 */
+    function ensurePlaceholders(grid) {
+        if (grid.querySelector('.tile-placeholder')) return;
+
+        let totalCells = 0;
+        Array.from(grid.children).forEach(el => {
+            if (el.dataset.fullRow === 'true') {
+                totalCells += 2;
+            } else {
+                totalCells += 1;
+            }
+        });
+
+        const remainder = totalCells % 3;
+        const needed = remainder === 0 ? 0 : 3 - remainder;
+
+        for (let i = 0; i < needed; i++) {
+            const ph = document.createElement('div');
+            ph.className = 'tile tile-placeholder';
+            ph.dataset.tileId = `placeholder-${i}`;
+            ph.innerHTML = '<span>빈 슬롯</span>';
+            grid.appendChild(ph);
+        }
+    }
+
+    function addDragHandles(grid) {
+        const headers = grid.querySelectorAll('.tile h4, .dmg-inc-box h4');
+        headers.forEach(h4 => {
+            if (!h4.querySelector('.tile-drag-handle')) {
+                const handle = document.createElement('span');
+                handle.className = 'tile-drag-handle';
+                handle.innerHTML = `
+                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                `;
+                h4.classList.add('has-drag-handle');
+                h4.appendChild(handle);
+            }
+        });
+    }
+
     function initSortable() {
         const grid = getGrid();
         if (!grid || typeof Sortable === 'undefined') return;
+
+        // 자리맞춤용 더미 추가
+        ensurePlaceholders(grid);
+
+        // 드래그 핸들(햄버거 버튼) 추가
+        addDragHandles(grid);
 
         // 저장된 순서 복원
         restoreOrder(grid);
         updateFullRowStyles(grid);
 
         Sortable.create(grid, {
+            swap: true, // swap 플러그인 활성화
+            swapClass: 'tile-drag-swap', // 교체될 대상에 부여할 클래스
+            handle: '.tile-drag-handle', // 햄버거 버튼으로 옮기기
             animation: 200,
-            delay: 300,
-            delayOnTouchOnly: false,
             ghostClass: 'tile-drag-ghost',
             chosenClass: 'tile-drag-chosen',
             dragClass: 'tile-drag-active',
@@ -65,8 +116,9 @@
             scrollSensitivity: 200,
             scrollSpeed: 20,
             bubbleScroll: true,
-            // data-full-row 타일은 항상 별도 row를 차지하므로 group filter 없음
-            onEnd() {
+            onEnd(evt) {
+                if (evt.oldIndex === evt.newIndex) return;
+
                 saveOrder(grid);
                 updateFullRowStyles(grid);
             }

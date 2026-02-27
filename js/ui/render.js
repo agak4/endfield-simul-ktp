@@ -73,7 +73,7 @@ function buildSkillIconHtml(imgSrc, color, altText) {
 // 클릭으로 효과를 비활성화할 수 있는 <li> 요소를 생성한다.
 // options: { isProtected, log, uid, uiUid }
 function createEffectListItem(log, options = {}) {
-    const PROTECTED_UIDS = ['base_op_atk', 'base_wep_atk', 'stat_bonus_atk', 'unbalance_base'];
+    const PROTECTED_UIDS = ['base_op_atk', 'base_wep_atk', 'stat_bonus_atk', 'unbalance_base', 'level_coeff_phys', 'level_coeff_arts'];
     const uid = options.uid || log.uid;
     const uiUid = options.uiUid || uid;
     const isProtected = options.isProtected || PROTECTED_UIDS.includes(uid);
@@ -244,6 +244,7 @@ function renderResult(res) {
 
     // 이펙트 다이얼리스트는 개별 설정 결과
     renderDmgInc(displayRes, cycleRes);
+    renderLevelCoeff(displayRes);
 
     // 증폭/받는피해/취약 속성 분리 렌더링
     renderElemSplit('amp-container', displayRes.logs.amp, '증폭');
@@ -311,6 +312,22 @@ function renderElemSplit(containerId, logs, label) {
             cats.forEach(cat => {
                 catLogs[cat.id].push(uiLog);
                 if (!isDisabled) catSums[cat.id] += val;
+            });
+        } else if (tag === 'phys') {
+            cats.forEach(cat => {
+                const elemKey = cat.id === 'elem1' ? elem1Key : elem2Key;
+                if (elemKey === 'phys') {
+                    catLogs[cat.id].push(uiLog);
+                    if (!isDisabled) catSums[cat.id] += val;
+                }
+            });
+        } else if (tag === 'arts') {
+            cats.forEach(cat => {
+                const elemKey = cat.id === 'elem1' ? elem1Key : elem2Key;
+                if (elemKey && elemKey !== 'phys') {
+                    catLogs[cat.id].push(uiLog);
+                    if (!isDisabled) catSums[cat.id] += val;
+                }
             });
         } else {
             const catId = (tag === elem1Key) ? 'elem1' : (tag === elem2Key) ? 'elem2' : null;
@@ -704,7 +721,7 @@ function renderCyclePerSkill(cycleRes) {
         const header = document.createElement('div');
         header.className = 'skill-card-header';
 
-        let displayName = name;
+        let displayName = name.replace('(이상)', '');
         header.innerHTML = `<span class="skill-name">${displayName}</span><span class="skill-dmg">${dmgVal.toLocaleString()}</span>`;
 
         // 툴팁 이벤트
@@ -732,7 +749,7 @@ function renderCyclePerSkill(cycleRes) {
                 }
                 AppTooltip.showCustom(content, e, { width: '350px' });
             } else {
-                const isProc = name.startsWith('재능') || name.startsWith('잠재') || name.startsWith('무기');
+                const isProc = name.startsWith('재능') || name.startsWith('잠재') || name.startsWith('무기') || name.startsWith('세트');
                 if (!isProc) {
                     const artsStrength = window.lastCalcResult?.stats?.originiumArts || 0;
                     const content = AppTooltip.renderAbnormalTooltip(name, artsStrength, state, data.elements);
@@ -961,6 +978,9 @@ function renderDmgInc(res, cycleRes) {
 
     // 로그 분류
     (res.logs.dmgInc || []).forEach(log => {
+        // 레벨 계수 전용 로그는 별도 타일에서 렌더링하므로 제외
+        if (log.uid === 'level_coeff_phys' || log.uid === 'level_coeff_arts') return;
+
         let val = 0;
         const isMult = (log.tag === 'skillMult' || log.txt.includes('*'));
         if (!isMult) {
@@ -1083,8 +1103,69 @@ function renderDmgInc(res, cycleRes) {
 }
 
 
+/**
+ * 레벨 계수 타일을 렌더링한다.
+ * 오퍼레이터 스킬 속성에 따라 물리/아츠 컨럼을 유동적으로 표시한다.
+ * @param {object} res - calculateDamage 반환값
+ */
+function renderLevelCoeff(res) {
+    const container = document.getElementById('lv-coeff-container');
+    if (!container) return;
+    container.innerHTML = '';
 
+    const opData = DATA_OPERATORS.find(o => o.id === state.mainOp.id);
 
+    // 오퍼레이터 스킬에서 고유 element 목록 추출 (최대 2개)
+    const skillElements = [];
+    if (opData && opData.skill) {
+        opData.skill.forEach(s => {
+            if (s.element && !skillElements.includes(s.element)) skillElements.push(s.element);
+        });
+    }
+
+    const ELEMENT_LABEL_MAP = { phys: '물리', heat: '열기', elec: '전기', cryo: '냉기', nature: '자연' };
+    const elem1Key = skillElements[0] || null;
+    const elem2Key = skillElements[1] || null;
+
+    // 레벨 계수 로그 항목 (tag: phys 혹은 arts)
+    const coeffLogs = (res.logs.dmgInc || []).filter(l => l.uid === 'level_coeff_phys' || l.uid === 'level_coeff_arts');
+
+    // 속성에 따라 표시할 컨럼 결정
+    // 물리 속성 스킬이 있으면 물리 레벨 계수 표시
+    // 아츠 속성 스킬이 있으면 아츠 레벨 계수 표시
+    const hasPhys = elem1Key === 'phys' || elem2Key === 'phys';
+    const hasArts = (elem1Key && elem1Key !== 'phys') || (elem2Key && elem2Key !== 'phys');
+
+    const cats = [
+        ...(hasPhys ? [{ id: 'phys', title: '물리 레벨 계수', uid: 'level_coeff_phys' }] : []),
+        ...(hasArts ? [{ id: 'arts', title: '아츠 레벨 계수', uid: 'level_coeff_arts' }] : [])
+    ];
+
+    if (cats.length === 0) return;
+
+    cats.forEach(cat => {
+        const log = coeffLogs.find(l => l.uid === cat.uid);
+        if (!log) return;
+
+        const col = document.createElement('div');
+        col.className = 'dmg-inc-column';
+
+        const header = document.createElement('div');
+        header.className = 'dmg-inc-col-header';
+        const coeffPct = cat.id === 'phys'
+            ? (res.stats.levelCoeffPhys !== undefined ? (res.stats.levelCoeffPhys * 100).toFixed(1) : (89 / 392 * 100).toFixed(1))
+            : (res.stats.levelCoeffArts !== undefined ? (res.stats.levelCoeffArts * 100).toFixed(1) : (89 / 196 * 100).toFixed(1));
+        header.innerHTML = `<label>${cat.title}</label><span>${coeffPct}%</span>`;
+        col.appendChild(header);
+
+        const ul = document.createElement('ul');
+        ul.className = 'detail-list';
+        ul.appendChild(createEffectListItem(log, { uid: log.uid, uiUid: log.uid }));
+        col.appendChild(ul);
+
+        container.appendChild(col);
+    });
+}
 
 /**
  * 메인 오퍼레이터 변경 시, 해당 오퍼레이터의 '강화' 스킬들에 대한 동기식 버튼을 추가합니다.

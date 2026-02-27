@@ -427,7 +427,7 @@ const AppTooltip = {
     renderWeapon(wep) {
         const traitItems = [], synergyItems = [];
 
-        wep.traits.forEach(t => {
+        wep.traits.forEach((t, idx) => {
             const typeArr = this.normalizeTypeArr(t.type);
             const types = typeArr.map(e => e.type);
             const isStatTrait = types.includes('스탯');
@@ -444,7 +444,11 @@ const AppTooltip = {
             const bulletColor = isUnbalanced ? 'inherit' : isSynergy ? '#FFFA00' : 'var(--accent)';
             const html = `<div style="margin-bottom:2px;${isUnbalanced ? 'color:inherit;' : ''}"><span style="color:${bulletColor}">•</span> ${rangeStr}</div>`;
 
-            if (isSynergy) synergyItems.push(html); else traitItems.push(html);
+            if (isSynergy) {
+                synergyItems.push(html);
+            } else if (idx < 2) {
+                traitItems.push(html);
+            }
         });
 
         const lastTrait = wep.traits[wep.traits.length - 1];
@@ -554,7 +558,11 @@ const AppTooltip = {
             let dmgStr = `기본 데미지: <strong class="tooltip-highlight">${skillData.dmg}</strong>`;
             if (skillData.bonus) {
                 dmgStr += (skillData.bonus || []).map(b => {
-                    const triggerLines = (b.trigger || []).join(', ');
+                    const triggers = [
+                        ...(Array.isArray(b.trigger) ? b.trigger : (b.trigger ? [b.trigger] : [])),
+                        ...(Array.isArray(b.triggerTarget) ? b.triggerTarget : (b.triggerTarget ? [b.triggerTarget] : []))
+                    ];
+                    const triggerLines = triggers.join(', ');
                     const bValStr =
                         b.val !== undefined && b.val !== '0%' ? '+' + b.val :
                             b.perStack !== undefined && b.perStack !== '0%'
@@ -593,9 +601,7 @@ const AppTooltip = {
         return `
             <div class="tooltip-title tooltip-highlight">${type}</div>
             <div class="tooltip-group">
-                <div class="tooltip-desc">피해량: <strong class="tooltip-highlight">${Math.floor(displayDmg).toLocaleString()}</strong><br>
-                    데미지 배율: <strong>${rateHtml}</strong>
-                </div>
+                <div class="tooltip-desc">피해량: <strong class="tooltip-highlight">${Math.floor(displayDmg).toLocaleString()}</strong><br>데미지 배율: <strong>${rateHtml}</strong></div>
             </div>
             ${synergyHtml ? `<div class="tooltip-section tooltip-group">${synergyHtml}</div>` : ''}
         `;
@@ -678,8 +684,14 @@ const AppTooltip = {
         if (st && skillType && opDataLocal) {
             const skillDef = opDataLocal.skill?.find(s => s.skillType?.includes(skillType));
             (Array.isArray(skillDef?.bonus) ? skillDef.bonus : []).forEach(b => {
-                if (b.trigger && evaluateTrigger(b.trigger, st, opDataLocal, null, false, null, true)) {
-                    const triggerTxt = Array.isArray(b.trigger) ? b.trigger.join(', ') : b.trigger;
+                const opTrMet = !b.trigger || evaluateTrigger(b.trigger, st, opDataLocal, null, false, null, true);
+                const tgTrMet = !b.triggerTarget || evaluateTrigger(b.triggerTarget, st, opDataLocal, null, true, null, true);
+                if ((b.trigger || b.triggerTarget) && opTrMet && tgTrMet) {
+                    const triggers = [
+                        ...(Array.isArray(b.trigger) ? b.trigger : (b.trigger ? [b.trigger] : [])),
+                        ...(Array.isArray(b.triggerTarget) ? b.triggerTarget : (b.triggerTarget ? [b.triggerTarget] : []))
+                    ];
+                    const triggerTxt = triggers.join(', ');
                     if (!extraEffects.some(ee => ee.includes(triggerTxt))) {
                         extraEffects.push(`${triggerTxt} (보너스 발동)`);
                     }
@@ -767,7 +779,7 @@ const AppTooltip = {
             }
         }
 
-        let html = `<div class="tooltip-title">${aName}</div>`;
+        let html = `<div class="tooltip-title">${aName.replace('(이상)', '')}</div>`;
         if (attrLines.length > 0) html += `<div class="tooltip-section tooltip-group">${attrLines.join('')}</div>`;
 
         if (synergyLines.length > 0 || artsStrength > 0) {
