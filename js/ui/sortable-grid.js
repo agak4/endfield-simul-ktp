@@ -16,7 +16,10 @@
 
     /** 현재 타일 순서를 localStorage에 저장 */
     function saveOrder(grid) {
-        const order = Array.from(grid.children).map(el => el.dataset.tileId).filter(Boolean);
+        const order = Array.from(grid.children)
+            .filter(el => !el.classList.contains('tile-placeholder'))
+            .map(el => el.dataset.tileId)
+            .filter(Boolean);
         localStorage.setItem(STORAGE_KEY, JSON.stringify(order));
     }
 
@@ -27,6 +30,7 @@
         try {
             const order = JSON.parse(saved);
             order.forEach(tileId => {
+                if (tileId.startsWith('placeholder-')) return;
                 const el = grid.querySelector(`[data-tile-id="${tileId}"]`);
                 if (el) grid.appendChild(el);
             });
@@ -48,26 +52,41 @@
 
     /** 3x3 그리드 규격에 맞춰 빈 칸(Placeholder) 더미 타일 생성 */
     function ensurePlaceholders(grid) {
-        if (grid.querySelector('.tile-placeholder')) return;
+        const placeholders = grid.querySelectorAll('.tile-placeholder');
+        placeholders.forEach(el => el.remove());
 
-        let totalCells = 0;
-        Array.from(grid.children).forEach(el => {
-            if (el.dataset.fullRow === 'true') {
-                totalCells += 2;
-            } else {
-                totalCells += 1;
-            }
-        });
+        let col = 0;
+        const tiles = Array.from(grid.children);
+        let phCount = 0;
 
-        const remainder = totalCells % 3;
-        const needed = remainder === 0 ? 0 : 3 - remainder;
-
-        for (let i = 0; i < needed; i++) {
+        function createPlaceholder() {
             const ph = document.createElement('div');
             ph.className = 'tile tile-placeholder';
-            ph.dataset.tileId = `placeholder-${i}`;
+            ph.dataset.tileId = `placeholder-auto-${phCount++}`;
             ph.innerHTML = '<span>빈 슬롯</span>';
-            grid.appendChild(ph);
+            return ph;
+        }
+
+        for (let i = 0; i < tiles.length; i++) {
+            const el = tiles[i];
+            const span = el.dataset.fullRow === 'true' ? 2 : 1;
+
+            if (col + span > 3) {
+                const needed = 3 - col;
+                for (let j = 0; j < needed; j++) {
+                    grid.insertBefore(createPlaceholder(), el);
+                }
+                col = span;
+            } else {
+                col += span;
+            }
+        }
+
+        if (col > 0 && col < 3) {
+            const needed = 3 - col;
+            for (let j = 0; j < needed; j++) {
+                grid.appendChild(createPlaceholder());
+            }
         }
     }
 
@@ -94,15 +113,13 @@
         const grid = getGrid();
         if (!grid || typeof Sortable === 'undefined') return;
 
-        // 자리맞춤용 더미 추가
+        // 저장된 순서 복원
+        restoreOrder(grid);
+        updateFullRowStyles(grid);
         ensurePlaceholders(grid);
 
         // 드래그 핸들(햄버거 버튼) 추가
         addDragHandles(grid);
-
-        // 저장된 순서 복원
-        restoreOrder(grid);
-        updateFullRowStyles(grid);
 
         Sortable.create(grid, {
             swap: true, // swap 플러그인 활성화
@@ -121,6 +138,7 @@
 
                 saveOrder(grid);
                 updateFullRowStyles(grid);
+                ensurePlaceholders(grid);
             }
         });
     }

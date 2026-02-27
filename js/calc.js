@@ -616,14 +616,14 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects, act
     if (tsUsables) {
         if (tsUsables['혼란의 약제']) {
             const uid = 'usable_1';
-            logs.ultRecharge.push({ txt: `궁극기 충전 효율 +24% (혼란의 약제)`, uid: uid, tag: 'recharge' });
+            logs.ultRecharge.push({ txt: `[혼란의 약제] +24.0% (궁극기 충전 효율)`, uid: uid, tag: 'recharge' });
             if (!state.disabledEffects.includes(uid)) {
                 ultRecharge += 24;
             }
         }
         if (tsUsables['아츠가 부여된 금속 병']) {
             const uid = 'usable_2';
-            logs.dmgInc.push({ txt: `주는 모든 피해 +25% (아츠가 부여된 금속 병)`, uid: uid, tag: 'all' });
+            logs.dmgInc.push({ txt: `[아츠가 부여된 금속 병] +25.0% (모든 피해)`, uid: uid, tag: 'all' });
             if (!state.disabledEffects.includes(uid)) {
                 dmgInc += 25;
                 dmgIncMap.all += 25;
@@ -631,7 +631,7 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects, act
         }
         if (tsUsables['제이콥의 유산']) {
             const uid = 'usable_3';
-            logs.atkBuffs.push({ txt: `공격력 증가 +27% (제이콥의 유산)`, uid: uid });
+            logs.atkBuffs.push({ txt: `[제이콥의 유산] +27.0% (공격력)`, uid: uid });
             if (!state.disabledEffects.includes(uid)) {
                 atkInc += 27;
             }
@@ -641,12 +641,12 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects, act
             const uidAtk = 'usable_4_atk';
             const uidCrit = 'usable_4_crit';
 
-            logs.fixedAtk.push({ txt: `고정 공격력: +${val} (푹 삶은 갈비 미삼탕)`, uid: uidAtk });
+            logs.fixedAtk.push({ txt: `[푹 삶은 갈비 미삼탕] +${val} (고정 공격력)`, uid: uidAtk });
             if (!state.disabledEffects.includes(uidAtk)) {
                 fixedAtk += val;
             }
 
-            logs.crit.push({ txt: `치명타 확률 +11% (푹 삶은 갈비 미삼탕)`, uid: uidCrit, type: 'rate' });
+            logs.crit.push({ txt: `[푹 삶은 갈비 미삼탕] +11% (치명타 확률)`, uid: uidCrit, type: 'rate' });
             if (!state.disabledEffects.includes(uidCrit)) {
                 critRate += 11;
             }
@@ -655,12 +655,12 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects, act
             const uidCrit = 'usable_5_crit';
             const uidDmg = 'usable_5_dmgInc';
 
-            logs.crit.push({ txt: `치명타 확률 +9% (원기 회복 탕약)`, uid: uidCrit, type: 'rate' });
+            logs.crit.push({ txt: `[원기 회복 탕약] +9% (치명타 확률)`, uid: uidCrit, type: 'rate' });
             if (!state.disabledEffects.includes(uidCrit)) {
                 critRate += 9;
             }
 
-            logs.dmgInc.push({ txt: `주는 모든 피해 +18% (원기 회복 탕약)`, uid: uidDmg, tag: 'all' });
+            logs.dmgInc.push({ txt: `[원기 회복 탕약] +18.0% (모든 피해)`, uid: uidDmg, tag: 'all' });
             if (!state.disabledEffects.includes(uidDmg)) {
                 dmgInc += 18;
                 dmgIncMap.all += 18;
@@ -1030,8 +1030,8 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects, act
     const finalUltCost = Math.max(0, (baseUltCost * (1 + ultCostReduction / 100)) / (1 + ultRecharge / 100));
 
     // 레벨 계수 고정 로그 (항상 추가, PROTECTED)
-    logs.dmgInc.push({ txt: `레벨 계수: +${(LEVEL_COEFF_PHYS * 100).toFixed(1)}% (물리 이상)`, uid: 'level_coeff_phys', tag: 'phys' });
-    logs.dmgInc.push({ txt: `레벨 계수: +${(LEVEL_COEFF_ARTS * 100).toFixed(1)}% (아츠 이상/폭발)`, uid: 'level_coeff_arts', tag: 'arts' });
+    logs.dmgInc.push({ txt: `[물리 이상] +${(LEVEL_COEFF_PHYS * 100).toFixed(1)}% (레벨 계수)`, uid: 'level_coeff_phys', tag: 'phys' });
+    logs.dmgInc.push({ txt: `[아츠 이상/폭발] +${(LEVEL_COEFF_ARTS * 100).toFixed(1)}% (레벨 계수)`, uid: 'level_coeff_arts', tag: 'arts' });
 
     return {
         finalDmg,
