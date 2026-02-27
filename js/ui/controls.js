@@ -342,7 +342,8 @@ function applyDebuffIconState(wrap, stacks) {
 
     const bubble = wrap.querySelector('.debuff-stack-bubble');
     if (bubble) {
-        const max = wrap.dataset.max ? parseInt(wrap.dataset.max) : null;
+        const maxAttr = wrap.dataset.max;
+        const max = (maxAttr === 'null' || maxAttr === undefined) ? null : parseInt(maxAttr, 10);
         bubble.textContent = stacks;
         if (max === 1) {
             bubble.style.display = 'none';
@@ -585,13 +586,14 @@ function cycleSpecialStack(el, dir = 1) {
     const cur = specStacks[stackId] || 0;
 
     const stacksData = Array.isArray(op.specialStack) ? op.specialStack : [op.specialStack];
-    const max = stacksData.find(s => (s.id || 'default') === stackId)?.max ?? 1;
+    const specData = stacksData.find(s => (s.id || 'default') === stackId);
+    const max = (specData && specData.max !== undefined) ? specData.max : 1;
 
     let next;
     if (max === null) {
-        next = Math.max(0, cur + dir);
+        next = Math.max(0, Number(cur) + dir);
     } else {
-        next = cur + dir;
+        next = Number(cur) + dir;
         if (next > max) next = 0;
         else if (next < 0) next = max;
     }
