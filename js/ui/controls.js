@@ -687,6 +687,7 @@ function removeCycleItem(index) {
     state.skillSequence.splice(index, 1);
     if (state.selectedSeqId === removedId) state.selectedSeqId = null;
     saveState();
+    if (typeof AppTooltip !== 'undefined' && AppTooltip.hide) AppTooltip.hide();
     updateState();
 }
 
@@ -697,6 +698,7 @@ function clearCycleItems() {
     state.skillSequence = [];
     state.selectedSeqId = null;
     saveState();
+    if (typeof AppTooltip !== 'undefined' && AppTooltip.hide) AppTooltip.hide();
     updateState();
 }
 

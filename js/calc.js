@@ -1333,8 +1333,23 @@ function calcSingleSkillDamage(type, state, res) {
         }
     });
 
-    const skillDef = skillMap[type];
-    if (!skillDef) return null;
+    let originalSkillDef = skillMap[type];
+    if (!originalSkillDef) return null;
+
+    let skillDef = { ...originalSkillDef };
+    const skillNameForLvl = Array.isArray(type) ? type[0] : type;
+    const baseTypeForLvl = skillNameForLvl.startsWith('강화 ') ? skillNameForLvl.substring(3) : skillNameForLvl;
+    const selectedLevel = state.mainOp?.skillLevels?.[baseTypeForLvl] || 'M3';
+
+    if (originalSkillDef.levels && originalSkillDef.levels[selectedLevel]) {
+        const lvlData = originalSkillDef.levels[selectedLevel];
+        if (lvlData.dmg !== undefined) skillDef.dmg = lvlData.dmg;
+        if (lvlData.type !== undefined) skillDef.type = lvlData.type;
+        if (lvlData.bonus !== undefined) skillDef.bonus = lvlData.bonus;
+        if (lvlData.cost !== undefined) skillDef.cost = lvlData.cost;
+        if (lvlData.target !== undefined) skillDef.target = lvlData.target;
+        if (lvlData.desc !== undefined) skillDef.desc = lvlData.desc;
+    }
 
     const { finalAtk, atkInc, baseAtk, statBonusPct, skillAtkIncData = { all: 0 }, critExp, finalCritRate, critDmg, amp, vuln, takenDmg, unbalanceDmg, resMult, defMult = 1, originiumArts = 0, skillMults = { all: { mult: 0, add: 0 } }, dmgIncData = { all: 0, skill: 0, normal: 0, battle: 0, combo: 0, ult: 0 }, skillCritData = { rate: { all: 0 }, dmg: { all: 0 } }, vulnMap = {}, takenDmgMap = { all: 0, phys: 0, arts: 0, heat: 0, elec: 0, cryo: 0, nature: 0 }, vulnAmpEffects = [] } = res.stats;
 
@@ -1888,8 +1903,17 @@ function calculateCycleDamage(currentState, baseRes, forceMaxStack = false) {
     // 1. 모든 스킬 타입(강화 스킬 포함)의 기본 데미지
     Object.keys(skillMap).forEach(type => {
         perSkill[type] = { dmg: 0, count: 0, unitDmg: 0, logs: [], dmgRate: '0%', desc: '' };
-        const skillDef = skillMap[type];
-        if (!skillDef) return;
+        let originalSkillDef = skillMap[type];
+        if (!originalSkillDef) return;
+
+        let skillDef = { ...originalSkillDef };
+        const skillNameForLvl = Array.isArray(type) ? type[0] : type;
+        const baseTypeForLvl = skillNameForLvl.startsWith('강화 ') ? skillNameForLvl.substring(3) : skillNameForLvl;
+        const selectedLevel = currentState.mainOp?.skillLevels?.[baseTypeForLvl] || 'M3';
+        if (originalSkillDef.levels && originalSkillDef.levels[selectedLevel]) {
+            const lvlData = originalSkillDef.levels[selectedLevel];
+            if (lvlData.element !== undefined) skillDef.element = lvlData.element;
+        }
 
         let specificRes = baseRes;
         const calculationTag = SKILL_TYPE_CAT_MAP[type] || 'common';
@@ -1921,7 +1945,20 @@ function calculateCycleDamage(currentState, baseRes, forceMaxStack = false) {
             return;
         }
 
-        const skillDef = skillMap[type];
+        let originalSkillDef = skillMap[type];
+        if (!originalSkillDef) {
+            sequenceResult.push({ type, dmg: 0, dmgRate: '0%', logs: [], desc: '' });
+            return;
+        }
+
+        let skillDef = { ...originalSkillDef };
+        const skillNameForLvl = Array.isArray(type) ? type[0] : type;
+        const baseTypeForLvl = skillNameForLvl.startsWith('강화 ') ? skillNameForLvl.substring(3) : skillNameForLvl;
+        const selectedLevel = currentState.mainOp?.skillLevels?.[baseTypeForLvl] || 'M3';
+        if (originalSkillDef.levels && originalSkillDef.levels[selectedLevel]) {
+            const lvlData = originalSkillDef.levels[selectedLevel];
+            if (lvlData.element !== undefined) skillDef.element = lvlData.element;
+        }
         let skillData = pSkill;
         let cRes = null;
 

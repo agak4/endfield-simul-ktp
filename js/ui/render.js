@@ -154,7 +154,6 @@ window.updateStaticCycleButtonsElementColor = updateStaticCycleButtonsElementCol
  * @param {object|null} res - calculateDamage 반환값
  */
 function renderResult(res) {
-    if (typeof AppTooltip !== 'undefined' && AppTooltip.hide) AppTooltip.hide();
     if (!res) {
         const el = document.getElementById('final-damage');
         if (el) el.innerText = '0';
@@ -1217,4 +1216,6 @@ function updateEnhancedSkillButtons(opId) {
 
         btnContainer.appendChild(btn);
     });
+
+    window.updateSkillLevelButtonsUI?.();
 }

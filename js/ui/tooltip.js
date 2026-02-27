@@ -534,8 +534,23 @@ const AppTooltip = {
      * @param {object|null} st - 현재 state
      * @returns {string}
      */
-    renderSkillTooltip(skillType, skillData, opData, extraHtml = '', activeEffects = [], st = null) {
-        if (!skillData) return '';
+    renderSkillTooltip(skillType, skillDataOriginal, opData, extraHtml = '', activeEffects = [], st = null, overrideLevel = null) {
+        if (!skillDataOriginal) return '';
+
+        let skillData = { ...skillDataOriginal };
+        const baseTypeForLvl = skillType.startsWith('강화 ') ? skillType.substring(3) : skillType;
+        const selectedLevel = overrideLevel || st?.mainOp?.skillLevels?.[baseTypeForLvl] || 'M3';
+        if (skillDataOriginal.levels && skillDataOriginal.levels[selectedLevel]) {
+            const lvlData = skillDataOriginal.levels[selectedLevel];
+            if (lvlData.dmg !== undefined) skillData.dmg = lvlData.dmg;
+            if (lvlData.type !== undefined) skillData.type = lvlData.type;
+            if (lvlData.bonus !== undefined) skillData.bonus = lvlData.bonus;
+            if (lvlData.cost !== undefined) skillData.cost = lvlData.cost;
+            if (lvlData.target !== undefined) skillData.target = lvlData.target;
+            if (lvlData.element !== undefined) skillData.element = lvlData.element;
+            if (lvlData.desc !== undefined) skillData.desc = lvlData.desc;
+        }
+
         const attrLines = [];
 
         const element = this.getElementName(skillData.element ? skillData : opData);

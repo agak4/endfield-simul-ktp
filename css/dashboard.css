@@ -89,13 +89,15 @@
     align-items: center;
     justify-content: center;
     gap: 6px;
-    padding: 10px 5px;
+    padding: 10px 5px 23px 5px;
     background: rgba(0, 0, 0, 0.4);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.2s;
     user-select: none;
+    position: relative;
+    overflow: hidden;
 }
 
 .cycle-btn:hover {
@@ -142,6 +144,95 @@
 
 .cycle-btn span {
     font-size: 0.85rem;
+}
+
+.skill-level-container {
+    display: flex;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    gap: 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.skill-lvl-btn {
+    flex: 1;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.05);
+    border: none;
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-muted);
+    font-size: 0.65rem;
+    padding: 0;
+    cursor: pointer;
+    border-radius: 0;
+    transition: all 0.1s;
+    font-family: inherit;
+}
+
+.skill-lvl-btn:last-child {
+    border-right: none;
+}
+
+.skill-lvl-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+}
+
+.skill-lvl-btn.active {
+    background: var(--accent);
+    color: #000;
+    font-weight: bold;
+}
+
+.mastery-svg {
+    width: 14px;
+    height: 14px;
+}
+
+.mastery-svg polygon {
+    fill: rgba(255, 255, 255, 0.25);
+    transition: fill 0.15s;
+}
+
+/* Default state: white polygons based on M level */
+.skill-lvl-btn[data-level="M1"] .mastery-svg polygon.m1-on {
+    fill: #fff;
+}
+
+.skill-lvl-btn[data-level="M2"] .mastery-svg polygon.m1-on,
+.skill-lvl-btn[data-level="M2"] .mastery-svg polygon.m2-on {
+    fill: #fff;
+}
+
+.skill-lvl-btn[data-level="M3"] .mastery-svg polygon.m1-on,
+.skill-lvl-btn[data-level="M3"] .mastery-svg polygon.m2-on,
+.skill-lvl-btn[data-level="M3"] .mastery-svg polygon.m3-on {
+    fill: #fff;
+}
+
+/* Active state: background is accent (yellow), dark polygons become semi-transparent black */
+.skill-lvl-btn.active .mastery-svg polygon {
+    fill: rgba(0, 0, 0, 0.4);
+}
+
+.skill-lvl-btn.active[data-level="M1"] .mastery-svg polygon.m1-on {
+    fill: #fff;
+}
+
+.skill-lvl-btn.active[data-level="M2"] .mastery-svg polygon.m1-on,
+.skill-lvl-btn.active[data-level="M2"] .mastery-svg polygon.m2-on {
+    fill: #fff;
+}
+
+.skill-lvl-btn.active[data-level="M3"] .mastery-svg polygon.m1-on,
+.skill-lvl-btn.active[data-level="M3"] .mastery-svg polygon.m2-on,
+.skill-lvl-btn.active[data-level="M3"] .mastery-svg polygon.m3-on {
+    fill: #fff;
 }
 
 .cycle-sequence-display {

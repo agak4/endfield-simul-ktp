@@ -66,6 +66,7 @@ let state = {
         gears: [null, null, null, null],
         gearForged: [false, false, false, false],
         specialStack: {},
+        skillLevels: { '일반 공격': 'M3', '배틀 스킬': 'M3', '연계 스킬': 'M3', '궁극기': 'M3' },
     },
     subOps: [
         { id: null, pot: 0, wepId: null, wepPot: 0, wepState: false, equipSet: null },
@@ -233,6 +234,7 @@ function updateState() {
         wepId: state.mainOp.wepId, wepPot: state.mainOp.wepPot, wepState: state.mainOp.wepState,
         gears: state.mainOp.gears, gearForged: state.mainOp.gearForged, gearForge: state.mainOp.gearForge,
         specialStack: state.mainOp.specialStack,
+        skillLevels: state.mainOp.skillLevels,
         skillSequence: state.skillSequence || [],
     });
 
@@ -365,6 +367,9 @@ function loadState() {
     if (!state.effectStacks) state.effectStacks = {};
     if (typeof state.mainOp.specialStack !== 'object' || state.mainOp.specialStack === null) {
         state.mainOp.specialStack = {};
+    }
+    if (!state.mainOp.skillLevels) {
+        state.mainOp.skillLevels = { '일반 공격': 'M3', '배틀 스킬': 'M3', '연계 스킬': 'M3', '궁극기': 'M3' };
     }
     if (!state.usables) {
         state.usables = {

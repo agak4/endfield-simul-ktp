@@ -251,6 +251,8 @@ function initUI() {
         btn.onmouseleave = () => AppTooltip.hide();
     });
 
+    window.updateSkillLevelButtonsUI?.();
+
     document.getElementById('clear-cycle-btn')?.addEventListener('click', clearCycleItems);
 
     initCycleSortButton?.();
@@ -470,8 +472,85 @@ function applyStateToUI() {
 
     applyDebuffStateToUI();
     applySkillCountsToUI();
+    window.updateSkillLevelButtonsUI?.();
     updateState();
 }
+
+/**
+ * 스킬 레벨 버튼 UI 동기화 및 렌더링
+ */
+window.updateSkillLevelButtonsUI = function () {
+    document.querySelectorAll('.cycle-btn').forEach(btn => {
+        let type = btn.dataset.type;
+        if (!type) return;
+        let baseType = type.startsWith('강화 ') ? type.substring(3) : type;
+
+        let container = btn.querySelector('.skill-level-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.className = 'skill-level-container';
+            container.onclick = (e) => e.stopPropagation();
+
+            ['M0', 'M1', 'M2', 'M3'].forEach(lvl => {
+                const lvlBtn = document.createElement('button');
+                lvlBtn.className = 'skill-lvl-btn';
+                lvlBtn.dataset.level = lvl;
+                lvlBtn.innerHTML = `
+                    <svg viewBox="0 0 100 100" class="mastery-svg">
+                        <polygon class="m1-on" points="10,50 21,31 43,31 54,50 43,69 21,69" />
+                        <polygon class="m3-on" points="46,29 57,10 79,10 90,29 79,48 57,48" />
+                        <polygon class="m2-on" points="46,71 57,52 79,52 90,71 79,90 57,90" />
+                    </svg>
+                `;
+                lvlBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    if (!state.mainOp.skillLevels) {
+                        state.mainOp.skillLevels = { '일반 공격': 'M3', '배틀 스킬': 'M3', '연계 스킬': 'M3', '궁극기': 'M3' };
+                    }
+                    state.mainOp.skillLevels[baseType] = lvl;
+
+                    window.updateSkillLevelButtonsUI();
+                    updateState();
+
+                    // Refresh tooltip dynamically
+                    btn.dispatchEvent(new MouseEvent('mouseenter', {
+                        bubbles: false, cancelable: true, clientX: e.clientX, clientY: e.clientY
+                    }));
+                };
+
+                lvlBtn.onmouseenter = (e) => {
+                    e.stopPropagation();
+                    const opData = DATA_OPERATORS.find(o => o.id === state.mainOp.id);
+                    const skillDef = opData?.skill?.find(s => s?.skillType?.includes(type));
+                    if (skillDef) {
+                        const tooltipWidth = btn.classList.contains('cycle-btn-enhanced') ? '350px' : '260px';
+                        const content = AppTooltip.renderSkillTooltip(type, skillDef, opData, '', window.lastCalcResult?.activeEffects || [], state, lvl);
+                        AppTooltip.showCustom(content, e, { width: tooltipWidth });
+                    }
+                };
+
+                lvlBtn.onmouseleave = (e) => {
+                    e.stopPropagation();
+                    btn.dispatchEvent(new MouseEvent('mouseenter', {
+                        bubbles: false, cancelable: true, clientX: e.clientX, clientY: e.clientY
+                    }));
+                };
+                container.appendChild(lvlBtn);
+            });
+            btn.appendChild(container);
+        }
+
+        // update active state
+        let currentLevel = 'M3';
+        if (state.mainOp && state.mainOp.skillLevels && state.mainOp.skillLevels[baseType]) {
+            currentLevel = state.mainOp.skillLevels[baseType];
+        }
+
+        container.querySelectorAll('.skill-lvl-btn').forEach(b => {
+            b.classList.toggle('active', b.dataset.level === currentLevel);
+        });
+    });
+};
 
 /**
  * 메인 오퍼레이터 관련 UI를 state에서 복원한다.
@@ -632,6 +711,7 @@ function applyOpSettingsToUI(opId, type, subIdx) {
 
         updateUIStateVisuals?.();
         updateEnhancedSkillButtons?.(opId);
+        window.updateSkillLevelButtonsUI?.();
 
     } else {
         document.getElementById(`sub-${subIdx}-pot`).value = s?.pot || 0;
