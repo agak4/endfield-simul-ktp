@@ -23,7 +23,7 @@ const AppTooltip = {
     /** 텍스트 내 키워드 하이라이트 매핑 (CSS 클래스명) */
     HIGHLIGHTS: {
         '공격력': 'kw-special',
-        '물리 피해': 'kw-phys', '아츠 피해': 'kw-arts', '열기 피해': 'kw-heat', '전기 피해': 'kw-elec', '냉기 피해': 'kw-cryo', '자연 피해': 'kw-nature',
+        '모든 피해': 'kw-special', '물리 피해': 'kw-phys', '아츠 피해': 'kw-arts', '열기 피해': 'kw-heat', '전기 피해': 'kw-elec', '냉기 피해': 'kw-cryo', '자연 피해': 'kw-nature',
         '받는 물리 피해': 'kw-phys', '받는 아츠 피해': 'kw-arts', '받는 열기 피해': 'kw-heat', '받는 전기 피해': 'kw-elec', '받는 냉기 피해': 'kw-cryo', '받는 자연 피해': 'kw-nature',
         '물리 취약': 'kw-special', '아츠 취약': 'kw-special', '열기 취약': 'kw-heat', '전기 취약': 'kw-elec', '냉기 취약': 'kw-cryo', '자연 취약': 'kw-nature',
         '열기 부착': 'kw-heat', '전기 부착': 'kw-elec', '냉기 부착': 'kw-cryo', '자연 부착': 'kw-nature',
@@ -31,7 +31,7 @@ const AppTooltip = {
         '방어 불능': 'kw-phys', '강타': 'kw-phys', '띄우기': 'kw-phys', '넘어뜨리기': 'kw-phys', '강제 띄우기': 'kw-phys', '강제 넘어뜨리기': 'kw-phys', '갑옷 파괴': 'kw-phys', '오리지늄 결정': 'kw-phys',
         '쇄빙': 'kw-phys',
         '일반 공격': 'kw-special', '배틀 스킬': 'kw-special', '연계 스킬': 'kw-special', '궁극기': 'kw-special',
-        '불균형': 'kw-special', '치유': 'kw-nature', '보호': 'kw-nature', '비호': 'kw-nature', '연타': 'kw-special', '스킬 게이지': 'kw-special', '소모': 'kw-special', '궁극기 에너지': 'kw-special', '치명타 확률': 'kw-special', '치명타 피해': 'kw-special',
+        '불균형': 'kw-special', '치유': 'kw-nature', '보호': 'kw-nature', '비호': 'kw-nature', '연타': 'kw-special', '스킬 게이지': 'kw-special', '소모': 'kw-special', '궁극기 에너지': 'kw-special', '궁극기 충전 효율': 'kw-special', '치명타 확률': 'kw-special', '치명타 피해': 'kw-special',
         '녹아내린 불꽃': 'kw-heat', '썬더랜스': 'kw-elec', '강력한 썬더랜스': 'kw-elec',
         '아츠 폭발': 'kw-special',
         '재능': 'kw-desc', '잠재': 'kw-desc',
