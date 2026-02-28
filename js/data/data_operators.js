@@ -638,22 +638,22 @@ const DATA_OPERATORS = [
                     M0: {
                         dmg: '0%',
                         type: [
-                            { type: '냉기 증폭', val: '19.1%', scaling: { stat: 'int', ratio: '0.024%', max: '28.6%' }, target: '팀' },
-                            { type: '자연 증폭', val: '19.1%', scaling: { stat: 'int', ratio: '0.024%', max: '28.6%' }, target: '팀' }
+                            { type: '냉기 증폭', val: '19%', scaling: { stat: 'int', ratio: '0.024%', max: '30%' }, target: '팀' },
+                            { type: '자연 증폭', val: '19%', scaling: { stat: 'int', ratio: '0.024%', max: '30%' }, target: '팀' }
                         ]
                     },
                     M1: {
                         dmg: '0%',
                         type: [
-                            { type: '냉기 증폭', val: '20.9%', scaling: { stat: 'int', ratio: '0.026%', max: '31.4%' }, target: '팀' },
-                            { type: '자연 증폭', val: '20.9%', scaling: { stat: 'int', ratio: '0.026%', max: '31.4%' }, target: '팀' }
+                            { type: '냉기 증폭', val: '21%', scaling: { stat: 'int', ratio: '0.026%', max: '30%' }, target: '팀' },
+                            { type: '자연 증폭', val: '21%', scaling: { stat: 'int', ratio: '0.026%', max: '30%' }, target: '팀' }
                         ]
                     },
                     M2: {
                         dmg: '0%',
                         type: [
-                            { type: '냉기 증폭', val: '22.1%', scaling: { stat: 'int', ratio: '0.028%', max: '33.2%' }, target: '팀' },
-                            { type: '자연 증폭', val: '22.1%', scaling: { stat: 'int', ratio: '0.028%', max: '33.2%' }, target: '팀' }
+                            { type: '냉기 증폭', val: '22%', scaling: { stat: 'int', ratio: '0.028%', max: '30%' }, target: '팀' },
+                            { type: '자연 증폭', val: '22%', scaling: { stat: 'int', ratio: '0.028%', max: '30%' }, target: '팀' }
                         ]
                     },
                     M3: {
@@ -675,7 +675,27 @@ const DATA_OPERATORS = [
             [{ type: ['궁극기 에너지 감소'], val: '-10%', desc: '궁극기 스택 오버플로의 사용에 필요한 궁극기 에너지 -10%' }],
             [{ desc: '연계 스킬 스트레스 테스트가 목표에 명중했을 때, 주변의 다른 목표 하나에게 1회 튕깁니다.' }],
             [{ type: ['스탯'], stats: '지능', val: 15, desc: '지능 +15, 치유 효율 +10%' }],
-            [{ type: ['냉기 증폭'], val: '3.6%', target: '팀' }, { type: ['자연 증폭'], val: '3.6%', target: '팀', desc: '궁극기 스택 오버플로가 제공하는 증폭 효과가 기존의 1.1배로 증가합니다.' }]
+            [
+                {
+                    type: '냉기 증폭', masterySource: '궁극기', target: '팀',
+                    levels: {
+                        M0: { val: '1.9%', scaling: { stat: 'int', ratio: '0.0024%', max: '3%' } },
+                        M1: { val: '2.1%', scaling: { stat: 'int', ratio: '0.0026%', max: '3%' } },
+                        M2: { val: '2.2%', scaling: { stat: 'int', ratio: '0.0028%', max: '3%' } },
+                        M3: { val: '2.4%', scaling: { stat: 'int', ratio: '0.003%', max: '3.6%' } }
+                    }
+                },
+                {
+                    type: '자연 증폭', masterySource: '궁극기', target: '팀',
+                    levels: {
+                        M0: { val: '1.9%', scaling: { stat: 'int', ratio: '0.0024%', max: '3%' } },
+                        M1: { val: '2.1%', scaling: { stat: 'int', ratio: '0.0026%', max: '3%' } },
+                        M2: { val: '2.2%', scaling: { stat: 'int', ratio: '0.0028%', max: '3%' } },
+                        M3: { val: '2.4%', scaling: { stat: 'int', ratio: '0.003%', max: '3%' } }
+                    },
+                    desc: '궁극기 스택 오버플로가 제공하는 증폭 효과가 기존의 1.1배로 증가합니다.'
+                }
+            ]
         ]
     },
     {

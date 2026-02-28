@@ -230,6 +230,9 @@ function updateState() {
     const defenseEl = document.getElementById('enemy-defense');
     state.enemyDefense = defenseEl ? (parseInt(defenseEl.value || defenseEl.innerText) || 0) : 100;
 
+    // 장비/무기 등 변경되었을 수 있으므로 서브 오퍼레이터 캐시 초기화
+    state._subStatsCache = null;
+
     // 계산 → 렌더링
     const result = calculateDamage(state);
     if (typeof renderResult === 'function') renderResult(result);

@@ -86,7 +86,7 @@ function calcPerStackValue(perStack, base, stackCount) {
 
 // ============ 데미지 계산 엔진 ============
 
-function calculateDamage(currentState, forceMaxStack = false) {
+function calculateDamage(currentState, forceMaxStack = false, isStatCalcOnly = false) {
     const originalOpData = DATA_OPERATORS.find(o => o.id === currentState.mainOp.id);
     const wepData = DATA_WEAPONS.find(w => w.id === currentState.mainOp.wepId);
     if (!originalOpData || !wepData) return null;
@@ -106,6 +106,24 @@ function calculateDamage(currentState, forceMaxStack = false) {
     const stats = { ...opData.stats };
     const allEffects = [];
 
+    // 서브 오퍼레이터 스탯 사전 계산 (전체 데미지 연산 진입 시 1회만 수행)
+    if (!isStatCalcOnly && currentState.subOps) {
+        if (!currentState._subStatsCache) {
+            currentState._subStatsCache = {};
+            currentState.subOps.forEach(subOp => {
+                if (subOp.id && subOp.id !== currentState.mainOp.id) {
+                    const fakeState = { ...currentState, mainOp: subOp, subOps: [currentState.mainOp, ...currentState.subOps.filter(o => o.id !== subOp.id)], overrideSkillElement: null, _subStatsCache: {} };
+                    const res = calculateDamage(fakeState, false, true);
+                    if (res && res.stats) {
+                        currentState._subStatsCache[subOp.id] = res.stats;
+                        // 서브 오퍼레이터 객체 자체에도 캐싱 (디버깅 및 UI 편의성)
+                        subOp.cachedStats = res.stats;
+                    }
+                }
+            });
+        }
+    }
+
     collectAllEffects(currentState, opData, wepData, stats, allEffects, forceMaxStack);
 
     const activeEffects = allEffects.filter(e => {
@@ -117,6 +135,10 @@ function calculateDamage(currentState, forceMaxStack = false) {
     });
     applyFixedStats(activeEffects, stats);
     applyPercentStats(activeEffects, stats);
+
+    if (isStatCalcOnly) {
+        return { stats };
+    }
 
     return computeFinalDamageOutput(currentState, opData, wepData, stats, allEffects, activeEffects);
 }
@@ -350,13 +372,15 @@ function collectAllEffects(state, opData, wepData, stats, allEffects, forceMaxSt
 
                     const expanded = {
                         ...eff,
+                        ...typeItem,
                         type: typeItem.type,
                         val: currentVal,
                         target: typeItem.target || eff.target,
                         skillType: typeItem.skillType || eff.skillType || eff.skilltype,
                         _stackCount: typeItem._stackCount,
                         _isExternal: !isSkillSource || !!(typeItem.skillType),
-                        _triggerFailed: triggerFailed
+                        _triggerFailed: triggerFailed,
+                        _sourceOpId: effectiveOpData ? effectiveOpData.id : null
                     };
 
                     if (isSub && !isSubOpTargetValid(expanded)) return;
@@ -805,12 +829,11 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects, act
 
         if (!isApplicableEffect(opData, eff.type, eff.name)) return;
 
-        const val = resolveVal(eff.val, stats, eff.scaling) * (eff.forgeMult || 1.0);
+        const val = resolveVal(eff.val, stats, eff.scaling, eff._sourceOpId, state) * (eff.forgeMult || 1.0);
         const t = (eff.type || '').toString();
 
-        // [Fix] 표시용 수치 업데이트 (최종 계산값 반영 및 % 단위 강제)
         valDisplay = (val > 0 ? '+' : '') + val.toFixed(val % 1 === 0 ? 0 : 1);
-        if (t.includes('증폭') || t.includes('피해') || t.includes('확률') || t.includes('효율') || t.includes('감소') || t.includes('취약')) {
+        if (t.includes('증폭') || t.includes('피해') || t.includes('확률') || t.includes('효율') || t.includes('감소') || t.includes('취약') || t === '공격력 증가') {
             if (!valDisplay.endsWith('%')) valDisplay += '%';
         }
 
@@ -920,7 +943,7 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects, act
             if (eff.skillType) typeLabel += ` (<span class="tooltip-highlight">${eff.skillType.join(', ')}</span>)`;
             logs.crit.push({ txt: `[${displayName}] ${valDisplay}${eff.stack ? ` <span class="tooltip-highlight">(${eff._stackCount}중첩)</span>` : ''} (${typeLabel})`, uid: eff.uid, tag: 'skillCrit', skillType: eff.skillType, stack: eff.stack, stackCount: eff._stackCount, _triggerFailed: eff._triggerFailed, type: isRate ? 'rate' : 'dmg' });
         } else if (t === '스킬 배율 증가') {
-            const addVal = eff.dmg ? resolveVal(eff.dmg, stats, eff.dmgScaling || eff.scaling) * (eff.forgeMult || 1.0) : 0;
+            const addVal = eff.dmg ? resolveVal(eff.dmg, stats, eff.dmgScaling || eff.scaling, eff._sourceOpId, state) * (eff.forgeMult || 1.0) : 0;
             const addSkillMult = (st) => {
                 const cat = getCat(st);
                 if (!checkDisabled(cat)) {
@@ -1120,25 +1143,39 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects, act
 }
 
 // ---- 유틸리티 함수 ----
-function resolveVal(val, stats, scaling) {
+function resolveVal(val, stats, scaling, sourceOpId = null, state = null) {
     let result = (typeof val === 'number') ? val : (parseFloat(val) || 0);
 
+    let activeStats = stats;
+    // 제공자가 메인 오퍼레이터가 아닌 서브 오퍼레이터일 경우, 미리 계산된 캐시에서 스탯을 가져옵니다.
+    if (sourceOpId && state && state.mainOp && state.mainOp.id !== sourceOpId) {
+        if (state._subStatsCache && state._subStatsCache[sourceOpId]) {
+            activeStats = state._subStatsCache[sourceOpId];
+        } else {
+            // 캐시가 없는 경우 (예외 상황), 서브 오퍼레이터 객체의 캐시 확인 시도
+            const subOp = state.subOps?.find(o => o.id === sourceOpId);
+            if (subOp && subOp.cachedStats) {
+                activeStats = subOp.cachedStats;
+            }
+        }
+    }
+
     // [New] 데이터 기반 스탯 비례 처리 (scaling 객체)
-    if (scaling && stats) {
-        const sVal = stats[scaling.stat] || 0;
+    if (scaling && activeStats) {
+        const sVal = activeStats[scaling.stat] || 0;
         const ratio = (typeof scaling.ratio === 'string') ? parseFloat(scaling.ratio) : (scaling.ratio || 0);
         const max = (typeof scaling.max === 'string') ? parseFloat(scaling.max) : (scaling.max || 999999);
         const bonus = Math.min(max, sVal * ratio);
         result += bonus;
     }
 
-    if (typeof val === 'string' && stats) {
+    if (typeof val === 'string' && activeStats) {
         let statSum = 0;
         let foundStat = false;
 
         ['str', 'agi', 'int', 'wil'].forEach(k => {
             if (val.includes(STAT_NAME_MAP[k])) {
-                statSum += (stats[k] || 0);
+                statSum += (activeStats[k] || 0);
                 foundStat = true;
             }
         });
@@ -1723,7 +1760,7 @@ function calcSingleSkillDamage(type, state, res) {
             targets.forEach(tKey => {
                 const vVal = vulnMap[tKey] || 0;
                 if (vVal > 0) {
-                    const ampVal = vVal * (resolveVal(eff.val, res.stats) * (eff.forgeMult || 1.0));
+                    const ampVal = vVal * (resolveVal(eff.val, res.stats, null, eff._sourceOpId, state) * (eff.forgeMult || 1.0));
                     finalVuln += ampVal;
                     const label = (eff.type === '취약 증폭' ? '취약 증폭' : '냉기 취약 증폭') + ` (${tKey})`;
                     bonusList.push({ name: label, val: ampVal / 100 });
@@ -1854,7 +1891,7 @@ function calcSingleSkillDamage(type, state, res) {
             targets.forEach(tKey => {
                 const vVal = vulnMap[tKey] || 0;
                 if (vVal > 0) {
-                    const ampFactor = (1 + (resolveVal(eff.val, res.stats) * (eff.forgeMult || 1.0))).toFixed(1);
+                    const ampFactor = (1 + (resolveVal(eff.val, res.stats, null, eff._sourceOpId, state) * (eff.forgeMult || 1.0))).toFixed(1);
                     const displayName = (eff.name || '').replace(/(_t|_s)\d+$/g, '');
                     myLogs.vuln.push({ txt: `[${displayName}] *${ampFactor} (${tKey})`, uid: eff.uid });
                 }
