@@ -532,10 +532,13 @@ function collectAllEffects(state, opData, wepData, stats, allEffects, forceMaxSt
             subOpData.skill.forEach((s, i) => {
                 const skName = (s.skillType && Array.isArray(s.skillType)) ? s.skillType.join('/') : `스킬${i + 1}`;
 
-                // 서브 오퍼레이터는 현재 UI상 레벨 조절 불가하므로 M3 고정
+                // 서브 오프레이터는 M3 고정이 아닌 실제 설정된 레벨 사용
                 let skillDef = { ...s };
-                if (s.levels && s.levels['M3']) {
-                    Object.assign(skillDef, s.levels['M3']);
+                const skillNameForLvl = Array.isArray(s.skillType) ? s.skillType[0] : (s.skillType || '');
+                const baseType = s.masterySource || (skillNameForLvl.startsWith('강화 ') ? skillNameForLvl.substring(3) : skillNameForLvl);
+                const level = sub.skillLevels?.[baseType] || 'M3';
+                if (s.levels && s.levels[level]) {
+                    Object.assign(skillDef, s.levels[level]);
                 }
 
                 addEffect([skillDef], `${prefix} ${skName}`, 1.0, true, true, false, subOpData);
@@ -557,7 +560,9 @@ function collectAllEffects(state, opData, wepData, stats, allEffects, forceMaxSt
 
             const processedPot = merged.map(eff => {
                 if (eff.levels) {
-                    const level = 'M3';
+                    const skillNameForLvl = Array.isArray(eff.skillType) ? eff.skillType[0] : (eff.skillType || '');
+                    const baseType = eff.masterySource || (skillNameForLvl.startsWith('강화 ') ? skillNameForLvl.substring(3) : skillNameForLvl);
+                    const level = sub.skillLevels?.[baseType] || 'M3';
                     if (eff.levels[level]) {
                         return { ...eff, ...eff.levels[level] };
                     }

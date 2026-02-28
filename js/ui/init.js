@@ -711,6 +711,12 @@ function applyOpSettingsToUI(opId, type, subIdx) {
             : ['일반 공격', '배틀 스킬', '연계 스킬', '궁극기'].map((type, idx) =>
                 ({ id: `seq_def_${Date.now()}_${idx}`, type, customState: null }));
 
+        if (s?.skillLevels) {
+            state.mainOp.skillLevels = { ...s.skillLevels };
+        } else {
+            state.mainOp.skillLevels = { '일반 공격': 'M3', '배틀 스킬': 'M3', '연계 스킬': 'M3', '궁극기': 'M3' };
+        }
+
         state.mainOp.specialStack = s?.specialStack ? { ...s.specialStack } : {};
         state.selectedSeqId = null;
 
@@ -733,6 +739,12 @@ function applyOpSettingsToUI(opId, type, subIdx) {
         document.getElementById(`sub-${subIdx}-wep-pot`).value = s?.wepPot || 0;
         setupPotencyButtons(`sub-${subIdx}-wep-pot`, `sub-${subIdx}-wep-pot-group`);
         applyToggle(`sub-${subIdx}-wep-state`, `sub-${subIdx}-wep-toggle`, '기질', s?.wepState || false);
+
+        if (s?.skillLevels) {
+            state.subOps[subIdx].skillLevels = { ...s.skillLevels };
+        } else {
+            state.subOps[subIdx].skillLevels = { '일반 공격': 'M3', '배틀 스킬': 'M3', '연계 스킬': 'M3', '궁극기': 'M3' };
+        }
 
         const setSel = document.getElementById(`sub-${subIdx}-set`);
         if (setSel) setSel.value = s?.equipSet || '';

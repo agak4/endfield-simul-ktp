@@ -373,10 +373,19 @@ const AppTooltip = {
         op.skill?.forEach(s => {
             let skillDef = { ...s };
             let level = 'M3';
-            if (typeof state !== 'undefined' && state.mainOp && state.mainOp.id === op.id) {
-                const skillNameForLvl = Array.isArray(s.skillType) ? s.skillType[0] : (s.skillType || '');
-                const baseType = s.masterySource || (skillNameForLvl.startsWith('강화 ') ? skillNameForLvl.substring(3) : skillNameForLvl);
-                level = state.mainOp.skillLevels?.[baseType] || 'M3';
+            if (typeof state !== 'undefined') {
+                if (state.mainOp && state.mainOp.id === op.id) {
+                    const skillNameForLvl = Array.isArray(s.skillType) ? s.skillType[0] : (s.skillType || '');
+                    const baseType = s.masterySource || (skillNameForLvl.startsWith('강화 ') ? skillNameForLvl.substring(3) : skillNameForLvl);
+                    level = state.mainOp.skillLevels?.[baseType] || 'M3';
+                } else {
+                    const subMatch = state.subOps?.find(sub => sub.id === op.id);
+                    if (subMatch) {
+                        const skillNameForLvl = Array.isArray(s.skillType) ? s.skillType[0] : (s.skillType || '');
+                        const baseType = s.masterySource || (skillNameForLvl.startsWith('강화 ') ? skillNameForLvl.substring(3) : skillNameForLvl);
+                        level = subMatch.skillLevels?.[baseType] || 'M3';
+                    }
+                }
             }
             if (s.levels && s.levels[level]) {
                 Object.assign(skillDef, s.levels[level]);
@@ -729,7 +738,7 @@ const AppTooltip = {
                         ];
                         const triggerTxt = triggers.join(', ');
                         if (!extraEffects.some(ee => ee.includes(triggerTxt))) {
-                            extraEffects.push(`${triggerTxt} (보너스 발동)`);
+                            extraEffects.push(`${triggerTxt}`);
                         }
                     }
                 });

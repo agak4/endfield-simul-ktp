@@ -1022,10 +1022,10 @@ const DATA_OPERATORS = [
             {
                 skillType: ['연계 스킬'], element: 'cryo', desc: '적에게 냉기 부착 3스택 혹은 그 이상이 쌓였을 때 사용할 수 있습니다. 목표한 적에게 얼음송곳을 응결시킨 다음 산산이 조각냅니다. 목표에 쌓인 냉기 부착을 전부 소모하고, 대상에게 냉기 부착의 스택 수치에 따른 냉기 피해를 주며, 소모한 스택 수치에 따라 궁극기 에너지를 획득합니다.',
                 levels: {
-                    M0: { dmg: '128%', type: ['냉기 부착 소모'], bonus: [{ trigger: ['냉기 부착'], base: '128%', perStack: '192%' }] },
-                    M1: { dmg: '137%', type: ['냉기 부착 소모'], bonus: [{ trigger: ['냉기 부착'], base: '137%', perStack: '206%' }] },
-                    M2: { dmg: '147%', type: ['냉기 부착 소모'], bonus: [{ trigger: ['냉기 부착'], base: '147%', perStack: '222%' }] },
-                    M3: { dmg: '160%', type: ['냉기 부착 소모'], bonus: [{ trigger: ['냉기 부착'], base: '160%', perStack: '240%' }] }
+                    M0: { dmg: '128%', type: ['냉기 부착 소모'], bonus: [{ triggerTarget: ['냉기 부착'], base: '128%', perStack: '192%' }] },
+                    M1: { dmg: '137%', type: ['냉기 부착 소모'], bonus: [{ triggerTarget: ['냉기 부착'], base: '137%', perStack: '206%' }] },
+                    M2: { dmg: '147%', type: ['냉기 부착 소모'], bonus: [{ triggerTarget: ['냉기 부착'], base: '147%', perStack: '222%' }] },
+                    M3: { dmg: '160%', type: ['냉기 부착 소모'], bonus: [{ triggerTarget: ['냉기 부착'], base: '160%', perStack: '240%' }] }
                 }
             },
             {
@@ -1075,19 +1075,19 @@ const DATA_OPERATORS = [
             {
                 skillType: ['강화 일반 공격'], masterySource: '궁극기', element: 'cryo', desc: '7초 동안, 이본의 일반 공격이 강화되며 일반 공격을 할 때마다 자신의 치명타 확률이 3% 증가합니다(최대 10스택). 스택 수치가 최대로 쌓였을 경우, 자신의 치명타 피해가 60% 증가합니다. 지속 시간이 끝나기 전의 마지막 일반 공격은 강력한 일격으로 바뀌어 대량의 냉기 피해를 줍니다. 적이 동결 상태라면, 추가로 냉기 피해를 1회 준 후, 동결 상태를 소모합니다.',
                 levels: {
-                    M0: { dmg: '1440%', type: ['동결 소모'], bonus: [{ trigger: ['동결'], base: '480%', perStack: '0%' }] },
-                    M1: { dmg: '1546%', type: ['동결 소모'], bonus: [{ trigger: ['동결'], base: '514%', perStack: '0%' }] },
-                    M2: { dmg: '1663%', type: ['동결 소모'], bonus: [{ trigger: ['동결'], base: '554%', perStack: '0%' }] },
-                    M3: { dmg: '1800%', type: ['동결 소모'], bonus: [{ trigger: ['동결'], base: '600%', perStack: '0%' }] } // 75타
+                    M0: { dmg: '1440%', type: ['동결 소모'], bonus: [{ triggerTarget: ['동결'], base: '480%', perStack: '0%' }] },
+                    M1: { dmg: '1546%', type: ['동결 소모'], bonus: [{ triggerTarget: ['동결'], base: '514%', perStack: '0%' }] },
+                    M2: { dmg: '1663%', type: ['동결 소모'], bonus: [{ triggerTarget: ['동결'], base: '554%', perStack: '0%' }] },
+                    M3: { dmg: '1800%', type: ['동결 소모'], bonus: [{ triggerTarget: ['동결'], base: '600%', perStack: '0%' }] } // 75타
                 }
             },
             {
                 skillType: ['배틀 스킬'], element: 'cryo', desc: '전방을 향해 냉각탄을 발사합니다. 냉각탄은 적에게 명중된 다음 폭발하며 냉기 피해를 줍니다. 냉기 부착 혹은 자연 부착 상태의 적에게 명중했을 때, 목표가 보유한 모든 아츠 부착을 소모하고, 대상에게 강제로 동결을 부여하며 소모한 스택 수치에 따라 냉기 피해를 줍니다. 배틀 스킬로 적에게 동결 상태를 부여한 후, 소모한 스택 수치에 따라 추가로 궁극기 에너지를 획득하며 여러 목표를 명중했을 경우 1회만 획득합니다.',
                 levels: {
-                    M0: { dmg: '200%', type: ['냉기 부착 소모', '자연 부착 소모', '동결 부여'], target: '적', bonus: [{ trigger: ['냉기 부착', '자연 부착'], base: '120%', perStack: '160%' }] },
-                    M1: { dmg: '214%', type: ['냉기 부착 소모', '자연 부착 소모', '동결 부여'], target: '적', bonus: [{ trigger: ['냉기 부착', '자연 부착'], base: '128%', perStack: '171%' }] },
-                    M2: { dmg: '230%', type: ['냉기 부착 소모', '자연 부착 소모', '동결 부여'], target: '적', bonus: [{ trigger: ['냉기 부착', '자연 부착'], base: '138%', perStack: '185%' }] },
-                    M3: { dmg: '250%', type: ['냉기 부착 소모', '자연 부착 소모', '동결 부여'], target: '적', bonus: [{ trigger: ['냉기 부착', '자연 부착'], base: '150%', perStack: '200%' }] }
+                    M0: { dmg: '200%', type: ['냉기 부착 소모', '자연 부착 소모', '동결 부여'], target: '적', bonus: [{ triggerTarget: ['냉기 부착', '자연 부착'], base: '120%', perStack: '160%' }] },
+                    M1: { dmg: '214%', type: ['냉기 부착 소모', '자연 부착 소모', '동결 부여'], target: '적', bonus: [{ triggerTarget: ['냉기 부착', '자연 부착'], base: '128%', perStack: '171%' }] },
+                    M2: { dmg: '230%', type: ['냉기 부착 소모', '자연 부착 소모', '동결 부여'], target: '적', bonus: [{ triggerTarget: ['냉기 부착', '자연 부착'], base: '138%', perStack: '185%' }] },
+                    M3: { dmg: '250%', type: ['냉기 부착 소모', '자연 부착 소모', '동결 부여'], target: '적', bonus: [{ triggerTarget: ['냉기 부착', '자연 부착'], base: '150%', perStack: '200%' }] }
                 }
             },
             {
@@ -1120,8 +1120,8 @@ const DATA_OPERATORS = [
                 desc: '연계 스킬 꽁꽁이 · υ37의 적용 범위 +20%, 추가로 에너지를 2회 더 방출하고, 피해를 준 후 추가로 15포인트의 궁극기 에너지를 획득합니다.',
                 levels: {
                     M0: { dmg: '160%' },
-                    M1: { dmg: '165%' },
-                    M2: { dmg: '185%' },
+                    M1: { dmg: '172%' },
+                    M2: { dmg: '186%' },
                     M3: { dmg: '200%' }
                 }
             }],
@@ -1151,36 +1151,36 @@ const DATA_OPERATORS = [
             {
                 skillType: ['일반 공격'], element: 'phys', desc: '적에게 최대 5단 공격을 하여 물리 피해를 줍니다.',
                 levels: {
-                    M0: { dmg: '312%' },
-                    M1: { dmg: '312%' },
-                    M2: { dmg: '312%' },
+                    M0: { dmg: '250%' },
+                    M1: { dmg: '266%' },
+                    M2: { dmg: '288%' },
                     M3: { dmg: '312%' }
                 }
             },
             {
                 skillType: ['배틀 스킬'], element: 'elec', desc: '점프하여 창을 휘둘러 회오리바람을 일으킵니다. 주변의 적에게 소량의 전기 피해를 주며, 모든 썬더랜스와 강력한 썬더랜스를 회수합니다. 썬더랜스가 회수되는 과정에서 적을 공격할 경우, 대상에게 전기 피해를 줍니다. 강력한 썬더랜스는 더욱 큰 전기 피해를 주고 전기 부착 상태를 부여합니다.',
                 levels: {
-                    M0: { dmg: '150%', type: ['전기 부착'], target: '적', bonus: [{ trigger: ['썬더랜스'], base: '0%', perStack: '168%' }, { trigger: ['강력한 썬더랜스'], base: '0%', perStack: '432%' }] },
-                    M1: { dmg: '150%', type: ['전기 부착'], target: '적', bonus: [{ trigger: ['썬더랜스'], base: '0%', perStack: '168%' }, { trigger: ['강력한 썬더랜스'], base: '0%', perStack: '432%' }] },
-                    M2: { dmg: '150%', type: ['전기 부착'], target: '적', bonus: [{ trigger: ['썬더랜스'], base: '0%', perStack: '168%' }, { trigger: ['강력한 썬더랜스'], base: '0%', perStack: '432%' }] },
-                    M3: { dmg: '150%', type: ['전기 부착'], target: '적', bonus: [{ trigger: ['썬더랜스'], base: '0%', perStack: '168%' }, { trigger: ['강력한 썬더랜스'], base: '0%', perStack: '432%' }] }
+                    M0: { dmg: '120%', type: ['전기 부착'], target: '적', bonus: [{ triggerTarget: ['썬더랜스'], base: '0%', perStack: '134%' }, { triggerTarget: ['강력한 썬더랜스'], base: '0%', perStack: '346%' }] },
+                    M1: { dmg: '128%', type: ['전기 부착'], target: '적', bonus: [{ triggerTarget: ['썬더랜스'], base: '0%', perStack: '144%' }, { triggerTarget: ['강력한 썬더랜스'], base: '0%', perStack: '370%' }] },
+                    M2: { dmg: '138%', type: ['전기 부착'], target: '적', bonus: [{ triggerTarget: ['썬더랜스'], base: '0%', perStack: '155%' }, { triggerTarget: ['강력한 썬더랜스'], base: '0%', perStack: '398%' }] },
+                    M3: { dmg: '150%', type: ['전기 부착'], target: '적', bonus: [{ triggerTarget: ['썬더랜스'], base: '0%', perStack: '168%' }, { triggerTarget: ['강력한 썬더랜스'], base: '0%', perStack: '432%' }] }
                 }
             },
             {
                 skillType: ['연계 스킬'], element: 'elec', desc: '메인 컨트롤 오퍼레이터가 전기 부착 혹은 감전 상태의 목표에 강력한 일격을 준 후 사용할 수 있습니다. 점프하여 목표에 30초간 존재하는 썬더랜스 3개를 던져, 전방 범위 내의 적에게 전기 피해를 줍니다.',
                 levels: {
-                    M0: { dmg: '380%' },
-                    M1: { dmg: '380%' },
-                    M2: { dmg: '380%' },
+                    M0: { dmg: '304%' },
+                    M1: { dmg: '325%' },
+                    M2: { dmg: '350%' },
                     M3: { dmg: '380%' }
                 }
             },
             {
                 skillType: ['궁극기'], element: 'elec', cost: 100, desc: '목표 구역에 30초간 존재하는 강력한 썬더랜스 하나를 투척하여 주변의 적에게 대량의 전기 피해를 줍니다.',
                 levels: {
-                    M0: { dmg: '950%' },
-                    M1: { dmg: '950%' },
-                    M2: { dmg: '950%' },
+                    M0: { dmg: '760%' },
+                    M1: { dmg: '813%' },
+                    M2: { dmg: '876%' },
                     M3: { dmg: '950%' }
                 }
             }
@@ -1213,42 +1213,42 @@ const DATA_OPERATORS = [
             {
                 skillType: ['일반 공격'], element: 'phys', desc: '적에게 최대 4단 공격을 하여 물리 피해를 줍니다.',
                 levels: {
-                    M0: { dmg: '387%' },
-                    M1: { dmg: '387%' },
-                    M2: { dmg: '387%' },
+                    M0: { dmg: '310%' },
+                    M1: { dmg: '331%' },
+                    M2: { dmg: '357%' },
                     M3: { dmg: '387%' }
                 }
             },
             {
                 skillType: ['배틀 스킬'], element: 'phys', desc: '웍을 꺼내 짧게 차지한 다음 힘껏 위로 던집니다. 적에게 물리 피해를 주고 띄우기 상태로 만듭니다.',
                 levels: {
-                    M0: { dmg: '300%', type: ['띄우기'], target: '적' },
-                    M1: { dmg: '300%', type: ['띄우기'], target: '적' },
-                    M2: { dmg: '300%', type: ['띄우기'], target: '적' },
+                    M0: { dmg: '240%', type: ['띄우기'], target: '적' },
+                    M1: { dmg: '256%', type: ['띄우기'], target: '적' },
+                    M2: { dmg: '276%', type: ['띄우기'], target: '적' },
                     M3: { dmg: '300%', type: ['띄우기'], target: '적' }
                 }
             },
             {
                 skillType: ['연계 스킬'], element: 'phys', desc: '방어 불능 4스택 중첩 상태인 적이 있을 때 사용할 수 있습니다. 웍을 휘둘러 적에게 대량의 물리 피해를 주고 강타합니다. 이번 강타로 주는 피해는 조금 더 강합니다.',
                 levels: {
-                    M0: { dmg: '650%', type: ['강타'], target: '적' },
-                    M1: { dmg: '650%', type: ['강타'], target: '적' },
-                    M2: { dmg: '650%', type: ['강타'], target: '적' },
+                    M0: { dmg: '520%', type: ['강타'], target: '적' },
+                    M1: { dmg: '556%', type: ['강타'], target: '적' },
+                    M2: { dmg: '599%', type: ['강타'], target: '적' },
                     M3: { dmg: '650%', type: ['강타'], target: '적' }
                 }
             },
             {
                 skillType: ['궁극기'], element: 'phys', cost: 90, desc: '도마를 강하게 내리쳐, 전방 범위 내의 적을 강제 띄우기 상태로 만듭니다. 이어서 연속 6단 베기 공격을 사용하여 물리 피해를 주며, 마지막에 모든 적을 추락시켜 강제 넘어뜨리기 상태로 만들고, 대량의 물리 피해를 줍니다.',
                 levels: {
-                    M0: { dmg: '700%', type: [{ type: '강제 띄우기', target: '적' }, { type: '강제 넘어뜨리기', target: '적' }] },
-                    M1: { dmg: '700%', type: [{ type: '강제 띄우기', target: '적' }, { type: '강제 넘어뜨리기', target: '적' }] },
-                    M2: { dmg: '700%', type: [{ type: '강제 띄우기', target: '적' }, { type: '강제 넘어뜨리기', target: '적' }] },
+                    M0: { dmg: '560%', type: [{ type: '강제 띄우기', target: '적' }, { type: '강제 넘어뜨리기', target: '적' }] },
+                    M1: { dmg: '594%', type: [{ type: '강제 띄우기', target: '적' }, { type: '강제 넘어뜨리기', target: '적' }] },
+                    M2: { dmg: '645%', type: [{ type: '강제 띄우기', target: '적' }, { type: '강제 넘어뜨리기', target: '적' }] },
                     M3: { dmg: '700%', type: [{ type: '강제 띄우기', target: '적' }, { type: '강제 넘어뜨리기', target: '적' }] }
                 }
             }
         ],
         talents: [
-            [{ type: ['물리 피해'], val: '64%', desc: '매번 방어 불능 1스택을 소모한 후, 주는 물리 피해 +6%, 10초 동안 지속. 해당 효과는 최대 4스택까지 중첩됩니다.', stack: 4 }],
+            [{ type: ['물리 피해'], val: '6%', desc: '매번 방어 불능 1스택을 소모한 후, 주는 물리 피해 +6%, 10초 동안 지속. 해당 효과는 최대 4스택까지 중첩됩니다.', stack: 4 }],
             [{ desc: '궁극기 채 썰어 웍에 넣기!의 마지막 공격이 적을 명중할 때마다 식재료 준비 상태 1스택을 획득합니다. 20초 동안 지속되며, 최대 2스택까지 중첩할 수 있습니다. 식재료 준비 상태일 때 연계 스킬이 적을 명중하면 쿨타임을 즉시 40% 회복하고 식재료 준비 상태 1스택을 소모합니다.' }]
         ],
         potential: [
