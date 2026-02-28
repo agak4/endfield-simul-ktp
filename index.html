@@ -600,8 +600,8 @@
                     </div>
                 </div>
             </div>
-            <!-- 이전 횟수 입력 타일 자리 (삭제됨) -->
             <div class="dashboard-grid">
+                <!-- 공격력 -->
                 <div class="tile" data-tile-id="atk">
                     <h4>공격력</h4>
                     <div class="tile-main-stat-row">
@@ -631,6 +631,20 @@
                     </div>
                     <ul id="list-atk" class="detail-list"></ul>
                 </div>
+                <!-- 주는 피해 -->
+                <div class="result-box dmg-inc-box" id="dmg-inc-box" data-tile-id="dmg-inc" data-full-row="true">
+                    <h4>주는 피해</h4>
+                    <div id="dmg-inc-stats-top" class="dmg-inc-stats-row">
+                    </div>
+                    <div id="dmg-inc-list-top" class="dmg-inc-container dmg-inc-list-row">
+                    </div>
+                    <div class="dmg-inc-divider"></div>
+                    <div id="dmg-inc-stats-bottom" class="dmg-inc-stats-row">
+                    </div>
+                    <div id="dmg-inc-list-bottom" class="dmg-inc-container dmg-inc-list-row">
+                    </div>
+                </div>
+                <!-- 치명타 기대값 -->
                 <div class="tile" data-tile-id="crit">
                     <h4>치명타 기대값</h4>
                     <div class="tile-main-stat-row">
@@ -648,61 +662,22 @@
                     </div>
                     <ul id="list-crit" class="detail-list"></ul>
                 </div>
-                <!-- 주는 피해 (7분할, 2층) -->
-                <div class="result-box dmg-inc-box" id="dmg-inc-box" data-tile-id="dmg-inc" data-full-row="true">
-                    <h4>주는 피해</h4>
-                    <!-- 상단 행: 주는피해 + 속성1 + 속성2 -->
-                    <div id="dmg-inc-stats-top" class="dmg-inc-stats-row">
-                        <!-- JS로 생성 -->
-                    </div>
-                    <div id="dmg-inc-list-top" class="dmg-inc-container dmg-inc-list-row">
-                        <!-- JS로 생성: deal/elem1/elem2 컬럼 -->
-                    </div>
-                    <div class="dmg-inc-divider"></div>
-                    <!-- 하단 행: 일반공격 + 배틀스킬 + 연계스킬 + 궁극기 -->
-                    <div id="dmg-inc-stats-bottom" class="dmg-inc-stats-row">
-                        <!-- JS로 생성 -->
-                    </div>
-                    <div id="dmg-inc-list-bottom" class="dmg-inc-container dmg-inc-list-row">
-                        <!-- JS로 생성: normal/battle/combo/ult 컬럼 -->
-                    </div>
-                </div>
+                <!-- 증폭 -->
                 <div class="result-box dmg-inc-box" id="amp-box" data-tile-id="amp">
                     <h4>증폭</h4>
                     <div id="amp-container" class="dmg-inc-container"></div>
                 </div>
+                <!-- 적이 받는 피해 -->
                 <div class="result-box dmg-inc-box" id="taken-box" data-tile-id="taken">
                     <h4>적이 받는 피해</h4>
                     <div id="taken-container" class="dmg-inc-container"></div>
                 </div>
+                <!-- 취약 -->
                 <div class="result-box dmg-inc-box" id="vuln-box" data-tile-id="vuln">
                     <h4>취약</h4>
                     <div id="vuln-container" class="dmg-inc-container"></div>
                 </div>
-                <div class="tile" data-tile-id="unbal">
-                    <div class="tile-header-row">
-                        <h4>불균형 피해</h4>
-                        <div class="tile-ctrl-group">
-                            <input type="checkbox" id="enemy-unbalanced" class="hidden-checkbox">
-                            <button id="enemy-unbalanced-toggle" class="toggle-btn enemy-toggle-btn">OFF</button>
-                        </div>
-                    </div>
-                    <span id="stat-unbal">0%</span>
-                    <ul id="list-unbal" class="detail-list"></ul>
-                </div>
-                <div class="tile" data-tile-id="ult-recharge">
-                    <h4>궁극기 충전 효율</h4>
-                    <div class="tile-main-stat-row">
-                        <span id="stat-ult-recharge">0%</span>
-                        <div class="tile-sub-stats">
-                            <div class="sub-stat-item">
-                                <label>필요 궁극기 게이지</label>
-                                <span id="stat-ult-cost">0</span>
-                            </div>
-                        </div>
-                    </div>
-                    <ul id="list-ult-recharge" class="detail-list"></ul>
-                </div>
+                <!-- 오리지늄 아츠 강도 -->
                 <div class="tile" data-tile-id="arts">
                     <h4>오리지늄 아츠 강도</h4>
                     <div class="tile-main-stat-row">
@@ -710,28 +685,18 @@
                         <div class="tile-sub-stats">
                             <div class="sub-stat-item">
                                 <label>이상/폭발 피해</label>
-                                <span id="stat-arts-bonus">+0%</span>
+                                <span id="stat-arts-bonus">0%</span>
                             </div>
                         </div>
                     </div>
                     <ul id="list-arts" class="detail-list"></ul>
                 </div>
+                <!-- 레벨 계수 -->
                 <div class="result-box dmg-inc-box" id="lv-coeff-box" data-tile-id="lv-coeff">
                     <h4>레벨 계수</h4>
                     <div id="lv-coeff-container" class="dmg-inc-container"></div>
                 </div>
-                <div class="tile" data-tile-id="def">
-                    <h4>적 방어력</h4>
-                    <div class="tile-main-stat-row">
-                        <span id="enemy-defense">100</span>
-                        <div class="tile-sub-stats">
-                            <div class="sub-stat-item">
-                                <label>피해 감소</label>
-                                <span id="stat-def-red">0%</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <!-- 적의 저항 -->
                 <div class="tile" data-tile-id="res">
                     <h4>적의 저항</h4>
                     <div class="tile-main-stat-row">
@@ -750,6 +715,45 @@
                         </div>
                     </div>
                     <ul id="list-res" class="detail-list"></ul>
+                </div>
+                <!-- 불균형 피해 -->
+                <div class="tile" data-tile-id="unbal">
+                    <div class="tile-header-row">
+                        <h4>불균형 피해</h4>
+                        <div class="tile-ctrl-group">
+                            <input type="checkbox" id="enemy-unbalanced" class="hidden-checkbox">
+                            <button id="enemy-unbalanced-toggle" class="toggle-btn enemy-toggle-btn">OFF</button>
+                        </div>
+                    </div>
+                    <span id="stat-unbal">0%</span>
+                    <ul id="list-unbal" class="detail-list"></ul>
+                </div>
+                <!-- 궁극기 충전 효율 -->
+                <div class="tile" data-tile-id="ult-recharge">
+                    <h4>궁극기 충전 효율</h4>
+                    <div class="tile-main-stat-row">
+                        <span id="stat-ult-recharge">0%</span>
+                        <div class="tile-sub-stats">
+                            <div class="sub-stat-item">
+                                <label>필요 궁극기 게이지</label>
+                                <span id="stat-ult-cost">0</span>
+                            </div>
+                        </div>
+                    </div>
+                    <ul id="list-ult-recharge" class="detail-list"></ul>
+                </div>
+                <!-- 적 방어력 -->
+                <div class="tile" data-tile-id="def">
+                    <h4>적 방어력</h4>
+                    <div class="tile-main-stat-row">
+                        <span id="enemy-defense">100</span>
+                        <div class="tile-sub-stats">
+                            <div class="sub-stat-item">
+                                <label>피해 감소</label>
+                                <span id="stat-def-red">0%</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>

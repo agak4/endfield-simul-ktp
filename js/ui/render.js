@@ -192,7 +192,7 @@ function renderResult(res) {
         'stat-ult-recharge': (displayRes.stats.ultRecharge || 0).toFixed(1) + '%',
         'stat-ult-cost': Math.ceil(displayRes.stats.finalUltCost || 0),
         'stat-arts': displayRes.stats.originiumArts.toFixed(0),
-        'stat-arts-bonus': '+' + displayRes.stats.originiumArts.toFixed(1) + '%',
+        'stat-arts-bonus': displayRes.stats.originiumArts.toFixed(1) + '%',
         'stat-res': (displayRes.stats.resistance ?? 0).toFixed(0),
         'stat-res-mult': (((displayRes.stats.resMult ?? 1) - 1) * 100).toFixed(1) + '%',
         'stat-def-red': ((1 - (displayRes.stats.defMult ?? 1)) * 100).toFixed(1) + '%'

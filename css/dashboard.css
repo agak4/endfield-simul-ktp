@@ -503,10 +503,9 @@
     color: var(--accent);
 }
 
-/* tile h4 and dmg-inc-box h4 unified */
 .tile h4,
 .dmg-inc-box h4 {
-    font-size: 0.8rem;
+    font-size: 1rem;
     margin-bottom: 10px;
     color: var(--text-muted);
     letter-spacing: 0.3px;
@@ -587,7 +586,7 @@ h4.has-drag-handle {
 }
 
 .sub-stat-item span {
-    font-size: 0.95rem;
+    font-size: 1rem;
     font-weight: 600;
     color: var(--text-primary);
 }
@@ -1104,7 +1103,7 @@ h4.has-drag-handle {
 }
 
 .dmg-inc-col-header label {
-    font-size: 0.75rem;
+    font-size: 0.9rem;
     color: var(--text-muted);
     text-align: center;
 }
