@@ -393,6 +393,7 @@ function updateUIStateVisuals() {
         let val = 0;
         if (el.dataset.attachType) {
             val = (ds.artsAttach?.type === el.dataset.attachType) ? (ds.artsAttach?.stacks || 0) : 0;
+            el.classList.toggle('attach-disabled', ds.artsAttach?.type !== null && ds.artsAttach?.type !== el.dataset.attachType);
         } else if (el.dataset.abnormalType) {
             val = ds.artsAbnormal?.[el.dataset.abnormalType] || 0;
         } else if (el.dataset.debuff) {

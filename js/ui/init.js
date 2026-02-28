@@ -718,6 +718,8 @@ function applyOpSettingsToUI(opId, type, subIdx) {
         }
 
         state.mainOp.specialStack = s?.specialStack ? { ...s.specialStack } : {};
+        state.debuffState = s?.debuffState ? migrateDebuffState(s.debuffState) : DEFAULT_DEBUFF_STATE();
+        state.usables = s?.usables ? { ...s.usables } : DEFAULT_USABLES();
         state.selectedSeqId = null;
 
         updateUIStateVisuals?.();

@@ -43,6 +43,14 @@ const DEFAULT_DEBUFF_STATE = () => ({
     artsAbnormal: { '연소': 0, '감전': 0, '동결': 0, '부식': 0 },
 });
 
+const DEFAULT_USABLES = () => ({
+    '혼란의 약제': false,
+    '아츠가 부여된 금속 병': false,
+    '제이콥의 유산': false,
+    '푹 삶은 갈비 미삼탕': false,
+    '원기 회복 탕약': false
+});
+
 // ============================================================
 // 전역 상태
 // ============================================================
@@ -97,13 +105,7 @@ let state = {
      * 사용 아이템 활성화 상태
      * - 혼란의 약제, 아츠가 부여된 금속 병, 제이콥의 유산, 푹 삶은 갈비 미삼탕, 원기 회복 탕약
      */
-    usables: {
-        '혼란의 약제': false,
-        '아츠가 부여된 금속 병': false,
-        '제이콥의 유산': false,
-        '푹 삶은 갈비 미삼탕': false,
-        '원기 회복 탕약': false
-    },
+    usables: DEFAULT_USABLES(),
 
     selectedSeqId: null, // 현재 선택된 사이클 아이템의 id
     skillSequence: [],   // { id: 'seq_...', type: '일반 공격', customState: null | {...} }
@@ -236,6 +238,8 @@ function updateState() {
         specialStack: state.mainOp.specialStack,
         skillLevels: state.mainOp.skillLevels,
         skillSequence: state.skillSequence || [],
+        debuffState: state.debuffState,
+        usables: state.usables,
     });
 
     // 무기별 설정 자동 저장 (메인만)
@@ -384,13 +388,7 @@ function loadState() {
         }
     });
     if (!state.usables) {
-        state.usables = {
-            '혼란의 약제': false,
-            '아츠가 부여된 금속 병': false,
-            '제이콥의 유산': false,
-            '푹 삶은 갈비 미삼탕': false,
-            '원기 회복 탕약': false
-        };
+        state.usables = DEFAULT_USABLES();
     }
 
     // enemyDefense는 저장값을 무시하고 항상 기본값(100)으로 초기화한다.
