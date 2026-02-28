@@ -144,6 +144,7 @@
 
 .cycle-btn span {
     font-size: 0.85rem;
+    margin-bottom: 10px;
 }
 
 .skill-level-container {
@@ -240,6 +241,7 @@
 .skill-lvl-btn.active[data-level="M3"] .m3-on {
     fill: rgba(255, 255, 255, 0.7);
 }
+
 
 .cycle-sequence-display {
     display: flex;

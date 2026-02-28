@@ -1591,7 +1591,8 @@ function calcSingleSkillDamage(type, state, res) {
                     stackCount: currentStacks,
                     isArts: true,
                     element: (artsName === '아츠 폭발') ? (currentBase === '열기' ? 'heat' : (currentBase === '전기' ? 'elec' : (currentBase === '냉기' ? 'cryo' : (currentBase === '자연' ? 'nature' : null)))) : null,
-                    originalType: typeName
+                    originalType: typeName,
+                    uiHidden: !!isForcedAbnormal && artsMult === 0
                 });
                 abnormalMultTotal += artsMult;
             }
@@ -1600,9 +1601,10 @@ function calcSingleSkillDamage(type, state, res) {
 
     // 스킬 관련 로그/기록용 최종 배율 (UI용)
     let abnormalDesc = '';
-    if (abnormalList.length > 0) {
+    const visibleAbnormals = abnormalList.filter(a => !a.uiHidden);
+    if (visibleAbnormals.length > 0) {
         const artsStrengthMult = 1 + (originiumArts / 100);
-        const descParts = abnormalList.map(a => {
+        const descParts = visibleAbnormals.map(a => {
             const boostedMult = a.mult * artsStrengthMult;
             return `${a.name} +${(boostedMult * 100).toFixed(0)}%`;
         });
@@ -1865,7 +1867,7 @@ function calcSingleSkillDamage(type, state, res) {
         baseRate: dmgMult - bonusList.reduce((acc, b) => acc + b.val, 0),
         bonusList,
         abnormalList,
-        abnormalInfo: abnormalList.length > 0 ? abnormalList : undefined,
+        abnormalInfo: visibleAbnormals.length > 0 ? visibleAbnormals : undefined,
         activeEffects: res.activeEffects
     };
 }
@@ -2044,11 +2046,11 @@ function calculateCycleDamage(currentState, baseRes, forceMaxStack = false) {
         let skillTotal = skillData.unitDmg || 0;
 
         // 발동형 추가 피해(Proc) 처리
-        if (skillData.abnormalInfo && procEffects.length > 0) {
+        if (skillData.abnormalList && procEffects.length > 0) {
             procEffects.forEach(pe => {
-                // 발동 조건(trigger) 중 하나라도 스킬의 상태 이상(abnormalInfo)에 포함되어 있는지 확인
+                // 발동 조건(trigger) 중 하나라도 스킬의 상태 이상(abnormalList)에 포함되어 있는지 확인
                 const isTriggerMet = pe.trigger.some(t =>
-                    skillData.abnormalInfo.some(a => {
+                    skillData.abnormalList.some(a => {
                         // 1. 기본 이름 매칭 (예: '강타')
                         if (a.name === t) return true;
                         // 2. 물리 이상 강제 이름 매칭
@@ -2107,16 +2109,16 @@ function calculateCycleDamage(currentState, baseRes, forceMaxStack = false) {
 
         if (skillData.abnormalDmgs) {
             Object.entries(skillData.abnormalDmgs).forEach(([aName, aDmg]) => {
+                const info = skillData.abnormalList ? skillData.abnormalList.find(a => a.name === aName) : null;
+                if (info && info.uiHidden) return;
+
                 if (!perAbnormal[aName]) perAbnormal[aName] = { dmg: 0, count: 0, elements: [] };
                 perAbnormal[aName].dmg += aDmg;
                 perAbnormal[aName].count += 1;
 
                 // 해당 이상 상태의 속성 정보 수집 (아츠 폭발 등 동적 속성 대응)
-                if (skillData.abnormalList) {
-                    const info = skillData.abnormalList.find(a => a.name === aName);
-                    if (info && info.element && !perAbnormal[aName].elements.includes(info.element)) {
-                        perAbnormal[aName].elements.push(info.element);
-                    }
+                if (info && info.element && !perAbnormal[aName].elements.includes(info.element)) {
+                    perAbnormal[aName].elements.push(info.element);
                 }
             });
         }
