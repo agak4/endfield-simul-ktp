@@ -77,7 +77,7 @@
                     </div>
                 </div>
             </div>
-            <!-- 장비 슬롯 (Flex Layout) -->
+            <!-- 장비 슬롯 -->
             <div id="main-gear-slots" class="gear-flex-row">
                 <div class="gear-slot" data-slot="gloves">
                     <div class="gear-image-container op-image-container"
@@ -131,7 +131,7 @@
                 <h2>서브 오퍼레이터</h2>
             </div>
             <div id="sub-ops-container">
-                <!-- Sub Op 1~3은 JS로 제어되나 HTML 구조는 유지 -->
+                <!-- Sub Op 1 -->
                 <div class="sub-op-card" id="sub-op-card-0">
                     <div class="sub-op-header" onclick="toggleSubOp(0)">
                         <span>서브 오퍼레이터 1</span>
@@ -188,7 +188,7 @@
                         </div>
                     </div>
                 </div>
-                <!-- Sub Op 2 (생략된 구조 복구) -->
+                <!-- Sub Op 2 -->
                 <div class="sub-op-card" id="sub-op-card-1">
                     <div class="sub-op-header" onclick="toggleSubOp(1)">
                         <span>서브 오퍼레이터 2</span>
@@ -245,7 +245,7 @@
                         </div>
                     </div>
                 </div>
-                <!-- Sub Op 3 (생략된 구조 복구) -->
+                <!-- Sub Op 3 -->
                 <div class="sub-op-card" id="sub-op-card-2">
                     <div class="sub-op-header" onclick="toggleSubOp(2)">
                         <span>서브 오퍼레이터 3</span>
@@ -306,10 +306,10 @@
         </section>
         <section class="panel right-panel">
             <h2>스킬 사이클 및 특성 설정</h2>
-            <!-- 사이클 보드와 디버프 아이콘 구역 (가로 배치 래퍼 추가) -->
+            <!-- 사이클 보드와 디버프 아이콘 구역 -->
             <div class="result-debuff-wrapper">
                 <div class="result-area-row">
-                    <!-- 스킬 사이클 입력 및 순서 (통합) -->
+                    <!-- 스킬 사이클 입력 및 순서 -->
                     <div class="result-box cycle-board-box">
                         <div
                             style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
@@ -323,7 +323,7 @@
                         <div class="cycle-add-buttons">
                             <div class="cycle-btn" data-type="일반 공격" title="일반 공격">
                                 <div class="skill-icon-frame">
-                                    <img src="images/skills/기본 공격.webp" alt="일반 공격">
+                                    <img src="images/skills/일반 공격.webp" alt="일반 공격">
                                 </div>
                                 <span>일반 공격</span>
                             </div>
@@ -346,11 +346,9 @@
                                 <span>궁극기</span>
                             </div>
                         </div>
-                        <!-- 클릭한 순서대로 보여주는 디스플레이 영역 (가로 스크롤) -->
                         <div class="cycle-sequence-container" style="margin-top: 15px;">
                             <h4 style="color: var(--text-muted); margin-bottom: 8px;">현재 사이클 순서</h4>
                             <div id="cycle-sequence-display" class="cycle-sequence-display">
-                                <!-- JS에서 동적으로 아이템 채움 -->
                             </div>
                         </div>
                     </div>
@@ -759,7 +757,7 @@
         </section>
         <section class="panel analysis-panel">
             <h2>전투 분석</h2>
-            <!-- 사이클 계산값 (3) -->
+            <!-- 사이클 계산값 -->
             <div class="result-box cycle-dmg-box">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                     <h3 style="margin: 0;">사이클 상세 합산</h3>

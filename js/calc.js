@@ -661,7 +661,7 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects, act
     let resIgnore = 0;
 
     // ---- 사용 아이템 호환 (usables) ----
-    const tsUsables = state.skillSequence?.find(s => s.id === state.selectedSeqId)?.customState?.usables || state.usables;
+    const tsUsables = state.usables;
     if (tsUsables) {
         if (tsUsables['혼란의 약제']) {
             const uid = 'usable_1';
@@ -2030,6 +2030,7 @@ function calculateCycleDamage(currentState, baseRes, forceMaxStack = false) {
             customStateMerged.debuffState = itemObj.customState.debuffState;
             customStateMerged.enemyUnbalanced = itemObj.customState.enemyUnbalanced;
             customStateMerged.mainOp.specialStack = itemObj.customState.specialStack;
+            customStateMerged.usables = itemObj.customState.usables;
         }
 
         customStateMerged.calculationTag = SKILL_TYPE_CAT_MAP[type] || 'common';

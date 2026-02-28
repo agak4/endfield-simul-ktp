@@ -435,7 +435,7 @@ function updateUIStateVisuals() {
             wrap.id = `debuff-icon-special-${stackId}`;
             wrap.dataset.debuff = 'specialStack';
             wrap.dataset.stackId = stackId;
-            wrap.dataset.max = s.max; // Store max for UI display logic
+            wrap.dataset.max = s.max;
 
             wrap.innerHTML = useSingleCircle ? `
                 <svg xmlns="http://www.w3.org/2000/svg" class="debuff-ring-svg single-ring-svg" viewBox="0 0 100 100">

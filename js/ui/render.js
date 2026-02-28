@@ -455,7 +455,7 @@ function renderCycleSequence(cycleRes) {
         };
 
         const imgMap = {
-            '일반 공격': 'images/skills/기본 공격.webp',
+            '일반 공격': 'images/skills/일반 공격.webp',
             '배틀 스킬': 'images/skills/배틀 스킬.webp',
             '연계 스킬': 'images/skills/연계 스킬.webp',
             '궁극기': 'images/skills/궁극기.webp'
