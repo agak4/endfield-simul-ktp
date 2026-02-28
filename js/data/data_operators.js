@@ -633,12 +633,36 @@ const DATA_OPERATORS = [
                 }
             },
             {
-                skillType: ['궁극기'], element: 'cryo', cost: 80, desc: '팀 전체에게 12초 동안 냉기 증폭과 자연 증폭 상태를 부여합니다. 지능은 해당 증폭 효과를 추가로 강화시킵니다.',
+                skillType: ['궁극기'], element: 'cryo', cost: 80, desc: '팀 전체에게 12초 동안 냉기 증폭과 자연 증폭 상태를 부여합니다. 지능은 해당 증폭 효과를 추가로 강화시킵니다. (지능 1포인트당 추가 증폭, 최대 1200)',
                 levels: {
-                    M0: { dmg: '0%', type: [{ type: '냉기 증폭', val: '28.6%', target: '팀' }, { type: '자연 증폭', val: '28.6%', target: '팀' }] },
-                    M1: { dmg: '0%', type: [{ type: '냉기 증폭', val: '31.4%', target: '팀' }, { type: '자연 증폭', val: '31.4%', target: '팀' }] },
-                    M2: { dmg: '0%', type: [{ type: '냉기 증폭', val: '33.2%', target: '팀' }, { type: '자연 증폭', val: '33.2%', target: '팀' }] },
-                    M3: { dmg: '0%', type: [{ type: '냉기 증폭', val: '36%', target: '팀' }, { type: '자연 증폭', val: '36%', target: '팀' }] }
+                    M0: {
+                        dmg: '0%',
+                        type: [
+                            { type: '냉기 증폭', val: '19.1%', scaling: { stat: 'int', ratio: '0.024%', max: '28.6%' }, target: '팀' },
+                            { type: '자연 증폭', val: '19.1%', scaling: { stat: 'int', ratio: '0.024%', max: '28.6%' }, target: '팀' }
+                        ]
+                    },
+                    M1: {
+                        dmg: '0%',
+                        type: [
+                            { type: '냉기 증폭', val: '20.9%', scaling: { stat: 'int', ratio: '0.026%', max: '31.4%' }, target: '팀' },
+                            { type: '자연 증폭', val: '20.9%', scaling: { stat: 'int', ratio: '0.026%', max: '31.4%' }, target: '팀' }
+                        ]
+                    },
+                    M2: {
+                        dmg: '0%',
+                        type: [
+                            { type: '냉기 증폭', val: '22.1%', scaling: { stat: 'int', ratio: '0.028%', max: '33.2%' }, target: '팀' },
+                            { type: '자연 증폭', val: '22.1%', scaling: { stat: 'int', ratio: '0.028%', max: '33.2%' }, target: '팀' }
+                        ]
+                    },
+                    M3: {
+                        dmg: '0%',
+                        type: [
+                            { type: '냉기 증폭', val: '24%', scaling: { stat: 'int', ratio: '0.03%', max: '36%' }, target: '팀' },
+                            { type: '자연 증폭', val: '24%', scaling: { stat: 'int', ratio: '0.03%', max: '36%' }, target: '팀' }
+                        ]
+                    }
                 }
             }
         ],

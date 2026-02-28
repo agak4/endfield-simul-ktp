@@ -339,7 +339,8 @@ const AppTooltip = {
                 const st = e.skillType || t.skillType;
                 const suffix = (['스킬 치명타 확률', '스킬 치명타 피해', '스킬 배율 증가'].includes(e.type) && st)
                     ? ` (${Array.isArray(st) ? st.join(', ') : st})` : '';
-                return e.val !== undefined ? `${e.type}${suffix} +${e.val}` : `${e.type}${suffix}`;
+                const scalingSuffix = e.scaling ? ` (<span class="tooltip-muted">+${getStatName(e.scaling.stat)} 비례</span>)` : '';
+                return e.val !== undefined ? `${e.type}${suffix} +${e.val}${scalingSuffix}` : `${e.type}${suffix}${scalingSuffix}`;
             }).join(' / ');
 
             const isPotential = potLevel !== null;
@@ -583,7 +584,8 @@ const AppTooltip = {
                 if (typeof t === 'object' && t !== null && t.type) {
                     if (t.skillType) return null;
                     const tName = Array.isArray(t.type) ? t.type[0] : t.type;
-                    return t.val ? `${tName} +${t.val}` : tName;
+                    const scalingSuffix = t.scaling ? ` (<span class="tooltip-muted">+${getStatName(t.scaling.stat)} 비례</span>)` : '';
+                    return t.val ? `${tName} +${t.val}${scalingSuffix}` : `${tName}${scalingSuffix}`;
                 }
                 return typeof t === 'string' ? t : '';
             }).filter(Boolean);

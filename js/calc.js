@@ -805,8 +805,14 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects, act
 
         if (!isApplicableEffect(opData, eff.type, eff.name)) return;
 
-        const val = resolveVal(eff.val, stats) * (eff.forgeMult || 1.0);
+        const val = resolveVal(eff.val, stats, eff.scaling) * (eff.forgeMult || 1.0);
         const t = (eff.type || '').toString();
+
+        // [Fix] 표시용 수치 업데이트 (최종 계산값 반영 및 % 단위 강제)
+        valDisplay = (val > 0 ? '+' : '') + val.toFixed(val % 1 === 0 ? 0 : 1);
+        if (t.includes('증폭') || t.includes('피해') || t.includes('확률') || t.includes('효율') || t.includes('감소') || t.includes('취약')) {
+            if (!valDisplay.endsWith('%')) valDisplay += '%';
+        }
 
         const checkDisabled = (cat) => {
             if (state.disabledEffects.includes(eff.uid) || !!eff._triggerFailed) return true;
@@ -914,7 +920,7 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects, act
             if (eff.skillType) typeLabel += ` (<span class="tooltip-highlight">${eff.skillType.join(', ')}</span>)`;
             logs.crit.push({ txt: `[${displayName}] ${valDisplay}${eff.stack ? ` <span class="tooltip-highlight">(${eff._stackCount}중첩)</span>` : ''} (${typeLabel})`, uid: eff.uid, tag: 'skillCrit', skillType: eff.skillType, stack: eff.stack, stackCount: eff._stackCount, _triggerFailed: eff._triggerFailed, type: isRate ? 'rate' : 'dmg' });
         } else if (t === '스킬 배율 증가') {
-            const addVal = eff.dmg ? resolveVal(eff.dmg, stats) * (eff.forgeMult || 1.0) : 0;
+            const addVal = eff.dmg ? resolveVal(eff.dmg, stats, eff.dmgScaling || eff.scaling) * (eff.forgeMult || 1.0) : 0;
             const addSkillMult = (st) => {
                 const cat = getCat(st);
                 if (!checkDisabled(cat)) {
@@ -1114,21 +1120,28 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects, act
 }
 
 // ---- 유틸리티 함수 ----
-function resolveVal(val, stats) {
-    if (typeof val === 'number') return val;
-    if (typeof val === 'string') {
+function resolveVal(val, stats, scaling) {
+    let result = (typeof val === 'number') ? val : (parseFloat(val) || 0);
+
+    // [New] 데이터 기반 스탯 비례 처리 (scaling 객체)
+    if (scaling && stats) {
+        const sVal = stats[scaling.stat] || 0;
+        const ratio = (typeof scaling.ratio === 'string') ? parseFloat(scaling.ratio) : (scaling.ratio || 0);
+        const max = (typeof scaling.max === 'string') ? parseFloat(scaling.max) : (scaling.max || 999999);
+        const bonus = Math.min(max, sVal * ratio);
+        result += bonus;
+    }
+
+    if (typeof val === 'string' && stats) {
         let statSum = 0;
         let foundStat = false;
 
-        // [Fix] 스탯 비례 수치 처리 (예: "지능, 의지 1포인트당 0.15% 증가")
         ['str', 'agi', 'int', 'wil'].forEach(k => {
             if (val.includes(STAT_NAME_MAP[k])) {
                 statSum += (stats[k] || 0);
                 foundStat = true;
             }
         });
-
-        const num = parseFloat(val);
 
         if (foundStat) {
             // "1포인트당 X%" 또는 "X%" 패턴 추출 -> 스탯 총합에 곱함
@@ -1138,10 +1151,8 @@ function resolveVal(val, stats) {
                 return statSum * perPoint;
             }
         }
-
-        return isNaN(num) ? 0 : num;
     }
-    return 0;
+    return result;
 }
 
 // ---- 무기 특성 레벨/값 ----
