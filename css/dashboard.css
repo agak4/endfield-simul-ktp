@@ -761,10 +761,6 @@ h4.has-drag-handle {
 }
 
 /* ============ 세트 배지 ============ */
-.active-set-container {
-    min-height: 40px;
-}
-
 .active-set-badge {
     flex: 1;
     background: #1a1a1a;

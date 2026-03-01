@@ -1581,6 +1581,8 @@ function calcSingleSkillDamage(type, state, res) {
     const bonusList = [];
     const skillTypes = skillDef.type ? (Array.isArray(skillDef.type) ? skillDef.type : [skillDef.type]) : [];
 
+    const baseSkillElement = skillDef.element || (opData.type === 'phys' ? 'phys' : opData.element);
+
     if (skillDef.bonus) {
         skillDef.bonus.forEach(b => {
             const opTriggerMet = !b.trigger || evaluateTrigger(b.trigger, state, opData, b.triggerType, false, b.target, true);
@@ -1621,20 +1623,39 @@ function calcSingleSkillDamage(type, state, res) {
                     const bonusVal = (parseFloat(bb) + parseFloat(bp) * stackCount) / 100;
 
                     if (bonusVal > 0) {
-                        dmgMult += bonusVal;
-                        bonusList.push({
-                            name: trName,
-                            val: bonusVal,
-                            stack: stackCount
-                        });
+                        if (b.element && b.element !== baseSkillElement) {
+                            bonusList.push({
+                                name: trName,
+                                val: bonusVal,
+                                stack: stackCount,
+                                isSeparateHit: true,
+                                element: b.element
+                            });
+                        } else {
+                            dmgMult += bonusVal;
+                            bonusList.push({
+                                name: trName,
+                                val: bonusVal,
+                                stack: stackCount
+                            });
+                        }
                     }
                 } else if (b.val) {
                     const bonusVal = parsePct(b.val);
-                    dmgMult += bonusVal;
-                    bonusList.push({
-                        name: trName,
-                        val: bonusVal
-                    });
+                    if (b.element && b.element !== baseSkillElement) {
+                        bonusList.push({
+                            name: trName,
+                            val: bonusVal,
+                            isSeparateHit: true,
+                            element: b.element
+                        });
+                    } else {
+                        dmgMult += bonusVal;
+                        bonusList.push({
+                            name: trName,
+                            val: bonusVal
+                        });
+                    }
                 }
             }
         });
@@ -1878,7 +1899,7 @@ function calcSingleSkillDamage(type, state, res) {
     // [Fix] 오리지늄 아츠 강도는 물리/아츠 이상 데미지에만 적용 (스킬 기본 데미지 미적용)
     const finalSkillCommonMults = commonMults;
 
-    const baseHitDmg = adjFinalAtk * baseMultOnly * finalSkillCommonMults;
+    let baseHitDmg = adjFinalAtk * baseMultOnly * finalSkillCommonMults;
 
     const abnormalDmgMap = {};
     const resKeyMap = { heat: '열기', elec: '전기', cryo: '냉기', nature: '자연' };
@@ -1932,6 +1953,79 @@ function calcSingleSkillDamage(type, state, res) {
 
         abnormalDmgMap[a.name] = (abnormalDmgMap[a.name] || 0) + Math.floor(aDmg);
     });
+
+    bonusList.forEach(b => {
+        if (!b.isSeparateHit) return;
+        const bElem = b.element;
+        let bResMult = resMult;
+        let bVuln = res.stats.vulnMap['취약'] || 0;
+        let bTaken = res.stats.takenDmgMap.all || 0;
+        let bInc = dmgIncData.all || 0;
+
+        const activeResKey = bElem === 'phys' ? '물리' : (resKeyMap[bElem] || null);
+
+        if (activeResKey && res.stats.allRes) {
+            const bResVal = res.stats.allRes[activeResKey] - (res.stats.resIgnore || 0);
+            bResMult = 1 - bResVal / 100;
+        }
+
+        const eKey = bElem === 'phys' ? '물리' : (resKeyMap[bElem] || null);
+        if (eKey) {
+            bVuln += (res.stats.vulnMap[`${eKey} 취약`] || 0);
+            if (bElem !== 'phys') {
+                bVuln += (res.stats.vulnMap['아츠 취약'] || 0);
+            }
+
+            if (bElem === 'phys') {
+                bTaken += (res.stats.takenDmgMap.phys || 0);
+            } else {
+                bTaken += (res.stats.takenDmgMap.arts || 0);
+                if (res.stats.takenDmgMap[bElem]) bTaken += res.stats.takenDmgMap[bElem];
+            }
+
+            bInc += (res.stats.dmgIncData[bElem] || 0);
+        }
+
+        if (baseType === '일반 공격') bInc += dmgIncData.normal;
+        else bInc += dmgIncData.skill + (dmgIncData[SKILL_TYPE_CAT_MAP[baseType]] || 0);
+
+        vulnAmpEffects.forEach(eff => {
+            const isTypeMatch = !eff.skillType || (eff.skillType && eff.skillType.includes(baseType));
+            if (isTypeMatch && !state.disabledEffects.includes(eff.uid)) {
+                const targets = eff.targetEffect || (eff.type.includes('냉기 취약 증폭') ? ['냉기 취약'] : ['취약']);
+                targets.forEach(tKey => {
+                    const vVal = res.stats.vulnMap[tKey] || 0;
+                    if (vVal > 0) {
+                        const ampVal = vVal * (resolveVal(eff.val, res.stats, null, eff._sourceOpId, state) * (eff.forgeMult || 1.0));
+                        bVuln += ampVal;
+                    }
+                });
+            }
+        });
+
+        const adjustedBonusVal = b.val * (1 + sMult / 100);
+        const bCommonMults = adjCritExp * (1 + bInc / 100) * (1 + amp / 100) * (1 + bTaken / 100) * (1 + bVuln / 100) * (1 + unbalanceDmg / 100) * bResMult * defMult;
+        const bHitDmg = adjFinalAtk * adjustedBonusVal * bCommonMults;
+
+        // Add to main baseHitDmg instead of abnormalDmgMap
+        baseHitDmg += bHitDmg;
+
+        // Still track in visibleAbnormals for the UI percentage display
+        visibleAbnormals.push({ name: `추가 피해(${eKey || '알 수 없음'})`, mult: adjustedBonusVal, isSeparateBonus: true });
+    });
+
+    if (visibleAbnormals.length > 0) {
+        const artsStrengthMult = 1 + (originiumArts / 100);
+        const descParts = visibleAbnormals.map(a => {
+            if (a.isSeparateBonus) {
+                return `${a.name} +${(a.mult * 100).toFixed(0)}%`;
+            } else {
+                const boostedMult = a.mult * artsStrengthMult;
+                return `${a.name} +${(boostedMult * 100).toFixed(0)}%`;
+            }
+        });
+        abnormalDesc = ` (${descParts.join(', ')})`;
+    }
 
     const myLogs = JSON.parse(JSON.stringify(res.logs));
 
@@ -2031,7 +2125,7 @@ function calcSingleSkillDamage(type, state, res) {
         dmgRate: (adjDmgMult * 100).toFixed(0) + '%' + abnormalDesc,
         desc: skillDef.desc,
         rawRate: adjDmgMult,
-        baseRate: dmgMult - bonusList.reduce((acc, b) => acc + b.val, 0),
+        baseRate: dmgMult - bonusList.reduce((acc, b) => acc + (b.isSeparateHit ? 0 : b.val), 0),
         bonusList,
         abnormalList,
         abnormalInfo: visibleAbnormals.length > 0 ? visibleAbnormals : undefined,

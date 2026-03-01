@@ -1561,5 +1561,130 @@ const DATA_OPERATORS = [
             [{ type: ['궁극기 에너지 감소'], val: '-10%', desc: '궁극기 소대, 집합!의 사용에 필요한 궁극기 에너지 -10%' }],
             [{ desc: '재능 "몰입의 시간" 효과 강화: 연타가 궁극기 소대, 집합!이 끝난 뒤에도 5초 동안 지속됩니다.' }]
         ]
+    },
+    {
+        id: 'Tangtang',
+        name: '탕탕',
+        class: '캐스터',
+        rarity: 6,
+        baseAtk: 300,
+        mainStat: '',
+        subStat: '',
+        type: 'arts',
+        element: 'cryo',
+        stats: { str: 0, agi: 0, int: 0, wil: 0 },
+        usableWeapons: ['handcannon'],
+        specialStack: { name: '와류', max: 1, triggers: ['와류'] },
+        skill: [
+            {
+                skillType: ['일반 공격'], element: 'cryo', desc: '적에게 최대 5단 공격을 하여 냉기 피해를 줍니다.',
+                levels: {
+                    M0: { dmg: '0%' },
+                    M1: { dmg: '0%' },
+                    M2: { dmg: '0%' },
+                    M3: { dmg: '0%' }
+                }
+            },
+            {
+                skillType: ['배틀 스킬'], element: 'cryo', desc: '적에게 근접 사격을 하고 용오름을 일으킵니다. 범위 내의 적에게 냉기 부착을 부여하고, 지속적으로 피해를 줍니다. 주변에 와류가 존재할 경우 이를 소모하여 추가로 용오름을 생성합니다. 이번 배틀 스킬로 용오름이 생성되면 적에게 아츠 취약 상태를 부여합니다.',
+                levels: {
+                    M0: { dmg: '0%', type: [''], target: '' },
+                    M1: { dmg: '0%', type: [''], target: '' },
+                    M2: { dmg: '0%', type: [''], target: '' },
+                    M3: { dmg: '100%', type: ['냉기 부착', { type: ['아츠 취약'], val: '10%', target: '적' }], bonus: [{ triggerTarget: ['와류'], val: '100%' }] }
+                }
+            },
+            {
+                skillType: ['연계 스킬'], element: 'cryo', desc: '적이 냉기 부착을 부여받았거나 아츠 폭발 피해를 받았을 때 발동할 수 있습니다. 전방의 적을 관통하며 피해를 주고, 일정 시간 동안 지속되는 와류를 분출할 수 있습니다.',
+                levels: {
+                    M0: { dmg: '0%', type: ['와류'] },
+                    M1: { dmg: '0%', type: ['와류'] },
+                    M2: { dmg: '0%', type: ['와류'] },
+                    M3: { dmg: '0%', type: ['와류'] }
+                }
+            },
+            {
+                skillType: ['궁극기'], element: '', cost: 0, desc: '탕탕이 안대를 벗어 던지고 고대의 진을 발동합니다. 범위 내의 적은 움직일 수 없으며 피해를 받습니다. 마지막에 거대한 파도를 일으켜 대량의 피해를 줍니다. 메인 컨트롤 오퍼레이터가 범위 내에서 낙하 공격을 사용하면 해당 상태가 중단되며, 스킬 효과가 강화됩니다.',
+                levels: {
+                    M0: { dmg: '0%', type: [''] },
+                    M1: { dmg: '0%', type: [''] },
+                    M2: { dmg: '0%', type: [''] },
+                    M3: { dmg: '0%', type: [''] }
+                }
+            }
+        ],
+        talents: [
+            [{ desc: '메인 컨트롤 오퍼레이터가 고대의 진 내에서 낙하 공격을 사용하면, 변화하던 고대의 진이 그 변화를 중단합니다. 이어서 용오름 1개를 생성하며, 주변에 와류가 존재할 경우 이를 소모하여 추가로 용오름을 생성합니다. 이때 생성한 용오름은 배틀 스킬 우당탕탕 파도!와 동일한 효과를 가지고 있으며, 주는 피해가 증가합니다.' }],
+            [{ type: [''], target: '', desc: '2재능' }]
+        ],
+        potential: [
+            [{ type: [''], val: '', stack: 0, desc: '1잠재' }],
+            [{ type: [''], stats: '', val: 0 }, { type: [''], stats: '', val: 0, desc: '2잠재' }],
+            [{ type: [''], val: '', target: '', desc: '3잠재' }],
+            [{ type: [''], val: '', desc: '4잠재' }],
+            [{ desc: '5잠재' }]
+        ]
+    },
+    {
+        id: 'Rossi',
+        name: '로시',
+        class: '가드',
+        rarity: 6,
+        baseAtk: 300,
+        mainStat: '',
+        subStat: '',
+        type: 'phys',
+        element: null,
+        stats: { str: 0, agi: 0, int: 0, wil: 0 },
+        usableWeapons: ['sword'],
+        skill: [
+            {
+                skillType: ['일반 공격'], element: 'phys', desc: '적에게 최대 5단 공격을 하여 물리 피해를 줍니다',
+                levels: {
+                    M0: { dmg: '100%' },
+                    M1: { dmg: '100%' },
+                    M2: { dmg: '100%' },
+                    M3: { dmg: '100%' }
+                }
+            },
+            {
+                skillType: ['배틀 스킬'], element: 'phys', desc: '목표를 향해 돌진해 발톱으로 공격하여 물리 피해를 주고, 띄우기 피해를 줍니다. 목표에게 이미 방어 불능이 있는 경우, 추가 열기 피해를 주며 늑대의 발톱을 남겨 일정 시간 동안 지속 피해를 줍니다.',
+                levels: {
+                    M0: { dmg: '100%', type: ['띄우기'], bonus: [{ triggerTarget: ['방어 불능'], val: '100%', element: 'heat' }] },
+                    M1: { dmg: '100%', type: ['띄우기'], bonus: [{ triggerTarget: ['방어 불능'], val: '100%', element: 'heat' }] },
+                    M2: { dmg: '100%', type: ['띄우기'], bonus: [{ triggerTarget: ['방어 불능'], val: '100%', element: 'heat' }] },
+                    M3: { dmg: '100%', type: ['띄우기'], bonus: [{ triggerTarget: ['방어 불능'], val: '100%', element: 'heat' }] }
+                }
+            },
+            {
+                skillType: ['연계 스킬'], element: 'phys', desc: '적이 동시에 방어 불능과 아츠 부착 상태일 때 발동할 수 있습니다. 로시의 연계 스킬은 연속으로 2회 발동할 수 있으며, 첫 공격은 목표에 물리 피해를 주고, 두 번째 공격은 목표의 아츠 부착을 모두 소모한 뒤, 물리 피해 및 띄우기 피해를 줍니다. 연계 스킬의 두 번째 공격이 정확하게 연계되면 추가로 방어 불능 1스택을 쌓습니다.',
+                levels: {
+                    M0: { dmg: '100%', type: ['띄우기', '아츠 부착 소모'] },
+                    M1: { dmg: '100%', type: ['띄우기', '아츠 부착 소모'] },
+                    M2: { dmg: '100%', type: ['띄우기', '아츠 부착 소모'] },
+                    M3: { dmg: '100%', type: ['띄우기', '아츠 부착 소모'] }
+                }
+            },
+            {
+                skillType: ['궁극기'], element: 'heat', cost: 0, desc: '망토를 휘두르며 재빠른 찌르기로 짧은 시간 동안 여러 차례 피해를 줍니다. 마지막에 목표에게 돌진해 단검으로 베기를 사용하여 대량의 피해를 주고 열기 부착을 부여합니다.',
+                levels: {
+                    M0: { dmg: '100%', type: ['열기 부착'] },
+                    M1: { dmg: '100%', type: ['열기 부착'] },
+                    M2: { dmg: '100%', type: ['열기 부착'] },
+                    M3: { dmg: '100%', type: ['열기 부착'] }
+                }
+            }
+        ],
+        talents: [
+            [{ type: ['받는 물리 피해', '받는 열기 피해'], target: '적', val: '10%', desc: '배틀 스킬 제2단계 울프팀의 진주가 피해를 준 후 목표에게 늑대의 발톱 상태를 부여하고 일정 시간 동안 지속되며, 해당 효과는 중첩되지 않습니다. 늑대의 발톱이 지속되는 동안, 매초 로시 공격력 일정 비율의 물리 피해를 주며, 동시에 받는 물리 피해와 열기 피해가 증가합니다.' }],
+            [{ type: [''], target: '', desc: '2재능' }]
+        ],
+        potential: [
+            [{ type: [''], val: '', stack: 0, desc: '1잠재' }],
+            [{ type: [''], stats: '', val: 0 }, { type: [''], stats: '', val: 0, desc: '2잠재' }],
+            [{ type: [''], val: '', target: '', desc: '3잠재' }],
+            [{ type: [''], val: '', desc: '4잠재' }],
+            [{ desc: '5잠재' }]
+        ]
     }
 ];

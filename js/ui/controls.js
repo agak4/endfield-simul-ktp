@@ -613,25 +613,14 @@ function applyDebuffWithOperator(el, debuffNameRaw, opId) {
     ds.attribution[key] = opId || null;
 
     let nextStack;
-    if (!opId) {
-        nextStack = 0;
-        if (debuffNameRaw === 'armorBreak') {
-            if (!ds.physDebuff) ds.physDebuff = {};
-            ds.physDebuff.armorBreak = 0;
-        } else {
-            if (!ds.artsAbnormal) ds.artsAbnormal = {};
-            ds.artsAbnormal[debuffNameRaw] = 0;
-        }
-    } else if (debuffNameRaw === 'armorBreak') {
+    if (debuffNameRaw === 'armorBreak') {
         const cur = ds.physDebuff?.armorBreak || 0;
         nextStack = (cur + 1) % 5;
-        if (nextStack === 0) nextStack = 1;
         if (!ds.physDebuff) ds.physDebuff = {};
         ds.physDebuff.armorBreak = nextStack;
     } else {
         const cur = ds.artsAbnormal?.[debuffNameRaw] || 0;
         nextStack = (cur + 1) % 5;
-        if (nextStack === 0) nextStack = 1;
         ds.artsAbnormal[debuffNameRaw] = nextStack;
     }
 
