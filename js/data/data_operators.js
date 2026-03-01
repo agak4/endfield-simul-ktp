@@ -677,23 +677,14 @@ const DATA_OPERATORS = [
             [{ type: ['스탯'], stats: '지능', val: 15, desc: '지능 +15, 치유 효율 +10%' }],
             [
                 {
-                    type: '냉기 증폭', masterySource: '궁극기', target: '팀',
+                    type: ['냉기 증폭', '자연 증폭'], masterySource: '궁극기', target: '팀',
                     levels: {
                         M0: { val: '1.9%', scaling: { stat: 'int', ratio: '0.0024%', max: '3%' } },
                         M1: { val: '2.1%', scaling: { stat: 'int', ratio: '0.0026%', max: '3%' } },
                         M2: { val: '2.2%', scaling: { stat: 'int', ratio: '0.0028%', max: '3%' } },
                         M3: { val: '2.4%', scaling: { stat: 'int', ratio: '0.003%', max: '3.6%' } }
-                    }
-                },
-                {
-                    type: '자연 증폭', masterySource: '궁극기', target: '팀',
-                    levels: {
-                        M0: { val: '1.9%', scaling: { stat: 'int', ratio: '0.0024%', max: '3%' } },
-                        M1: { val: '2.1%', scaling: { stat: 'int', ratio: '0.0026%', max: '3%' } },
-                        M2: { val: '2.2%', scaling: { stat: 'int', ratio: '0.0028%', max: '3%' } },
-                        M3: { val: '2.4%', scaling: { stat: 'int', ratio: '0.003%', max: '3%' } }
                     },
-                    desc: '궁극기 스택 오버플로가 제공하는 증폭 효과가 기존의 1.1배로 증가합니다.'
+                    desc: '궁극기 스택 오버플로가 제공하는 증폭 효과가 1.1배로 증가합니다.'
                 }
             ]
         ]
