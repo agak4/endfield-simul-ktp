@@ -343,23 +343,15 @@ const AppTooltip = {
                     const suffix = (['스킬 치명타 확률', '스킬 치명타 피해', '스킬 배율 증가'].includes(e.type) && st)
                         ? ` (${Array.isArray(st) ? st.join(', ') : st})` : '';
 
-                    // [New] scaling이 있으면 리스트 항목에 직접 공식을 표시
-                    if (e.scaling || t.scaling) {
+                    // [New] val이 0%이고 scaling이 있으면 리스트 항목에 직접 공식을 표시
+                    if ((e.val === '0%' || t.val === '0%') && (e.scaling || t.scaling)) {
                         const sc = e.scaling || t.scaling;
                         const ratioDisp = (typeof sc.ratio === 'string') ? sc.ratio : `${sc.ratio}%`;
-                        const baseVal = e.val ?? t.val;
-
-                        if (baseVal === '0%') {
-                            return `${getStatName(sc.stat)} 1포인트당 ${e.type}${suffix} +${ratioDisp}`;
-                        } else {
-                            // 자이히 등 기본값이 있는 경우 요청된 형식: '냉기 증폭 +24% + 지능 1포인트당 증폭 +0.03%'
-                            // 증폭 관련 효과인 경우 "증폭"으로 축약 표시
-                            const formulaType = String(e.type).endsWith(' 증폭') ? '증폭' : e.type;
-                            return `${e.type}${suffix} +${baseVal} + ${getStatName(sc.stat)} 1포인트당 ${formulaType} +${ratioDisp}`;
-                        }
+                        return `${getStatName(sc.stat)} 1포인트당 ${e.type}${suffix} +${ratioDisp}`;
                     }
 
-                    return e.val !== undefined ? `${e.type}${suffix} +${e.val}` : `${e.type}${suffix}`;
+                    const scalingSuffix = e.scaling ? ` (<span class="tooltip-muted">+${getStatName(e.scaling.stat)} 비례</span>)` : '';
+                    return e.val !== undefined ? `${e.type}${suffix} +${e.val}${scalingSuffix}` : `${e.type}${suffix}${scalingSuffix}`;
                 }).join(' / ');
 
             const isPotential = potLevel !== null;
@@ -413,28 +405,7 @@ const AppTooltip = {
             processData([[skillDef]], skillDef.skillType || '스킬', 0);
         });
         op.talents?.forEach((t, i) => processData([t], `${i + 1}재능`, 1));
-        op.potential?.forEach((p, i) => {
-            const resolvedP = p.map(sub => {
-                let subCopy = { ...sub };
-                if (sub.levels) {
-                    let level = 'M3';
-                    const masterySource = sub.masterySource;
-                    if (masterySource && typeof state !== 'undefined') {
-                        if (state.mainOp && state.mainOp.id === op.id) {
-                            level = state.mainOp.skillLevels?.[masterySource] || 'M3';
-                        } else {
-                            const subMatch = state.subOps?.find(sm => sm.id === op.id);
-                            if (subMatch) {
-                                level = subMatch.skillLevels?.[masterySource] || 'M3';
-                            }
-                        }
-                    }
-                    if (sub.levels[level]) Object.assign(subCopy, sub.levels[level]);
-                }
-                return subCopy;
-            });
-            processData([resolvedP], '잠재', 2, i + 1);
-        });
+        op.potential?.forEach((p, i) => processData([p], '잠재', 2, i + 1));
 
         /**
          * 특성/시너지 아이템 배열을 정렬하여 HTML 목록으로 변환한다.

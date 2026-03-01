@@ -41,6 +41,7 @@ const DEFAULT_DEBUFF_STATE = () => ({
     physDebuff: { defenseless: 0, armorBreak: 0, combo: 0 },
     artsAttach: { type: null, stacks: 0 },
     artsAbnormal: { '연소': 0, '감전': 0, '동결': 0, '부식': 0 },
+    attribution: { '갑옷 파괴': null, '감전': null, '부식': null },
 });
 
 const DEFAULT_USABLES = () => ({
@@ -439,6 +440,7 @@ function migrateDebuffState(ds) {
             physDebuff: { defenseless: old.defenseless || 0, armorBreak: old.armorBreak || 0, combo: 0 },
             artsAttach: old.artsAttach || { type: null, stacks: 0 },
             artsAbnormal: old.artsAbnormal || { '연소': 0, '감전': 0, '동결': 0, '부식': 0 },
+            attribution: old.attribution || { '갑옷 파괴': null, '감전': null, '부식': null },
         };
     }
 
@@ -456,6 +458,9 @@ function migrateDebuffState(ds) {
 
     // combo 필드 누락 처리
     if (ds.physDebuff.combo === undefined) ds.physDebuff.combo = 0;
+
+    // attribution 필드 누락 처리
+    if (!ds.attribution) ds.attribution = { '갑옷 파괴': null, '감전': null, '부식': null };
 
     return ds;
 }

@@ -677,14 +677,23 @@ const DATA_OPERATORS = [
             [{ type: ['스탯'], stats: '지능', val: 15, desc: '지능 +15, 치유 효율 +10%' }],
             [
                 {
-                    type: ['냉기 증폭', '자연 증폭'], masterySource: '궁극기', target: '팀',
+                    type: '냉기 증폭', masterySource: '궁극기', target: '팀',
                     levels: {
                         M0: { val: '1.9%', scaling: { stat: 'int', ratio: '0.0024%', max: '3%' } },
                         M1: { val: '2.1%', scaling: { stat: 'int', ratio: '0.0026%', max: '3%' } },
                         M2: { val: '2.2%', scaling: { stat: 'int', ratio: '0.0028%', max: '3%' } },
                         M3: { val: '2.4%', scaling: { stat: 'int', ratio: '0.003%', max: '3.6%' } }
+                    }
+                },
+                {
+                    type: '자연 증폭', masterySource: '궁극기', target: '팀',
+                    levels: {
+                        M0: { val: '1.9%', scaling: { stat: 'int', ratio: '0.0024%', max: '3%' } },
+                        M1: { val: '2.1%', scaling: { stat: 'int', ratio: '0.0026%', max: '3%' } },
+                        M2: { val: '2.2%', scaling: { stat: 'int', ratio: '0.0028%', max: '3%' } },
+                        M3: { val: '2.4%', scaling: { stat: 'int', ratio: '0.003%', max: '3%' } }
                     },
-                    desc: '궁극기 스택 오버플로가 제공하는 증폭 효과가 1.1배로 증가합니다.'
+                    desc: '궁극기 스택 오버플로가 제공하는 증폭 효과가 기존의 1.1배로 증가합니다.'
                 }
             ]
         ]
@@ -809,7 +818,7 @@ const DATA_OPERATORS = [
             [{ desc: '연계 스킬 실시간 프로토콜 · 연쇄 섬광이 부여하는 감전의 지속 시간 +75%' }],
             [{ type: ['궁극기 에너지 감소'], val: '15%', desc: '궁극기 프로토콜ε · 70.41κ의 사용에 필요한 궁극기 에너지 -15%' }],
             [{ type: ['공격력 증가'], val: '20%', stack: 2, desc: '펠리카가 적에게 감전을 부여했을 때, 5초 동안 공격력 +20%, 해당 효과는 최대 2스택까지 중첩됩니다.' }],
-            [{ type: ['받는 아츠 피해'], val: '4%', target: '적', desc: '연계 스킬 실시간 프로토콜 · 연쇄 섬광이 부여하는 감전의 적이 받는 아츠 피해 증가 효과가 기존의 1.33배로 증가' }],
+            [{ type: ['받는 아츠 피해'], val: '4%', target: '적', triggerTarget: ['감전'], desc: '연계 스킬 실시간 프로토콜 · 연쇄 섬광이 부여하는 감전의 적이 받는 아츠 피해 증가 효과가 기존의 1.33배로 증가' }],
             [{ type: ['스킬 치명타 확률'], val: '30%', skillType: ['궁극기'], desc: '궁극기 프로토콜ε · 70.41κ의 치명타 확률 +30%' }]
         ]
     },

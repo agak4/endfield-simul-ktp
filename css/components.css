@@ -647,8 +647,7 @@
 }
 
 .tooltip-stat-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    display: flex;
     gap: 8px;
 }
 
@@ -657,6 +656,7 @@
     padding: 6px;
     border-radius: 6px;
     display: flex;
+    gap: 10px;
     justify-content: space-between;
 }
 

@@ -407,9 +407,11 @@ function updateUIStateVisuals() {
             el.classList.toggle('attach-disabled', ds.artsAttach?.type !== null && ds.artsAttach?.type !== el.dataset.attachType);
         } else if (el.dataset.abnormalType) {
             val = ds.artsAbnormal?.[el.dataset.abnormalType] || 0;
+            applyAttributionIcon(el, el.dataset.abnormalType, ds.attribution);
         } else if (el.dataset.debuff) {
             const type = el.dataset.debuff;
             val = ds.physDebuff?.[type] !== undefined ? ds.physDebuff[type] : (ds[type] || 0);
+            if (type === 'armorBreak') applyAttributionIcon(el, '갑옷 파괴', ds.attribution);
         } else if (el.dataset.usable) {
             const type = el.dataset.usable;
             val = ts.usables?.[type] ? 1 : 0;
@@ -486,6 +488,168 @@ function updateUIStateVisuals() {
 }
 
 // ============================================================
+// 디버프 오퍼레이터 귀속 팝업
+// ============================================================
+
+function getValidOperatorsForDebuff(debuffName) {
+    const validOps = [];
+    const checkOp = (opMeta) => {
+        if (!opMeta.id) return;
+        const opData = DATA_OPERATORS.find(o => o.id === opMeta.id);
+        if (!opData) return;
+
+        let types = [];
+        // 스킬 레벨에서 타입 추출
+        opData.skill.forEach(s => {
+            if (s.levels) {
+                Object.values(s.levels).forEach(lv => {
+                    if (lv.type) {
+                        if (Array.isArray(lv.type)) types.push(...lv.type);
+                        else types.push(lv.type);
+                    }
+                });
+            }
+        });
+        // 재능에서 타입 추출
+        opData.talents.forEach(row => {
+            row.forEach(t => {
+                if (t.type) {
+                    if (Array.isArray(t.type)) types.push(...t.type);
+                    else types.push(t.type);
+                }
+            });
+        });
+        // 잠재에서 타입 추출
+        opData.potential.forEach(row => {
+            row.forEach(p => {
+                if (p.type) {
+                    if (Array.isArray(p.type)) types.push(...p.type);
+                    else types.push(p.type);
+                }
+            });
+        });
+
+        const positives = {
+            '감전': ['감전 부여', '전기 부착'],
+            '부식': ['부식 부여', '자연 부착'],
+            'armorBreak': ['갑옷 파괴']
+        };
+        const negatives = ['소모'];
+
+        const isValid = types.some(t => {
+            const str = (typeof t === 'string') ? t : (t?.type || "");
+            if (!str) return false;
+            return positives[debuffName].some(p => str.includes(p)) && !negatives.some(n => str.includes(n));
+        });
+
+        if (isValid) validOps.push({ id: opData.id, name: opData.name });
+    };
+    checkOp(state.mainOp);
+    state.subOps.forEach(sub => checkOp(sub));
+    return validOps;
+}
+
+function showDebuffOperatorBubble(el, debuffName) {
+    let bubble = document.getElementById('debuff-operator-bubble');
+    if (bubble && bubble.dataset.targetId === el.id) {
+        bubble.remove();
+        return;
+    }
+    if (bubble) bubble.remove();
+
+    bubble = document.createElement('div');
+    bubble.id = 'debuff-operator-bubble';
+    bubble.dataset.targetId = el.id;
+    bubble.className = 'debuff-bubble-popup';
+
+    const rect = el.getBoundingClientRect();
+    bubble.style.position = 'absolute';
+    bubble.style.top = `${rect.bottom + window.scrollY + 5}px`;
+    bubble.style.left = `${rect.left + window.scrollX}px`;
+    bubble.style.zIndex = '1000';
+
+    const validOps = getValidOperatorsForDebuff(debuffName);
+
+    let defaultImg = '';
+    if (debuffName === '감전') defaultImg = 'images/debuff/감전.png';
+    else if (debuffName === '부식') defaultImg = 'images/debuff/부식.png';
+    else if (debuffName === 'armorBreak') defaultImg = 'images/debuff/갑옷 파괴.png';
+
+    let html = `<div class="bubble-item default-item" data-op-id="" title="기본 효과 (증강 없음)">
+        <img src="${defaultImg}" alt="기본">
+    </div>`;
+    validOps.forEach(op => {
+        html += `<div class="bubble-item op-item" data-op-id="${op.id}" title="${op.name} 귀속">
+            <img src="images/operators/${op.name}.webp" alt="${op.name}">
+        </div>`;
+    });
+    bubble.innerHTML = html;
+    document.body.appendChild(bubble);
+
+    const closeBubble = (e) => {
+        if (!bubble.contains(e.target) && !el.contains(e.target)) {
+            bubble.remove();
+            document.removeEventListener('click', closeBubble);
+        }
+    };
+    setTimeout(() => document.addEventListener('click', closeBubble), 0);
+
+    bubble.querySelectorAll('.bubble-item').forEach(item => {
+        item.onclick = (e) => {
+            e.stopPropagation();
+            applyDebuffWithOperator(el, debuffName, item.dataset.opId);
+            bubble.remove();
+            document.removeEventListener('click', closeBubble);
+        };
+    });
+}
+
+function applyDebuffWithOperator(el, debuffNameRaw, opId) {
+    ensureCustomState();
+    const ds = getTargetState().debuffState;
+    if (!ds.attribution) ds.attribution = { '갑옷 파괴': null, '감전': null, '부식': null };
+
+    const key = debuffNameRaw === 'armorBreak' ? '갑옷 파괴' : debuffNameRaw;
+    ds.attribution[key] = opId || null;
+
+    let nextStack;
+    if (debuffNameRaw === 'armorBreak') {
+        const cur = ds.physDebuff?.armorBreak || 0;
+        nextStack = (cur + 1) % 5;
+        if (!ds.physDebuff) ds.physDebuff = {};
+        ds.physDebuff.armorBreak = nextStack;
+    } else {
+        const cur = ds.artsAbnormal?.[debuffNameRaw] || 0;
+        nextStack = (cur + 1) % 5;
+        ds.artsAbnormal[debuffNameRaw] = nextStack;
+    }
+
+    if (nextStack === 0) ds.attribution[key] = null;
+
+    applyAttributionIcon(el, key, ds.attribution);
+    applyDebuffIconState(el, nextStack);
+    commitDebuffChange('debuff');
+}
+
+function applyAttributionIcon(el, type, attr) {
+    if (!attr || !attr[type]) {
+        const existing = el.querySelector('.debuff-attribution-icon');
+        if (existing) existing.remove();
+        return;
+    }
+    const op = DATA_OPERATORS.find(o => o.id === attr[type]);
+    if (!op) return;
+
+    let icon = el.querySelector('.debuff-attribution-icon');
+    if (!icon) {
+        icon = document.createElement('img');
+        icon.className = 'debuff-attribution-icon';
+        el.appendChild(icon);
+    }
+    icon.src = `images/operators/${op.name}.webp`;
+}
+
+// ============================================================
 // 디버프 사이클 핸들러
 // ============================================================
 
@@ -514,8 +678,27 @@ function cycleDebuff(el, dir = 1) {
     }
 
     const type = el.dataset.debuff;
-    const next = ((parseInt(el.dataset.stacks, 10) || 0) + dir + 5) % 5;
     const ds = getTargetState().debuffState;
+    if (!ds.attribution) ds.attribution = { '갑옷 파괴': null, '감전': null, '부식': null };
+
+    const currentStacks = ds.physDebuff?.[type] !== undefined ? ds.physDebuff[type] : (ds[type] || 0);
+
+    if (dir === 1 && type === 'armorBreak') {
+        if (currentStacks === 0) {
+            const validOps = getValidOperatorsForDebuff(type);
+            if (validOps.length > 0) {
+                showDebuffOperatorBubble(el, type);
+                return;
+            }
+        }
+    }
+
+    const next = ((parseInt(el.dataset.stacks, 10) || 0) + dir + 5) % 5;
+
+    if (next === 0 && type === 'armorBreak') {
+        ds.attribution['갑옷 파괴'] = null;
+        applyAttributionIcon(el, '갑옷 파괴', ds.attribution);
+    }
 
     if (ds.physDebuff?.[type] !== undefined) ds.physDebuff[type] = next;
     else if (ds[type] !== undefined) ds[type] = next;
@@ -575,8 +758,29 @@ function cycleDebuffAttach(el, dir = 1) {
 function cycleDebuffAbnormal(el, dir = 1) {
     ensureCustomState();
     const abnType = el.dataset.abnormalType;
+    const ds = getTargetState().debuffState;
+    if (!ds.attribution) ds.attribution = { '갑옷 파괴': null, '감전': null, '부식': null };
+
+    const currentStacks = ds.artsAbnormal?.[abnType] || 0;
+
+    if (dir === 1 && (abnType === '감전' || abnType === '부식')) {
+        if (currentStacks === 0) {
+            const validOps = getValidOperatorsForDebuff(abnType);
+            if (validOps.length > 0) {
+                showDebuffOperatorBubble(el, abnType);
+                return;
+            }
+        }
+    }
+
     const next = ((parseInt(el.dataset.stacks, 10) || 0) + dir + 5) % 5;
-    getTargetState().debuffState.artsAbnormal[abnType] = next;
+
+    if (next === 0 && (abnType === '감전' || abnType === '부식')) {
+        ds.attribution[abnType] = null;
+        applyAttributionIcon(el, abnType, ds.attribution);
+    }
+
+    ds.artsAbnormal[abnType] = next;
     applyDebuffIconState(el, next);
     commitDebuffChange('debuff');
 }

@@ -136,11 +136,13 @@ function calculateDamage(currentState, forceMaxStack = false, isStatCalcOnly = f
     applyFixedStats(activeEffects, stats);
     applyPercentStats(activeEffects, stats);
 
+    const finalResult = computeFinalDamageOutput(currentState, opData, wepData, stats, allEffects, activeEffects);
+
     if (isStatCalcOnly) {
-        return { stats };
+        return { stats: finalResult.stats };
     }
 
-    return computeFinalDamageOutput(currentState, opData, wepData, stats, allEffects, activeEffects);
+    return finalResult;
 }
 
 // ---- 스탯 키 정규화 ----
@@ -760,30 +762,10 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects, act
     const baseRes = state.enemyResistance || 0;
     const resistance = { '물리': baseRes, '열기': baseRes, '전기': baseRes, '냉기': baseRes, '자연': baseRes };
 
-    // 갑옷 파괴 디버프 (물리 받는 피해 증가)
-    const ARMOR_BREAK_BONUS = [0, 12, 16, 20, 24];
-    const abStacks = state.debuffState.physDebuff?.armorBreak || 0;
-    const abVal = ARMOR_BREAK_BONUS[abStacks];
-    const abDisabled = state.disabledEffects.includes('debuff_armorBreak');
-    if (abVal > 0) {
-        if (!abDisabled) takenDmgMap.phys += abVal;
-        logs.taken.push({ txt: `[갑옷 파괴 ${abStacks}단계] 받는 물리 피해 +${abVal}%`, uid: 'debuff_armorBreak', tag: 'phys' });
-    }
-
-    // 부식 디버프: 모든 저항 감소
-    const BUSIK_RED = [0, 12, 16, 20, 24];
-    const busikStacks = state.debuffState.artsAbnormal['부식'] || 0;
-    const busikVal = BUSIK_RED[busikStacks];
-    const busikDisabled = state.disabledEffects.includes('debuff_busik');
-    if (busikVal > 0) {
-        if (!busikDisabled) ALL_RES_KEYS.forEach(k => resistance[k] -= busikVal);
-        logs.res.push({ txt: `[부식 ${busikStacks}단계] 모든 저항 -${busikVal}`, uid: 'debuff_busik' });
-    }
-
-    // 감전 디버프: 받는 아츠 피해 증가
-    const GAMSUN_BONUS = [0, 12, 16, 20, 24];
-    const gamsunStacks = state.debuffState.artsAbnormal['감전'] || 0;
-    const gamsunVal = GAMSUN_BONUS[gamsunStacks];
+    // 디버프 변수 셋업 (부가 효과 증강 보너스 적용을 위해 allEffects.forEach 이후에 계산)
+    let abVal = 0;
+    let busikVal = 0;
+    let gamsunVal = 0;
 
     const atkBaseLogs = [
         { txt: `오퍼레이터 공격력: ${opData.baseAtk.toLocaleString()}`, uid: 'base_op_atk' },
@@ -1054,12 +1036,62 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects, act
             logs.res.push({ txt: `[${displayName}] ${t} ${val.toFixed(1)}${eff.stack ? ` <span class="tooltip-highlight">(${eff._stackCount}중첩)</span>` : ''}`, uid: eff.uid, stack: eff.stack, stackCount: eff._stackCount, _triggerFailed: eff._triggerFailed });
         }
     });
+    // [추가] calc.js 내부 로컬 변수로 연산된 아츠 강도를 stats 본체에 저장 (서브오퍼레이터 계산/캐시 시 활용)
+    stats.originiumArts = originiumArts;
 
-    // [디버프 직접 적용 규칙] 로그는 항상 push, 수치 반영은 !isDisabled 시에만
-    const gamsunDisabled = state.disabledEffects.includes('debuff_gamsun');
-    if (gamsunVal > 0) {
+    // [디버프 직접 적용 및 부가 효과 증강 계산]
+    const getSecondaryAmpRaw = (opId) => {
+        if (!opId) return { ampRaw: 0, opName: null };
+        let arts = 0;
+        let pName = null;
+        if (state.mainOp.id === opId) {
+            arts = originiumArts;
+            pName = opData.name;
+        } else {
+            const cached = state._subStatsCache?.[opId];
+            if (cached) arts = cached.originiumArts || 0;
+            const subOpData = typeof DATA_OPERATORS !== 'undefined' ? DATA_OPERATORS.find(o => o.id === opId) : null;
+            if (subOpData) pName = subOpData.name;
+        }
+        return { ampRaw: (2 * arts) / (300 + arts), opName: pName };
+    };
+
+    const attr = state.debuffState.attribution || {};
+
+    const ARMOR_BREAK_BONUS = [0, 12, 16, 20, 24];
+    const abStacks = state.debuffState.physDebuff?.armorBreak || 0;
+    if (abStacks > 0) {
+        const { ampRaw, opName } = getSecondaryAmpRaw(attr['갑옷 파괴']);
+        const amp = 1 + ampRaw;
+        abVal = parseFloat((ARMOR_BREAK_BONUS[abStacks] * amp).toFixed(1));
+        const abDisabled = state.disabledEffects.includes('debuff_armorBreak');
+        if (!abDisabled) takenDmgMap.phys += abVal;
+        const msgSuffix = amp > 1 && opName ? ` (${opName})` : '';
+        logs.taken.push({ txt: `[갑옷 파괴 ${abStacks}단계] 받는 물리 피해 +${abVal}%${msgSuffix}`, uid: 'debuff_armorBreak', tag: 'phys' });
+    }
+
+    const BUSIK_RED = [0, 12, 16, 20, 24];
+    const busikStacks = state.debuffState.artsAbnormal['부식'] || 0;
+    if (busikStacks > 0) {
+        const { ampRaw, opName } = getSecondaryAmpRaw(attr['부식']);
+        const amp = 1 + ampRaw;
+        busikVal = parseFloat((BUSIK_RED[busikStacks] * amp).toFixed(1));
+        const busikDisabled = state.disabledEffects.includes('debuff_busik');
+        if (!busikDisabled) ALL_RES_KEYS.forEach(k => resistance[k] -= busikVal);
+        const msgSuffix = amp > 1 && opName ? ` (${opName})` : '';
+        logs.res.push({ txt: `[부식 ${busikStacks}단계] 모든 저항 -${busikVal}${msgSuffix}`, uid: 'debuff_busik' });
+    }
+
+    const GAMSUN_BONUS = [0, 12, 16, 20, 24];
+    const gamsunStacks = state.debuffState.artsAbnormal['감전'] || 0;
+    if (gamsunStacks > 0) {
+        const { ampRaw, opName } = getSecondaryAmpRaw(attr['감전']);
+        const amp = 1 + ampRaw;
+        gamsunVal = parseFloat((GAMSUN_BONUS[gamsunStacks] * amp).toFixed(1));
+        const gamsunDisabled = state.disabledEffects.includes('debuff_gamsun');
         if (!gamsunDisabled) takenDmgMap.arts += gamsunVal;
-        logs.taken.push({ txt: `[감전 ${gamsunStacks}단계] 받는 아츠 피해 +${gamsunVal}%`, uid: 'debuff_gamsun', tag: 'arts' });
+        const msgSuffix = amp > 1 && opName ? ` (${opName})` : '';
+        logs.taken.push({ txt: `[감전 ${gamsunStacks}단계] 받는 아츠 피해 +${gamsunVal}%${msgSuffix}`, uid: 'debuff_gamsun', tag: 'arts' });
     }
 
     const statBonusPct = (stats[opData.mainStat] * 0.005) + (stats[opData.subStat] * 0.002);
@@ -1121,6 +1153,9 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects, act
     }
     const finalUltCost = Math.max(0, (baseUltCost * (1 + ultCostReduction / 100)) / (1 + ultRecharge / 100));
 
+    // 부가 효과 증강: (2 * arts) / (300 + arts)
+    const artsSecondary = (2 * originiumArts) / (300 + originiumArts) * 100;
+
     // 레벨 계수 고정 로그 (항상 추가, PROTECTED)
     logs.dmgInc.push({ txt: `[물리 이상] +${(LEVEL_COEFF_PHYS * 100).toFixed(1)}% (레벨 계수)`, uid: 'level_coeff_phys', tag: 'phys' });
     logs.dmgInc.push({ txt: `[아츠 이상/폭발] +${(LEVEL_COEFF_ARTS * 100).toFixed(1)}% (레벨 계수)`, uid: 'level_coeff_arts', tag: 'arts' });
@@ -1136,7 +1171,7 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects, act
             critExp, finalCritRate, critDmg, dmgInc, amp, vuln: opVuln, takenDmg: opTakenDmg, unbalanceDmg: finalUnbal, originiumArts, skillMults, dmgIncData: dmgIncMap,
             skillCritData, resistance: activeResVal, resMult, defMult, enemyDefense: defVal, ultRecharge, finalUltCost, vulnMap, takenDmgMap, vulnAmpEffects,
             allRes: resistance, armorBreakVal: abVal, gamsunVal: gamsunVal, baseTakenDmg: takenDmgMap.all,
-            resIgnore: resIgnore, levelCoeffPhys: LEVEL_COEFF_PHYS, levelCoeffArts: LEVEL_COEFF_ARTS
+            resIgnore: resIgnore, levelCoeffPhys: LEVEL_COEFF_PHYS, levelCoeffArts: LEVEL_COEFF_ARTS, artsSecondary
         },
         logs
     };
