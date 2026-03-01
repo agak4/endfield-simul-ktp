@@ -188,8 +188,11 @@ function initUI() {
         enemyCb.style.display = 'none';
         enemyBtn.onclick = () => {
             ensureCustomState();
-            enemyCb.checked = !enemyCb.checked;
-            updateToggleButton(enemyBtn, enemyCb.checked, '불균형');
+            const ts = getTargetState();
+            const next = !enemyCb.checked;
+            enemyCb.checked = next;
+            ts.setUnbalanced(next);
+            updateToggleButton(enemyBtn, next, '불균형');
             if (!state.selectedSeqId) propagateGlobalStateToCustom('unbalanced');
             updateState();
         };

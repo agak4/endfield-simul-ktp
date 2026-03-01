@@ -178,7 +178,10 @@ window.propagateGlobalStateToCustom = function (type) {
         if (!item.customState) return;
         switch (type) {
             case 'unbalanced': item.customState.enemyUnbalanced = state.enemyUnbalanced; break;
-            case 'debuff': item.customState.debuffState = deepClone(state.debuffState); break;
+            case 'debuff':
+                item.customState.debuffState = deepClone(state.debuffState);
+                item.customState.usables = deepClone(state.usables);
+                break;
             case 'specialStack': item.customState.specialStack = deepClone(state.mainOp.specialStack); break;
             case 'effects':
                 item.customState.disabledEffects = [...state.disabledEffects];
