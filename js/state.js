@@ -223,7 +223,6 @@ function updateState() {
             const newVal = document.getElementById(`sub-${i}-gear-${k}`)?.value || null;
             if (sub.gears[j] !== newVal) {
                 sub.gears[j] = newVal;
-                sub.gearForged[j] = false; // 장비 변경 시 단조 초기화
             }
         });
 

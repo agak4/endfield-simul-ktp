@@ -755,6 +755,12 @@ function applyOpSettingsToUI(opId, type, subIdx) {
             if (inp) inp.value = gearId || '';
             updateEntityImage(gearId, `sub-${subIdx}-gear-${k}-image`, 'gears');
         });
+
+        if (s?.gearForged) {
+            state.subOps[subIdx].gearForged = [...s.gearForged];
+        } else {
+            state.subOps[subIdx].gearForged = [false, false, false, false];
+        }
     }
 }
 
