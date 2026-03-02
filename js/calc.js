@@ -1623,11 +1623,13 @@ function calcSingleSkillDamage(type, state, res) {
                     const bonusVal = (parseFloat(bb) + parseFloat(bp) * stackCount) / 100;
 
                     if (bonusVal > 0) {
+                        const isStackable = b.perStack !== undefined && parseFloat(b.perStack) !== 0;
                         if (b.element && b.element !== baseSkillElement) {
                             bonusList.push({
                                 name: trName,
                                 val: bonusVal,
-                                stack: stackCount,
+                                stack: isStackable ? stackCount : undefined,
+                                isStackable: isStackable,
                                 isSeparateHit: true,
                                 element: b.element
                             });
@@ -1636,7 +1638,8 @@ function calcSingleSkillDamage(type, state, res) {
                             bonusList.push({
                                 name: trName,
                                 val: bonusVal,
-                                stack: stackCount
+                                stack: isStackable ? stackCount : undefined,
+                                isStackable: isStackable
                             });
                         }
                     }
@@ -1749,7 +1752,14 @@ function calcSingleSkillDamage(type, state, res) {
             } else if (currentAttachType || isForcedAbnormal) {
                 // 2. 아츠 이상 (다른 속성 혹은 강제 부여)
                 const targetAnomaly = ELEMENT_TO_ANOMALY[nextBase] || nextBase;
-                artsName = targetAnomaly + '(이상)';
+
+                // [Fix] 강제 연소 부여는 '(이상)' 대신 '연소'로 표시
+                if (isForcedAbnormal && targetAnomaly === '연소') {
+                    artsName = '연소';
+                } else {
+                    artsName = targetAnomaly + '(이상)';
+                }
+
                 shouldTrigger = true;
 
                 const S = currentStacks;

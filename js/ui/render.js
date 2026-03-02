@@ -545,7 +545,7 @@ function renderCycleSequence(cycleRes) {
                 // 보너스 항목 (이본 등)
                 if (item.bonusList && item.bonusList.length > 0) {
                     item.bonusList.forEach(b => {
-                        const stackStr = b.stack ? ` (${b.stack}스택)` : '';
+                        const stackStr = (b.isStackable && b.stack) ? ` (${b.stack}스택)` : '';
                         rateHtml += ` + ${b.name} ${(b.val * 100).toFixed(0)}%${stackStr}`;
                     });
                 }
@@ -553,6 +553,8 @@ function renderCycleSequence(cycleRes) {
                 // 물리/아츠 이상 항목
                 if (item.abnormalList && item.abnormalList.length > 0) {
                     item.abnormalList.forEach(a => {
+                        if (a.uiHidden) return; // [Fix] 숨김 처리된 이상 정보는 출력하지 않음
+
                         let suffix = '';
                         if (state.mainOp.id === 'Da Pan' && a.name === '강타') {
                             suffix = ' <span style="color:var(--accent); font-size: 0.9em;">[판 특성] * 120%</span>';
