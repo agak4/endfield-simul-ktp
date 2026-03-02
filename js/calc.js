@@ -1793,7 +1793,7 @@ function calcSingleSkillDamage(type, state, res) {
     if (visibleAbnormals.length > 0) {
         const artsStrengthMult = 1 + (originiumArts / 100);
         const descParts = visibleAbnormals.map(a => {
-            const boostedMult = a.mult * artsStrengthMult;
+            const boostedMult = (a.isArts || a.name === '아츠 폭발') ? a.mult * artsStrengthMult : a.mult;
             return `${a.name} +${(boostedMult * 100).toFixed(0)}%`;
         });
         abnormalDesc = ` (${descParts.join(', ')})`;
@@ -1943,7 +1943,9 @@ function calcSingleSkillDamage(type, state, res) {
         }
 
         const aLevelCoeff = (a.element === 'phys' || a.name === '강타') ? (1 + LEVEL_COEFF_PHYS) : (1 + LEVEL_COEFF_ARTS);
-        const aCommonMults = adjCritExp * (1 + aInc / 100) * (1 + amp / 100) * (1 + aTaken / 100) * (1 + aVuln / 100) * (1 + unbalanceDmg / 100) * aResMult * defMult * artsStrengthMult * aLevelCoeff;
+        const isAStrengthApplicable = (a.isArts || a.name === '아츠 폭발');
+        const currentArtsStrengthMult = isAStrengthApplicable ? artsStrengthMult : 1;
+        const aCommonMults = adjCritExp * (1 + aInc / 100) * (1 + amp / 100) * (1 + aTaken / 100) * (1 + aVuln / 100) * (1 + unbalanceDmg / 100) * aResMult * defMult * currentArtsStrengthMult * aLevelCoeff;
         let aDmg = adjFinalAtk * a.mult * aCommonMults;
 
         // 판(Da Pan) 전용 강타 보너스 (1.2배 곱연산)
@@ -2007,10 +2009,8 @@ function calcSingleSkillDamage(type, state, res) {
         const bCommonMults = adjCritExp * (1 + bInc / 100) * (1 + amp / 100) * (1 + bTaken / 100) * (1 + bVuln / 100) * (1 + unbalanceDmg / 100) * bResMult * defMult;
         const bHitDmg = adjFinalAtk * adjustedBonusVal * bCommonMults;
 
-        // Add to main baseHitDmg instead of abnormalDmgMap
         baseHitDmg += bHitDmg;
 
-        // Still track in visibleAbnormals for the UI percentage display
         visibleAbnormals.push({ name: `추가 피해(${eKey || '알 수 없음'})`, mult: adjustedBonusVal, isSeparateBonus: true });
     });
 
@@ -2020,7 +2020,7 @@ function calcSingleSkillDamage(type, state, res) {
             if (a.isSeparateBonus) {
                 return `${a.name} +${(a.mult * 100).toFixed(0)}%`;
             } else {
-                const boostedMult = a.mult * artsStrengthMult;
+                const boostedMult = (a.isArts || a.name === '아츠 폭발') ? a.mult * artsStrengthMult : a.mult;
                 return `${a.name} +${(boostedMult * 100).toFixed(0)}%`;
             }
         });

@@ -820,8 +820,7 @@ const AppTooltip = {
             }
 
             if (data.base) {
-                const multiplier = 1 + (artsStrength / 100);
-                const scalePct = (str) => (parseFloat(str.replace('%', '')) * multiplier).toFixed(0) + '%';
+                const scalePct = (str) => str;
                 let dmgStr = `기본 데미지: <strong class="tooltip-highlight">${scalePct(data.base)}</strong>`;
                 if (data.perStack) {
                     dmgStr += ` <span class="tooltip-muted">+ ${data.trigger || '스택'} * <strong class="tooltip-highlight">${scalePct(data.perStack)}</strong></span>`;

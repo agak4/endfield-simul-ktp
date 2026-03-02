@@ -46,9 +46,12 @@
                     </div>
                 </div>
                 <div class="main-op-right">
-                    <div class="control-row">
+                    <div class="control-row op-select-row">
                         <select id="main-op-select" class="u-display-none"></select>
-                        <button id="main-op-select-btn" class="visual-select-btn btn-select">== 선택 해제 ==</button>
+                        <button id="main-op-select-btn" class="visual-select-btn btn-select op-select-btn">== 선택 해제
+                            ==</button>
+                        <button id="main-op-preset-btn" class="visual-select-btn btn-select op-preset-btn"
+                            onclick="togglePresetPopup(this)">프리셋</button>
                     </div>
                     <div class="control-row potency-row">
                         <label>잠재효과</label>
@@ -1008,6 +1011,16 @@
             <div id="gear-sidebar-grid" class="gear-sidebar-grid"></div>
         </div>
     </div>
+    <!-- 프리셋 팝업 -->
+    <div id="preset-popup" class="preset-popup">
+        <div class="popup-header">
+            <span class="popup-header-title">프리셋 목록 (<span id="preset-op-name"></span>)</span>
+            <button class="popup-close" onclick="closePresetPopup()">&times;</button>
+        </div>
+        <div id="preset-list" class="preset-list">
+            <!-- 10개의 프리셋 슬롯이 자바스크립트에 동적으로 렌더링 됩니다. -->
+        </div>
+    </div>
     <!-- 가이드 모달 -->
     <div id="guide-modal" class="modal-overlay">
         <div class="modal-content guide-content">
@@ -1065,6 +1078,7 @@
     <!-- <script src="js/ui/damage_contribution.js" defer></script> -->
     <script src="js/ui/render.js" defer></script>
     <script src="js/ui/tooltip.js" defer></script>
+    <script src="js/ui/preset.js" defer></script>
     <script src="js/ui/init.js" defer></script>
 </body>
 
