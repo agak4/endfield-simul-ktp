@@ -246,7 +246,7 @@
 /* ============ 메인 오퍼레이터 레이아웃 ============ */
 .main-op-row {
     display: flex;
-    gap: 18px;
+    gap: 15px;
 }
 
 .main-op-right {
@@ -1008,4 +1008,98 @@
 
 .tooltip-muted {
     color: var(--text-muted);
+}
+
+/* ============ 전투 분석 탭 ============ */
+.analysis-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0;
+}
+
+.analysis-header h2 {
+    margin: 0;
+    padding-bottom: 10px;
+}
+
+.analysis-tabs {
+    display: flex;
+    gap: 4px;
+}
+
+.analysis-tab {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border);
+    border-bottom: none;
+    border-radius: 8px 8px 0 0;
+    padding: 8px 20px;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    top: 1px;
+}
+
+.analysis-tab:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+}
+
+.analysis-tab.active {
+    background: var(--panel-bg);
+    border-color: var(--accent);
+    border-bottom: 1px solid var(--panel-bg);
+    color: var(--accent);
+    font-weight: bold;
+    z-index: 1;
+}
+
+.analysis-tab-content {
+    display: none;
+    flex-direction: column;
+    gap: 15px;
+    animation: tabFadeIn 0.3s ease;
+}
+
+.analysis-tab-content.active {
+    display: flex;
+}
+
+@keyframes tabFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.empty-state-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px dashed rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    color: var(--text-muted);
+}
+
+.empty-state-icon {
+    font-size: 2rem;
+    margin-bottom: 15px;
+    color: var(--accent);
+    opacity: 0.5;
+}
+
+.empty-state-text {
+    font-size: 0.95rem;
 }

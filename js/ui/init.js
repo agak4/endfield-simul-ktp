@@ -260,6 +260,28 @@ function initUI() {
 
     initCycleSortButton?.();
     AppTooltip.init();
+
+    // 전투 분석 탭 시스템
+    const tabs = document.querySelectorAll('.analysis-tab');
+    tabs.forEach(tab => {
+        tab.onclick = () => {
+            const target = tab.dataset.tab;
+
+            // 탭 버튼 상태 업데이트
+            tabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+
+            // 콘텐츠 표시 업데이트
+            document.querySelectorAll('.analysis-tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+
+            const targetContent = document.getElementById(`analysis-${target}-content`);
+            if (targetContent) {
+                targetContent.classList.add('active');
+            }
+        };
+    });
 }
 
 // ============================================================

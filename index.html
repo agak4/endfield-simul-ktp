@@ -857,126 +857,146 @@
             </div>
         </section>
         <section class="panel analysis-panel">
-            <h2>전투 분석</h2>
-            <!-- 사이클 계산값 -->
-            <div class="result-box cycle-dmg-box">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                    <h3 style="margin: 0;">사이클 상세 합산</h3>
-                    <button id="btn-sort-cycle" class="icon-btn" title="데미지 순 정렬">⇅</button>
-                </div>
-                <div class="cycle-row"
-                    style="margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;">
-                    <div style="display: flex; align-items: center; gap: 6px; position: relative;">
-                        <span class="cycle-label" style="font-weight: bold; color: var(--text-muted);">최종 계산값
-                            (100%)</span>
-                        <span class="info-icon" id="formula-info-btn"
-                            style="width: 16px; height: 16px; font-size: 0.6rem;">ⓘ</span>
-                        <div id="formula-tooltip" class="formula-tooltip" style="left: 0; top: 25px; z-index: 200;">
-                            <div class="formula-title">데미지 계산 공식</div>
-                            <div class="formula-content">
-                                공격력*치명타 기대값(*주는 피해+스킬 피해)*증폭*적이 받는 피해*취약*불균형*적 방어력*적의 저항
-                            </div>
-                        </div>
-                    </div>
-                    <span id="final-damage" class="cycle-val" style="color: var(--accent); font-size: 1.1rem;">0</span>
-                </div>
-                <div id="cycle-dmg-list" class="cycle-dmg-list"></div>
-                <div class="cycle-total-row">
-                    <span class="cycle-label">총합</span>
-                    <span id="cycle-dmg-total" class="cycle-val cycle-total-val">0</span>
+            <div class="analysis-header">
+                <h2>전투 분석</h2>
+                <div class="analysis-tabs">
+                    <button class="analysis-tab active" data-tab="solo">솔로</button>
+                    <button class="analysis-tab" data-tab="party">파티</button>
                 </div>
             </div>
 
-            <!-- 오퍼레이터 사이클 딜 지분 -->
-            <div class="result-box cycle-dmg-box" id="damage-contribution-box" style="display: none;">
-                <h3 style="margin-top: 0; margin-bottom: 12px;">오퍼레이터 사이클 딜 지분</h3>
-                <div id="damage-contribution-list" class="dmg-contrib-list">
-                    <!-- 4 pre-defined slots for Main + up to 3 Sub operators -->
-                    <div class="dmg-contrib-item" id="contrib-item-0" style="order: 0;">
-                        <div class="op-image-container dmg-contrib-img-box">
-                            <img id="contrib-img-0" src="" class="dmg-contrib-img">
-                        </div>
-                        <div class="dmg-contrib-info-col">
-                            <div class="dmg-contrib-header">
-                                <span id="contrib-name-0" class="dmg-contrib-name"></span>
-                                <div class="dmg-contrib-val-wrap"><span id="contrib-val-0"
-                                        class="dmg-contrib-val"></span><span id="contrib-pct-0"
-                                        class="dmg-contrib-pct"></span></div>
+            <!-- 솔로 분석 컨텐츠 -->
+            <div id="analysis-solo-content" class="analysis-tab-content active">
+                <!-- 사이클 계산값 -->
+                <div class="result-box cycle-dmg-box">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <h3 style="margin: 0;">사이클 상세 합산</h3>
+                        <button id="btn-sort-cycle" class="icon-btn" title="데미지 순 정렬">⇅</button>
+                    </div>
+                    <div class="cycle-row"
+                        style="margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;">
+                        <div style="display: flex; align-items: center; gap: 6px; position: relative;">
+                            <span class="cycle-label" style="font-weight: bold; color: var(--text-muted);">최종 계산값
+                                (100%)</span>
+                            <span class="info-icon" id="formula-info-btn"
+                                style="width: 16px; height: 16px; font-size: 0.6rem;">ⓘ</span>
+                            <div id="formula-tooltip" class="formula-tooltip" style="left: 0; top: 25px; z-index: 200;">
+                                <div class="formula-title">데미지 계산 공식</div>
+                                <div class="formula-content">
+                                    공격력*치명타 기대값(*주는 피해+스킬 피해)*증폭*적이 받는 피해*취약*불균형*적 방어력*적의 저항
+                                </div>
                             </div>
-                            <div class="skill-card dmg-contrib-bar-track">
-                                <div id="contrib-bar-0" class="skill-dmg-bar dmg-contrib-bar-fill"></div>
+                        </div>
+                        <span id="final-damage" class="cycle-val"
+                            style="color: var(--accent); font-size: 1.1rem;">0</span>
+                    </div>
+                    <div id="cycle-dmg-list" class="cycle-dmg-list"></div>
+                    <div class="cycle-total-row">
+                        <span class="cycle-label">총합</span>
+                        <span id="cycle-dmg-total" class="cycle-val cycle-total-val">0</span>
+                    </div>
+                </div>
+
+                <!-- 오퍼레이터 사이클 딜 지분 -->
+                <div class="result-box cycle-dmg-box" id="damage-contribution-box" style="display: none;">
+                    <h3 style="margin-top: 0; margin-bottom: 12px;">오퍼레이터 사이클 딜 지분</h3>
+                    <div id="damage-contribution-list" class="dmg-contrib-list">
+                        <!-- 4 pre-defined slots for Main + up to 3 Sub operators -->
+                        <div class="dmg-contrib-item" id="contrib-item-0" style="order: 0;">
+                            <div class="op-image-container dmg-contrib-img-box">
+                                <img id="contrib-img-0" src="" class="dmg-contrib-img">
+                            </div>
+                            <div class="dmg-contrib-info-col">
+                                <div class="dmg-contrib-header">
+                                    <span id="contrib-name-0" class="dmg-contrib-name"></span>
+                                    <div class="dmg-contrib-val-wrap"><span id="contrib-val-0"
+                                            class="dmg-contrib-val"></span><span id="contrib-pct-0"
+                                            class="dmg-contrib-pct"></span></div>
+                                </div>
+                                <div class="skill-card dmg-contrib-bar-track">
+                                    <div id="contrib-bar-0" class="skill-dmg-bar dmg-contrib-bar-fill"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="dmg-contrib-item" id="contrib-item-1" style="order: 1;">
+                            <div class="op-image-container dmg-contrib-img-box">
+                                <img id="contrib-img-1" src="" class="dmg-contrib-img">
+                            </div>
+                            <div class="dmg-contrib-info-col">
+                                <div class="dmg-contrib-header">
+                                    <span id="contrib-name-1" class="dmg-contrib-name"></span>
+                                    <div class="dmg-contrib-val-wrap"><span id="contrib-val-1"
+                                            class="dmg-contrib-val"></span><span id="contrib-pct-1"
+                                            class="dmg-contrib-pct"></span></div>
+                                </div>
+                                <div class="skill-card dmg-contrib-bar-track">
+                                    <div id="contrib-bar-1" class="skill-dmg-bar dmg-contrib-bar-fill"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="dmg-contrib-item" id="contrib-item-2" style="order: 2;">
+                            <div class="op-image-container dmg-contrib-img-box">
+                                <img id="contrib-img-2" src="" class="dmg-contrib-img">
+                            </div>
+                            <div class="dmg-contrib-info-col">
+                                <div class="dmg-contrib-header">
+                                    <span id="contrib-name-2" class="dmg-contrib-name"></span>
+                                    <div class="dmg-contrib-val-wrap"><span id="contrib-val-2"
+                                            class="dmg-contrib-val"></span><span id="contrib-pct-2"
+                                            class="dmg-contrib-pct"></span></div>
+                                </div>
+                                <div class="skill-card dmg-contrib-bar-track">
+                                    <div id="contrib-bar-2" class="skill-dmg-bar dmg-contrib-bar-fill"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="dmg-contrib-item" id="contrib-item-3" style="order: 3;">
+                            <div class="op-image-container dmg-contrib-img-box">
+                                <img id="contrib-img-3" src="" class="dmg-contrib-img">
+                            </div>
+                            <div class="dmg-contrib-info-col">
+                                <div class="dmg-contrib-header">
+                                    <span id="contrib-name-3" class="dmg-contrib-name"></span>
+                                    <div class="dmg-contrib-val-wrap"><span id="contrib-val-3"
+                                            class="dmg-contrib-val"></span><span id="contrib-pct-3"
+                                            class="dmg-contrib-pct"></span></div>
+                                </div>
+                                <div class="skill-card dmg-contrib-bar-track">
+                                    <div id="contrib-bar-3" class="skill-dmg-bar dmg-contrib-bar-fill"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <div class="dmg-contrib-item" id="contrib-item-1" style="order: 1;">
-                        <div class="op-image-container dmg-contrib-img-box">
-                            <img id="contrib-img-1" src="" class="dmg-contrib-img">
+                </div>
+                <h3>무기 비교</h3>
+                <div class="comparison-settings comp-settings-panel">
+                    <div class="comp-settings-header">
+                        <span class="comp-settings-indicator"></span>
+                        비교 대상 설정 (일괄 적용)
+                    </div>
+                    <div class="comp-settings-body">
+                        <div class="control-row potency-row">
+                            <label class="u-font-xsmall">무기 잠재</label>
+                            <div class="potency-group" id="comp-wep-pot-group"></div>
+                            <input type="hidden" id="comp-wep-pot" value="0">
                         </div>
-                        <div class="dmg-contrib-info-col">
-                            <div class="dmg-contrib-header">
-                                <span id="contrib-name-1" class="dmg-contrib-name"></span>
-                                <div class="dmg-contrib-val-wrap"><span id="contrib-val-1"
-                                        class="dmg-contrib-val"></span><span id="contrib-pct-1"
-                                        class="dmg-contrib-pct"></span></div>
-                            </div>
-                            <div class="skill-card dmg-contrib-bar-track">
-                                <div id="contrib-bar-1" class="skill-dmg-bar dmg-contrib-bar-fill"></div>
-                            </div>
+                        <div class="u-flex-column-center">
+                            <label class="u-font-xsmall">기질 여부</label>
+                            <input type="checkbox" id="comp-wep-state" class="hidden-checkbox">
                         </div>
                     </div>
-                    <div class="dmg-contrib-item" id="contrib-item-2" style="order: 2;">
-                        <div class="op-image-container dmg-contrib-img-box">
-                            <img id="contrib-img-2" src="" class="dmg-contrib-img">
-                        </div>
-                        <div class="dmg-contrib-info-col">
-                            <div class="dmg-contrib-header">
-                                <span id="contrib-name-2" class="dmg-contrib-name"></span>
-                                <div class="dmg-contrib-val-wrap"><span id="contrib-val-2"
-                                        class="dmg-contrib-val"></span><span id="contrib-pct-2"
-                                        class="dmg-contrib-pct"></span></div>
-                            </div>
-                            <div class="skill-card dmg-contrib-bar-track">
-                                <div id="contrib-bar-2" class="skill-dmg-bar dmg-contrib-bar-fill"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="dmg-contrib-item" id="contrib-item-3" style="order: 3;">
-                        <div class="op-image-container dmg-contrib-img-box">
-                            <img id="contrib-img-3" src="" class="dmg-contrib-img">
-                        </div>
-                        <div class="dmg-contrib-info-col">
-                            <div class="dmg-contrib-header">
-                                <span id="contrib-name-3" class="dmg-contrib-name"></span>
-                                <div class="dmg-contrib-val-wrap"><span id="contrib-val-3"
-                                        class="dmg-contrib-val"></span><span id="contrib-pct-3"
-                                        class="dmg-contrib-pct"></span></div>
-                            </div>
-                            <div class="skill-card dmg-contrib-bar-track">
-                                <div id="contrib-bar-3" class="skill-dmg-bar dmg-contrib-bar-fill"></div>
-                            </div>
-                        </div>
-                    </div>
+                </div>
+                <div id="weapon-comparison" class="comparison-list"></div>
+            </div>
+
+            <!-- 파티 분석 컨텐츠 -->
+            <div id="analysis-party-content" class="analysis-tab-content">
+                <div class="empty-state-container">
+                    <div class="empty-state-icon">✦</div>
+                    <p class="empty-state-text">현재 준비 중인 기능입니다.</p>
                 </div>
             </div>
-            <h3>무기 비교</h3>
-            <div class="comparison-settings comp-settings-panel">
-                <div class="comp-settings-header">
-                    <span class="comp-settings-indicator"></span>
-                    비교 대상 설정 (일괄 적용)
-                </div>
-                <div class="comp-settings-body">
-                    <div class="control-row potency-row">
-                        <label class="u-font-xsmall">무기 잠재</label>
-                        <div class="potency-group" id="comp-wep-pot-group"></div>
-                        <input type="hidden" id="comp-wep-pot" value="0">
-                    </div>
-                    <div class="u-flex-column-center">
-                        <label class="u-font-xsmall">기질 여부</label>
-                        <input type="checkbox" id="comp-wep-state" class="hidden-checkbox">
-                    </div>
-                </div>
-            </div>
-            <div id="weapon-comparison" class="comparison-list"></div>
         </section>
     </div>
     <!-- 오퍼레이터 선택 모달 -->
