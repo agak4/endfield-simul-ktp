@@ -176,7 +176,7 @@ function renderDamageContribution(cycleRes) {
         }
 
         if (nameEl) {
-            nameEl.innerText = item.isMain ? `${item.opName} (메인)` : item.opName;
+            nameEl.innerText = item.isMain ? `${item.opName} (현재)` : item.opName;
             if (item.isMain) {
                 nameEl.classList.add('is-main-text');
             } else {

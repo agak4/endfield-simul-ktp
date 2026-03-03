@@ -107,18 +107,18 @@ function renderPartyContribution() {
     let html = `
         <div class="analysis-tab-inner">
             <div class="tile" data-tile-id="party-total" data-full-row="true" style="margin-bottom: 20px;">
-                <h4>파티 총합 데미지 (사이클)</h4>
+                <h3>파티 총합 데미지</h3>
                 <div style="font-size: 1.8rem; font-weight: bold; color: var(--accent);">${Math.floor(totalPartyDmg).toLocaleString()}</div>
             </div>
             
             <div class="tile" data-tile-id="party-contrib-list" data-full-row="true">
-                <h4>오퍼레이터별 데미지 기여도</h4>
+                <h3>오퍼레이터별 데미지 기여도</h3>
                 <div class="dmg-contrib-list">
     `;
 
     results.sort((a, b) => b.damage - a.damage).forEach((item, idx) => {
         const sharePct = totalPartyDmg > 0 ? (item.damage / totalPartyDmg) * 100 : 0;
-        const mainBadge = item.isMain ? ' <span style="font-size: 0.75rem; color: var(--accent); opacity: 0.8;">(메인)</span>' : '';
+        const mainBadge = item.isMain ? ' (메인)' : '';
 
         html += `
             <div class="dmg-contrib-item active" style="order: ${idx};">

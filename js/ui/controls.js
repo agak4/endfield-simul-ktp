@@ -228,8 +228,10 @@ function updateToggleButton(btn, isChecked, label) {
  */
 function toggleSubOp(idx) {
     const content = document.getElementById(`sub-op-content-${idx}`);
+    const card = document.getElementById(`sub-op-card-${idx}`);
     if (content) {
         content.classList.toggle('collapsed');
+        if (card) card.classList.toggle('collapsed');
         if (typeof updateState === 'function') updateState();
     }
 }
@@ -315,6 +317,42 @@ function updateEntityImage(entityId, imgElementId, folder) {
         const slot = imgElementId.replace('gear-', '').replace('-image', '');
         imgElement.setAttribute('data-tooltip-forged',
             document.getElementById(`gear-${slot}-forge`)?.checked || false);
+    }
+
+    // 서브 오퍼레이터 요약 아이콘 동기화
+    if (imgElementId.startsWith('sub-')) {
+        let summaryId = '';
+        if (imgElementId.endsWith('-image') && !imgElementId.includes('-wep-') && !imgElementId.includes('-gear-')) {
+            summaryId = imgElementId.replace('-image', '-summary-op');
+        } else if (imgElementId.endsWith('-wep-image')) {
+            summaryId = imgElementId.replace('-wep-image', '-summary-wep');
+        } else if (imgElementId.includes('-gear-')) {
+            summaryId = imgElementId.replace('-gear-', '-summary-').replace('-image', '');
+        }
+
+        if (summaryId) {
+            const summaryImg = document.getElementById(summaryId);
+            if (summaryImg) {
+                const summaryContainer = summaryImg.parentElement;
+                summaryContainer?.classList.remove('rarity-6', 'rarity-5', 'rarity-4');
+                summaryImg.classList.remove('loaded');
+
+                summaryImg.src = imgElement.src;
+                summaryImg.style.display = imgElement.style.display;
+
+                if (imgElement.classList.contains('loaded')) {
+                    summaryImg.classList.add('loaded');
+                } else if (imgElement.src !== TRANSPARENT_PIXEL) {
+                    summaryImg.onload = () => summaryImg.classList.add('loaded');
+                    summaryImg.onerror = () => {
+                        summaryImg.style.display = 'none';
+                        summaryImg.classList.remove('loaded');
+                    };
+                }
+
+                if (rarity && summaryContainer) summaryContainer.classList.add(`rarity-${rarity}`);
+            }
+        }
     }
 }
 

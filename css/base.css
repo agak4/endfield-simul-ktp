@@ -5,6 +5,13 @@
     font-display: swap;
 }
 
+@font-face {
+    font-family: 'OneStoreMobileGothicBody';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2105_2@1.0/ONE-Mobile-Regular.woff') format('woff');
+    font-weight: normal;
+    font-display: swap;
+}
+
 /* ============ 테마 변수 ============ */
 :root {
     --bg-color: #121212;
@@ -94,7 +101,7 @@ body {
     background-image: radial-gradient(circle at center, #2a2a2a 0%, #121212 100%);
     background-attachment: fixed;
     color: var(--text-primary);
-    font-family: 'NexonLv1Gothic', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: 'OneStoreMobileGothicBody';
     min-height: 100vh;
     overflow-y: auto;
     display: flex;
@@ -226,7 +233,11 @@ input:focus {
     cursor: pointer;
     font-size: 0.9rem;
     transition: all var(--transition-speed);
-    text-align: center;
+    display: flex;
+    height: 30px;
+    align-items: center;
+    justify-content: center;
+    font-family: 'OneStoreMobileGothicBody';
 }
 
 .btn-select:hover,
@@ -254,6 +265,10 @@ input:focus {
     border-color: var(--accent);
     color: var(--accent);
     font-weight: 600;
+}
+
+#main-wep-toggle {
+    flex: 1;
 }
 
 /* ============ 체크박스 래퍼 ============ */

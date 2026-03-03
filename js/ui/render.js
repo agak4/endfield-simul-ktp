@@ -823,6 +823,8 @@ function initCycleSortButton() {
 }
 
 
+window.showAllWeapons = false;
+
 /**
  * 현재 오퍼레이터가 사용할 수 있는 모든 무기의 데미지를 비교 렌더링한다.
  * 사이클 데미지 합계를 우선으로 비교하며, 합계가 0이면 최종 1회 데미지를 기준으로 한다.
@@ -834,8 +836,9 @@ function initCycleSortButton() {
  *
  * @param {object} res - 현재 무기로 계산된 calculateDamage 결과
  * @param {object|null} cycleRes - 현재 무기로 계산된 calculateCycleDamage 결과
+ * @param {boolean} [skipAnimation=false] - 애니메이션 생략 여부
  */
-function renderWeaponComparison(res, cycleRes) {
+function renderWeaponComparison(res, cycleRes, skipAnimation = false) {
     const box = document.getElementById('weapon-comparison');
     if (!box || !state.mainOp.id || !res) return;
 
@@ -897,7 +900,10 @@ function renderWeaponComparison(res, cycleRes) {
     }
     box.innerHTML = '';
 
-    comparisons.forEach(item => {
+    // [Mod] 상위 5개 또는 전체 표시 처리
+    const displayItems = window.showAllWeapons ? comparisons : comparisons.slice(0, 5);
+
+    displayItems.forEach(item => {
         const sign = item.pct > 0 ? '+' : '';
         const cls = item.pct >= 0 ? (item.pct === 0 ? 'current' : 'positive') : 'negative';
 
@@ -920,8 +926,26 @@ function renderWeaponComparison(res, cycleRes) {
         box.appendChild(div);
     });
 
-    // FLIP 애니메이션: Last 위치와 비교하여 변위(delta) 계산 후 트랜지션
-    applyFlipAnimation(box, firstPositions, 'data-weapon-name');
+    // [Mod] 애니메이션 생략 요청이 없을 때만 FLIP 적용
+    if (!skipAnimation) {
+        // FLIP 애니메이션: Last 위치와 비교하여 변위(delta) 계산 후 트랜지션
+        applyFlipAnimation(box, firstPositions, 'data-weapon-name');
+    }
+
+    // [New] 토글 버튼 업데이트
+    const toggleBtn = document.getElementById('btn-toggle-weapon-comp');
+    if (toggleBtn) {
+        if (comparisons.length <= 5) {
+            toggleBtn.style.display = 'none';
+        } else {
+            toggleBtn.style.display = 'flex';
+            toggleBtn.innerText = window.showAllWeapons ? '접기 (▲)' : `더 보기 (▼)`;
+            toggleBtn.onclick = () => {
+                window.showAllWeapons = !window.showAllWeapons;
+                renderWeaponComparison(res, cycleRes, true);
+            };
+        }
+    }
 }
 /**
  * 주는 피해 세부 정보를 2층(상단: 주는피해+속성1+2, 하단: 4스킬)으로 나누어 렌더링한다.

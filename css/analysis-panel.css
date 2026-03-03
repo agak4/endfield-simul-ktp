@@ -7,7 +7,7 @@
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
     border-bottom: 1px solid var(--border);
     padding-bottom: 0;
 }
@@ -34,6 +34,7 @@
     transition: all 0.2s ease;
     position: relative;
     top: 1px;
+    font-family: 'OneStoreMobileGothicBody';
 }
 
 .analysis-tab:hover {
@@ -471,20 +472,30 @@
     background: var(--error);
 }
 
-.comp-settings-panel {
-    margin-bottom: 20px;
-    padding: 15px;
-    background: rgba(0, 0, 0, 0.3);
-    border-radius: 12px;
-    border: 1px solid rgba(0, 217, 255, 0.2);
+.wep-comp-toggle-handle {
+    width: 100%;
+    margin-top: 10px;
+    padding: 8px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.2s ease;
 }
 
-.comp-settings-header {
-    font-size: 0.8rem;
-    margin-bottom: 10px;
-    display: flex;
-    align-items: center;
-    gap: 5px;
+.wep-comp-toggle-handle:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-primary);
+    border-color: rgba(0, 217, 255, 0.3);
+}
+
+.comp-settings-panel {
+    margin-bottom: 20px;
 }
 
 .comp-settings-indicator {

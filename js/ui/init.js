@@ -96,8 +96,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // 첫 방문 시 가이드 모달 표시
     if (!localStorage.getItem('endfield_guide_seen')) {
-        document.getElementById('guide-modal')?.classList.add('open');
-        localStorage.setItem('endfield_guide_seen', 'true');
+        if (typeof openGuideModal === 'function') {
+            openGuideModal();
+            localStorage.setItem('endfield_guide_seen', 'true');
+        }
     }
 
     updateState();
@@ -228,8 +230,9 @@ function initUI() {
     setupToggleButton('comp-wep-state', 'comp-wep-toggle', '기질');
 
     // 가이드 모달
-    document.getElementById('nav-guide')?.addEventListener('click',
-        () => document.getElementById('guide-modal')?.classList.add('open'));
+    document.getElementById('nav-guide')?.addEventListener('click', () => {
+        if (typeof openGuideModal === 'function') openGuideModal();
+    });
 
     // 데미지 공식 툴팁
     const formulaBtn = document.getElementById('formula-info-btn');
@@ -685,8 +688,12 @@ function restoreSubOps() {
         });
 
         const content = document.getElementById(`sub-op-content-${i}`);
+        const card = document.getElementById(`sub-op-card-${i}`);
         if (content && state.subOpsCollapsed) {
             content.classList.toggle('collapsed', state.subOpsCollapsed[i]);
+            if (card) {
+                card.classList.toggle('collapsed', state.subOpsCollapsed[i]);
+            }
         }
     }
 }
