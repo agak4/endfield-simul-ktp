@@ -7,7 +7,6 @@
  */
 
 function renderPartyContribution() {
-    console.log('[Party] renderPartyContribution called');
     const container = document.getElementById('analysis-party-content');
     if (!container) return;
 

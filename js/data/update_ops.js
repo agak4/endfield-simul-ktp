@@ -30,4 +30,3 @@ for (let i = 0; i < lines.length; i++) {
 }
 
 fs.writeFileSync(filePath, lines.join('\n'), 'utf8');
-console.log("data_operators.js updated successfully.");

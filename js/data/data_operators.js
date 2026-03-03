@@ -53,10 +53,10 @@ const DATA_OPERATORS = [
             {
                 skillType: ['배틀 스킬'], element: 'phys', desc: '오리지늄 아츠를 사용해 전방 일정 범위 내의 적을 공격하여 물리 피해를 주고 강타합니다.',
                 levels: {
-                    M0: { dmg: '280%', type: ['강타'], target: '적' },
-                    M1: { dmg: '300%', type: ['강타'], target: '적' },
-                    M2: { dmg: '323%', type: ['강타'], target: '적' },
-                    M3: { dmg: '350%', type: ['강타'], target: '적' }
+                    M0: { dmg: '280%', type: ['강타'], target: '적', bonus: [{ trigger: ['오리지늄 결정'], val: '320%' }] },
+                    M1: { dmg: '300%', type: ['강타'], target: '적', bonus: [{ trigger: ['오리지늄 결정'], val: '342%' }] },
+                    M2: { dmg: '323%', type: ['강타'], target: '적', bonus: [{ trigger: ['오리지늄 결정'], val: '369%' }] },
+                    M3: { dmg: '350%', type: ['강타'], target: '적', bonus: [{ trigger: ['오리지늄 결정'], val: '400%' }] }
                 }
             },
             {
@@ -71,10 +71,10 @@ const DATA_OPERATORS = [
             {
                 skillType: ['궁극기'], element: 'phys', cost: 80, desc: '오리지늄 아츠로 지면을 강타하여, 전방 부채꼴 범위 내의 적에게 대량의 물리 피해를 줍니다. 적에게 오리지늄 결정이 부착되어 있을 경우, 오리지늄 결정을 파괴하며 1회에 한하여 추가로 물리 피해를 줍니다.',
                 levels: {
-                    M0: { dmg: '640%', bonus: [{ trigger: ['오리지늄 결정'], val: '800%' }] },
-                    M1: { dmg: '684%', bonus: [{ trigger: ['오리지늄 결정'], val: '856%' }] },
-                    M2: { dmg: '738%', bonus: [{ trigger: ['오리지늄 결정'], val: '923%' }] },
-                    M3: { dmg: '800%', bonus: [{ trigger: ['오리지늄 결정'], val: '1000%' }] }
+                    M0: { dmg: '640%', bonus: [{ trigger: ['오리지늄 결정'], val: '480%' }] },
+                    M1: { dmg: '684%', bonus: [{ trigger: ['오리지늄 결정'], val: '514%' }] },
+                    M2: { dmg: '738%', bonus: [{ trigger: ['오리지늄 결정'], val: '554%' }] },
+                    M3: { dmg: '800%', bonus: [{ trigger: ['오리지늄 결정'], val: '600%' }] }
                 }
             }
         ],
@@ -84,7 +84,7 @@ const DATA_OPERATORS = [
         ],
         potential: [
             [{ desc: '배틀 스킬 구성 시퀀스가 오리지늄 결정을 소모했을 때, 스킬 게이지를 50포인트 반환합니다.' }],
-            [{ type: ['공격력 증가'], val: '15%', target: '팀', desc: '재능1 효과 강화: 자신이 공격력 증가 효과를 획득할 때, 다른 아군 오퍼레이터가 공격력 증가 효과의 절반을 획득합니다.' }],
+            [{ type: ['공격력 증가'], val: '15%', target: '팀', targetFilter: '자신 제외', desc: '재능1 효과 강화: 자신이 공격력 증가 효과를 획득할 때, 다른 아군 오퍼레이터가 공격력 증가 효과의 절반을 획득합니다.' }],
             [{ desc: '???' }],
             [{ desc: '???' }],
             [{ desc: '???' }]
@@ -847,10 +847,10 @@ const DATA_OPERATORS = [
             {
                 skillType: ['배틀 스킬'], element: 'heat', desc: '목표를 연속으로 사격하여 소량의 열기 피해를 주고, 마지막 한 발은 열기 부착 상태를 부여합니다. 목표가 연소 또는 감전 상태일 경우 열기 부착 상태를 부여하지 않고, 해당 상태를 소모하여 추가로 1회 사격하며, 대량의 열기 피해를 줍니다.',
                 levels: {
-                    M0: { dmg: '184%', type: ['열기 부착', '연소 소모', '감전 소모'], target: '적', bonus: [{ trigger: ['연소', '감전'], val: '680%' }] },
-                    M1: { dmg: '196%', type: ['열기 부착', '연소 소모', '감전 소모'], target: '적', bonus: [{ trigger: ['연소', '감전'], val: '727%' }] },
-                    M2: { dmg: '212%', type: ['열기 부착', '연소 소모', '감전 소모'], target: '적', bonus: [{ trigger: ['연소', '감전'], val: '784%' }] },
-                    M3: { dmg: '230%', type: ['열기 부착', '연소 소모', '감전 소모'], target: '적', bonus: [{ trigger: ['연소', '감전'], val: '850%' }] }
+                    M0: { dmg: '184%', type: [{ type: '열기 부착', excludeTarget: ['연소', '감전'] }, '연소 소모', '감전 소모'], target: '적', bonus: [{ trigger: ['연소', '감전'], val: '680%' }] },
+                    M1: { dmg: '196%', type: [{ type: '열기 부착', excludeTarget: ['연소', '감전'] }, '연소 소모', '감전 소모'], target: '적', bonus: [{ trigger: ['연소', '감전'], val: '727%' }] },
+                    M2: { dmg: '212%', type: [{ type: '열기 부착', excludeTarget: ['연소', '감전'] }, '연소 소모', '감전 소모'], target: '적', bonus: [{ trigger: ['연소', '감전'], val: '784%' }] },
+                    M3: { dmg: '230%', type: [{ type: '열기 부착', excludeTarget: ['연소', '감전'] }, '연소 소모', '감전 소모'], target: '적', bonus: [{ trigger: ['연소', '감전'], val: '850%' }] }
                 }
             },
             {
@@ -975,28 +975,28 @@ const DATA_OPERATORS = [
             {
                 skillType: ['강화 일반 공격'], masterySource: '궁극기', element: 'heat', desc: '모든 공격이 열기 피해를 주며, 3단계 일반 공격은 열기 부착 상태를 부여합니다.',
                 levels: {
-                    M0: { dmg: '836%' },
-                    M1: { dmg: '893%' },
-                    M2: { dmg: '962%' },
-                    M3: { dmg: '1044%' }
+                    M0: { dmg: '836%', type: ['열기 부착'], target: '적' },
+                    M1: { dmg: '893%', type: ['열기 부착'], target: '적' },
+                    M2: { dmg: '962%', type: ['열기 부착'], target: '적' },
+                    M3: { dmg: '1044%', type: ['열기 부착'], target: '적' }
                 }
             },
             {
                 skillType: ['배틀 스킬'], element: 'heat', desc: '몰튼 코어 조각을 소환해 지속적으로 전방의 적을 공격합니다. 열기 피해를 주며, 적을 명중하면 녹아내린 불꽃 1스택을 획득합니다. 이미 녹아내린 불꽃 4스택이 쌓였을 경우, 마지막에 모든 스택 수치를 소모해 넓은 범위 내의 적에게 추가로 1회 공격하며, 열기 피해를 주고, 5초간 강제 연소 상태를 부여합니다. 추가 공격이 적에게 명중했다면 추가로 궁극기 에너지를 100포인트 획득합니다. 궁극기 사용 중에는 배틀 스킬의 효과가 강화됩니다.',
                 levels: {
-                    M0: { dmg: '112%', type: ['연소 부여'], target: '적', bonus: [{ trigger: ['녹아내린 불꽃'], val: '616%' }] },
-                    M1: { dmg: '120%', type: ['연소 부여'], target: '적', bonus: [{ trigger: ['녹아내린 불꽃'], val: '658%' }] },
-                    M2: { dmg: '129%', type: ['연소 부여'], target: '적', bonus: [{ trigger: ['녹아내린 불꽃'], val: '710%' }] },
-                    M3: { dmg: '140%', type: ['연소 부여'], target: '적', bonus: [{ trigger: ['녹아내린 불꽃'], val: '770%' }] }
+                    M0: { dmg: '112%', type: [{ type: '연소 부여', trigger: ['녹아내린 불꽃'], abnormalMult: 120, potOverrides: { 3: { abnormalMult: 252 } } }], target: '적', bonus: [{ trigger: ['녹아내린 불꽃'], val: '616%' }] },
+                    M1: { dmg: '120%', type: [{ type: '연소 부여', trigger: ['녹아내린 불꽃'], abnormalMult: 120, potOverrides: { 3: { abnormalMult: 252 } } }], target: '적', bonus: [{ trigger: ['녹아내린 불꽃'], val: '658%' }] },
+                    M2: { dmg: '129%', type: [{ type: '연소 부여', trigger: ['녹아내린 불꽃'], abnormalMult: 120, potOverrides: { 3: { abnormalMult: 252 } } }], target: '적', bonus: [{ trigger: ['녹아내린 불꽃'], val: '710%' }] },
+                    M3: { dmg: '140%', type: [{ type: '연소 부여', trigger: ['녹아내린 불꽃'], abnormalMult: 120, potOverrides: { 3: { abnormalMult: 252 } } }], target: '적', bonus: [{ trigger: ['녹아내린 불꽃'], val: '770%' }] }
                 }
             },
             {
                 skillType: ['강화 배틀 스킬'], masterySource: '배틀 스킬', element: 'heat', desc: '궁극기 사용 중에는 배틀 스킬의 효과가 강화됩니다.',
                 levels: {
-                    M0: { dmg: '560%', type: ['연소 부여'], target: '적', bonus: [{ trigger: ['녹아내린 불꽃'], val: '720%' }] },
-                    M1: { dmg: '598%', type: ['연소 부여'], target: '적', bonus: [{ trigger: ['녹아내린 불꽃'], val: '770%' }] },
-                    M2: { dmg: '645%', type: ['연소 부여'], target: '적', bonus: [{ trigger: ['녹아내린 불꽃'], val: '830%' }] },
-                    M3: { dmg: '700%', type: ['연소 부여'], target: '적', bonus: [{ trigger: ['녹아내린 불꽃'], val: '900%' }] }
+                    M0: { dmg: '560%', type: [{ type: '연소 부여', trigger: ['녹아내린 불꽃'], abnormalMult: 120, potOverrides: { 3: { abnormalMult: 252 } } }], target: '적', bonus: [{ trigger: ['녹아내린 불꽃'], val: '720%' }] },
+                    M1: { dmg: '598%', type: [{ type: '연소 부여', trigger: ['녹아내린 불꽃'], abnormalMult: 120, potOverrides: { 3: { abnormalMult: 252 } } }], target: '적', bonus: [{ trigger: ['녹아내린 불꽃'], val: '770%' }] },
+                    M2: { dmg: '645%', type: [{ type: '연소 부여', trigger: ['녹아내린 불꽃'], abnormalMult: 120, potOverrides: { 3: { abnormalMult: 252 } } }], target: '적', bonus: [{ trigger: ['녹아내린 불꽃'], val: '830%' }] },
+                    M3: { dmg: '700%', type: [{ type: '연소 부여', trigger: ['녹아내린 불꽃'], abnormalMult: 120, potOverrides: { 3: { abnormalMult: 252 } } }], target: '적', bonus: [{ trigger: ['녹아내린 불꽃'], val: '900%' }] }
                 }
             },
             {
@@ -1011,10 +1011,10 @@ const DATA_OPERATORS = [
             {
                 skillType: ['궁극기'], element: 'heat', cost: 300, desc: '열화의 마검을 소환하고 메인 컨트롤 캐릭터로 전환합니다. 15초 동안, 일반 공격이 강화되며 열화의 마검이 레바테인과 함께 적을 공격합니다.',
                 levels: {
-                    M0: { dmg: '0%', type: ['열기 부착'], target: '적' },
-                    M1: { dmg: '0%', type: ['열기 부착'], target: '적' },
-                    M2: { dmg: '0%', type: ['열기 부착'], target: '적' },
-                    M3: { dmg: '0%', type: ['열기 부착'], target: '적' }
+                    M0: { dmg: '0%' },
+                    M1: { dmg: '0%' },
+                    M2: { dmg: '0%' },
+                    M3: { dmg: '0%' }
                 }
             }
         ],

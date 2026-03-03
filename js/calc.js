@@ -311,6 +311,11 @@ function collectAllEffects(state, opData, wepData, stats, allEffects, forceMaxSt
                 typeArr.forEach((typeItem, j) => {
                     if (!typeItem?.type) return;
 
+                    if (typeItem.excludeTarget) {
+                        const isExcluded = evaluateTrigger(typeItem.excludeTarget, state, effectiveOpData, null, true, eff.target, !!eff.sourceId);
+                        if (isExcluded) return;
+                    }
+
                     let currentVal = typeItem.val !== undefined ? typeItem.val : eff.val;
 
                     const ps = typeItem.perStack || eff.perStack;
@@ -1685,7 +1690,7 @@ function calcSingleSkillDamage(type, state, res) {
     }
 
 
-    // 7. 물리 이상 처리를 위한 데이터 구성
+    // 7. 이상 처리를 위한 데이터 구성
     const abnormalList = [];
     const defenselessStacks = state.debuffState?.physDebuff?.defenseless || 0;
     const hasDefenseless = defenselessStacks > 0;
@@ -1693,6 +1698,19 @@ function calcSingleSkillDamage(type, state, res) {
     let abnormalMultTotal = 0;
     skillTypes.forEach(t => {
         if (!t) return;
+
+        // 추가: 단일 스킬 연산 시 excludeTarget 검사
+        if (typeof t === 'object' && t.excludeTarget) {
+            const isExcluded = evaluateTrigger(t.excludeTarget, state, opData, null, true, skillDef.target);
+            if (isExcluded) return;
+        }
+
+        // 추가: 단일 스킬 연산 시 조건(trigger) 검사
+        if (typeof t === 'object' && t.trigger) {
+            const isTriggerMet = evaluateTrigger(t.trigger, state, opData, null, false, skillDef.target);
+            if (!isTriggerMet) return;
+        }
+
         const typeName = typeof t === 'string' ? t : t.type;
         let addMult = 0;
 
@@ -1777,7 +1795,7 @@ function calcSingleSkillDamage(type, state, res) {
                 if (isForcedAbnormal && targetAnomaly === '연소') {
                     artsName = '연소';
                 } else {
-                    artsName = targetAnomaly + '(이상)';
+                    artsName = targetAnomaly;
                 }
 
                 shouldTrigger = true;
@@ -1787,7 +1805,27 @@ function calcSingleSkillDamage(type, state, res) {
                     // 연소: 초기 (80%+S*80%) + 추가 (120%+S*120%)
                     // 강제 부여(연소 부여)는 초기 데미지 0, 추가 데미지는 스택 보너스 없이 1스택분(120%) 고정
                     const initial = isForcedAbnormal ? 0 : (0.8 + S * 0.8);
-                    const additional = isForcedAbnormal ? 1.2 : (1.2 + S * 1.2);
+
+                    let additional = 1.2;
+                    if (!isForcedAbnormal) {
+                        additional = 1.2 + S * 1.2;
+                    } else if (typeof t === 'object' && t.abnormalMult !== undefined) {
+                        let mult = parseFloat(t.abnormalMult);
+
+                        if (t.potOverrides && state.mainOp && opData.id === state.mainOp.id) {
+                            const currentPot = Number(state.mainOp.pot) || 0;
+                            const matchingPots = Object.keys(t.potOverrides).map(Number).filter(p => currentPot >= p);
+                            if (matchingPots.length > 0) {
+                                const maxPot = Math.max(...matchingPots);
+                                if (t.potOverrides[maxPot].abnormalMult !== undefined) {
+                                    mult = parseFloat(t.potOverrides[maxPot].abnormalMult);
+                                }
+                            }
+                        }
+
+                        additional = mult / 100;
+                    }
+
                     artsMult = initial + additional;
                 } else {
                     // 감전, 동결, 부식: 강제 부여된 아츠 이상은 데미지가 없음

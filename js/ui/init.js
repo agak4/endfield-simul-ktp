@@ -264,11 +264,9 @@ function initUI() {
     // 전투 분석 탭 시스템
     const initTabs = () => {
         const tabs = document.querySelectorAll('.analysis-tab');
-        console.log('[Tabs Init] Found tabs:', tabs.length);
         tabs.forEach(tab => {
             tab.onclick = () => {
                 const target = tab.dataset.tab;
-                console.log('[Tabs Click] Switched to:', target);
 
                 // 탭 버튼 상태 업데이트
                 tabs.forEach(t => t.classList.remove('active'));
@@ -282,7 +280,6 @@ function initUI() {
                 const targetContent = document.getElementById(`analysis-${target}-content`);
                 if (targetContent) {
                     targetContent.classList.add('active');
-                    console.log('[Tabs] Activated content:', `analysis-${target}-content`);
                 }
             };
         });
