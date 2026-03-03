@@ -1,0 +1,880 @@
+/* ============ 설정 패널 ============ */
+.setting-panel {
+    overflow-y: auto;
+}
+
+/* ============ 결과/디버프 래퍼 ============ */
+.result-debuff-wrapper {
+    display: flex;
+    gap: 12px;
+    align-items: stretch;
+}
+
+.result-area-row {
+    display: flex;
+    gap: 12px;
+    flex: 1;
+}
+
+.result-box {
+    border: 1px solid rgba(0, 217, 255, 0.2);
+    background: linear-gradient(135deg, #1a1a1a 0%, #111 100%);
+    border-radius: 12px;
+    padding: 10px;
+}
+
+/* ============ 사이클 보드 ============ */
+.cycle-board-box,
+.cycle-sequence-box {
+    flex: 2;
+}
+
+.cycle-input-box h3,
+.cycle-sequence-box h3 {
+    margin: 0 0 12px;
+    font-size: 0.85rem;
+    color: var(--text-primary);
+}
+
+.cycle-add-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: space-between;
+}
+
+.cycle-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 5px 23px 5px;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    user-select: none;
+    position: relative;
+    overflow: hidden;
+}
+
+.cycle-btn:hover {
+    background: rgba(0, 217, 255, 0.1);
+    border-color: rgba(0, 217, 255, 0.5);
+    transform: translateY(-2px);
+}
+
+.cycle-btn svg {
+    display: none;
+}
+
+.cycle-btn img {
+    transition: all 0.2s;
+}
+
+.skill-icon-frame {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2px solid var(--accent);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 2px;
+    background: #000;
+}
+
+.skill-icon-frame img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.cycle-btn:hover .skill-icon-frame {
+    border-color: #fff;
+    box-shadow: 0 0 8px var(--accent-glow);
+}
+
+.cycle-btn-ult .skill-icon-frame {
+    border-color: var(--text-gold);
+}
+
+.cycle-btn span {
+    font-size: 0.85rem;
+    margin-bottom: 10px;
+}
+
+.skill-level-container {
+    display: flex;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    gap: 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.skill-lvl-btn {
+    flex: 1;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.05);
+    border: none;
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-muted);
+    font-size: 0.65rem;
+    padding: 0;
+    cursor: pointer;
+    border-radius: 0;
+    transition: all 0.1s;
+    font-family: inherit;
+}
+
+.skill-lvl-btn:last-child {
+    border-right: none;
+}
+
+.skill-lvl-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+}
+
+.skill-lvl-btn.active {
+    background: var(--accent);
+    color: #000;
+    font-weight: bold;
+}
+
+.cycle-btn .mastery-svg {
+    width: 20px;
+    height: 20px;
+    display: block;
+}
+
+.mastery-svg polygon {
+    fill: rgba(255, 255, 255, 0.15);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.skill-lvl-btn[data-level="M1"] .m1-on {
+    fill: rgba(255, 255, 255, 0.7);
+}
+
+.skill-lvl-btn[data-level="M2"] .m1-on,
+.skill-lvl-btn[data-level="M2"] .m2-on {
+    fill: rgba(255, 255, 255, 0.7);
+}
+
+.skill-lvl-btn[data-level="M3"] .m1-on,
+.skill-lvl-btn[data-level="M3"] .m2-on,
+.skill-lvl-btn[data-level="M3"] .m3-on {
+    fill: rgba(255, 255, 255, 0.7);
+}
+
+.skill-lvl-btn:hover .mastery-svg polygon {
+    filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.3));
+}
+
+.skill-lvl-btn.active .mastery-svg polygon {
+    fill: rgba(0, 0, 0, 0.2);
+}
+
+.skill-lvl-btn.active[data-level="M1"] .m1-on {
+    fill: rgba(255, 255, 255, 0.7);
+}
+
+.skill-lvl-btn.active[data-level="M2"] .m1-on,
+.skill-lvl-btn.active[data-level="M2"] .m2-on {
+    fill: rgba(255, 255, 255, 0.7);
+}
+
+.skill-lvl-btn.active[data-level="M3"] .m1-on,
+.skill-lvl-btn.active[data-level="M3"] .m2-on,
+.skill-lvl-btn.active[data-level="M3"] .m3-on {
+    fill: rgba(255, 255, 255, 0.7);
+}
+
+/* ============ 사이클 시퀀스 ============ */
+.cycle-sequence-display {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 5px;
+    min-height: 40px;
+}
+
+.seq-arrow {
+    display: flex;
+    align-items: center;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    opacity: 0.6;
+}
+
+.cycle-sequence-display::-webkit-scrollbar {
+    height: 6px;
+}
+
+.cycle-sequence-display::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+}
+
+.cycle-sequence-item {
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    padding: 5px;
+    gap: 6px;
+    cursor: grab;
+    flex-shrink: 0;
+    user-select: none;
+}
+
+.cycle-sequence-item:active {
+    cursor: grabbing;
+}
+
+.cycle-sequence-item.dragging {
+    opacity: 0.5;
+    background: rgba(0, 217, 255, 0.2);
+}
+
+.cycle-sequence-item.drag-over-left {
+    border-left: 2px solid var(--accent);
+    transform: translateX(2px);
+}
+
+.cycle-sequence-item.drag-over-right {
+    border-right: 2px solid var(--accent);
+    transform: translateX(-2px);
+}
+
+.cycle-sequence-item.seq-is-custom {
+    border-color: var(--accent);
+    box-shadow: 0 0 8px var(--accent-glow);
+    background: rgba(88, 155, 255, 0.1);
+}
+
+.cycle-sequence-item.seq-selected {
+    outline: 2px solid #FFBA03;
+    outline-offset: 1px;
+}
+
+.seq-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.seq-icon .skill-icon-frame {
+    width: 24px;
+    height: 24px;
+    margin-bottom: 0;
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.seq-icon-normal .skill-icon-frame {
+    border-color: #a0a0a0;
+}
+
+.seq-icon-battle .skill-icon-frame {
+    border-color: #4db8ff;
+}
+
+.seq-icon-combo .skill-icon-frame {
+    border-color: #ff8c00;
+}
+
+.seq-icon-ult .skill-icon-frame {
+    border-color: #ffca28;
+}
+
+.seq-info {
+    flex: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+}
+
+.seq-name {
+    font-size: 0.85rem;
+    color: var(--text-primary);
+}
+
+.seq-dmg {
+    font-size: 0.95rem;
+    font-weight: bold;
+    color: var(--accent);
+}
+
+.seq-share {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    min-width: 40px;
+    text-align: right;
+}
+
+.seq-delete-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1.2rem;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0 4px;
+    transition: color 0.15s;
+}
+
+.seq-delete-btn:hover {
+    color: #ff4d4d;
+}
+
+/* ============ 디버프 아이콘 섹션 ============ */
+.debuff-icon-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 7px;
+}
+
+.debuff-group {
+    border: 1px solid rgba(0, 217, 255, 0.2);
+    border-radius: 10px;
+    padding: 6px;
+    background: linear-gradient(135deg, #1a1a1a 0%, #111 100%);
+}
+
+.debuff-attach-row {
+    display: flex;
+    flex-direction: row;
+}
+
+.debuff-label {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+    text-align: center;
+    margin-top: 2px;
+}
+
+.debuff-icon-wrap {
+    position: relative;
+    width: 52px;
+    height: 52px;
+    cursor: pointer;
+    user-select: none;
+    flex-shrink: 0;
+}
+
+.debuff-icon-wrap:hover {
+    filter: brightness(1.15);
+}
+
+.debuff-ring-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.ring-seg,
+.ring-bg,
+.ring-fill {
+    fill: none;
+    stroke-width: 4;
+    stroke-linecap: round;
+    transition: stroke 0.18s ease;
+}
+
+.ring-seg {
+    stroke: rgba(255, 255, 255, 0.15);
+}
+
+.ring-bg {
+    stroke: rgba(255, 255, 255, 0.1);
+}
+
+.ring-seg.active,
+.ring-fill {
+    stroke: rgba(200, 200, 200, 0.9);
+    filter: drop-shadow(0 0 2px rgba(200, 200, 200, 0.5));
+}
+
+.debuff-icon-wrap.attach-disabled {
+    opacity: 0.35;
+    pointer-events: auto;
+}
+
+.debuff-icon-img-wrap {
+    position: absolute;
+    inset: 8px;
+    border-radius: 50%;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.55);
+}
+
+.debuff-icon-img-wrap img {
+    width: 80%;
+    height: 80%;
+    object-fit: contain;
+}
+
+.debuff-stack-label {
+    display: none;
+}
+
+.debuff-stack-bubble {
+    position: absolute;
+    right: -2px;
+    bottom: -2px;
+    background: var(--accent);
+    color: #000;
+    font-size: 0.75rem;
+    font-weight: 800;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+    z-index: 5;
+    transform: scale(0);
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.debuff-stack-bubble.active {
+    transform: scale(1);
+}
+
+.debuff-stack-bubble.zero {
+    display: none;
+}
+
+.single-ring-svg .ring-fill {
+    display: none;
+}
+
+.single-ring-svg.active .ring-fill {
+    display: block;
+}
+
+/* ============ 전용 스택 토글 ============ */
+.special-stack-bg {
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    opacity: 1;
+    border: 1px solid rgba(255, 215, 0, 0.4);
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.special-stack-bg img {
+    display: none;
+}
+
+.special-stack-name {
+    position: absolute;
+    bottom: -16px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.65rem;
+    color: var(--text-gold);
+    white-space: nowrap;
+    text-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
+    pointer-events: none;
+    font-weight: bold;
+}
+
+.debuff-icon-wrap[data-debuff="specialStack"] .ring-seg.active,
+.debuff-icon-wrap[data-debuff="specialStack"] .ring-fill {
+    stroke: var(--text-gold);
+    filter: drop-shadow(0 0 3px rgba(255, 215, 0, 0.6));
+}
+
+/* ============ 대시보드 그리드 & 타일 ============ */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 7px;
+}
+
+[data-full-row="true"] {
+    grid-column: span 2;
+}
+
+.tile {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 12px;
+    border-radius: 7px;
+    border: 1px solid rgba(0, 217, 255, 0.2);
+    transition: all var(--transition-speed) ease;
+    position: relative;
+    overflow: hidden;
+    user-select: none;
+}
+
+.tile-drag-swap {
+    outline: 2px dashed var(--accent);
+    outline-offset: -2px;
+    background: rgba(0, 217, 255, 0.15) !important;
+}
+
+.tile>span,
+.tile-main-stat-row>span {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--accent);
+}
+
+.tile h4,
+.dmg-inc-box h4 {
+    font-size: 1rem;
+    margin-bottom: 10px;
+    color: var(--text-muted);
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+}
+
+h4.has-drag-handle {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.tile-drag-handle {
+    cursor: grab;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    padding: 2px;
+    border-radius: 4px;
+    transition: all 0.2s;
+    margin-left: auto;
+}
+
+.tile-drag-handle:hover {
+    color: var(--accent);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.tile-drag-handle:active {
+    cursor: grabbing;
+}
+
+.tile-main-stat-row {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.tile-placeholder {
+    opacity: 0.5;
+    border: 1px dashed rgba(255, 255, 255, 0.2);
+    background: transparent !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tile-placeholder span {
+    color: var(--text-muted) !important;
+    font-size: 0.9rem !important;
+    font-weight: normal !important;
+}
+
+.tile-placeholder .tile-drag-handle {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+}
+
+.tile-sub-stats {
+    display: flex;
+    gap: 12px;
+    padding-left: 15px;
+    border-left: 1px solid var(--border);
+}
+
+.sub-stat-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.sub-stat-item label {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-bottom: 2px;
+    white-space: nowrap;
+}
+
+.sub-stat-item span {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.tile-ctrl-group {
+    display: flex;
+    gap: 4px;
+}
+
+.enemy-toggle-btn {
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    min-width: 50px;
+}
+
+/* ============ 세부 로그 리스트 ============ */
+.detail-list {
+    list-style: none;
+    padding: 0;
+    margin-top: 10px;
+    font-size: 0.8rem;
+}
+
+.detail-list li {
+    color: var(--text-muted);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    transition: all var(--transition-speed) ease;
+    line-height: 2;
+    border-radius: 3px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.detail-list li:hover {
+    background: rgba(255, 255, 255, 0.05);
+    padding-left: 3px;
+}
+
+.detail-list li.disabled-effect {
+    text-decoration: line-through;
+    opacity: 0.4;
+    color: #888 !important;
+}
+
+.detail-list li.triggerFail-effect {
+    opacity: 0.4;
+    color: #888 !important;
+}
+
+.detail-list li::before {
+    content: '▸';
+    color: var(--accent);
+    opacity: 0.8;
+    font-size: 0.7rem;
+}
+
+.skill-dmg-row {
+    user-select: none;
+}
+
+/* ============ 주는 피해 박스 ============ */
+.dmg-inc-box {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 12px;
+    border-radius: 7px;
+    border: 1px solid rgba(0, 217, 255, 0.2);
+    transition: all var(--transition-speed) ease;
+    position: relative;
+    overflow: hidden;
+    user-select: none;
+}
+
+.dmg-inc-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2px;
+}
+
+.dmg-inc-header-row h4 {
+    margin: 0;
+}
+
+.dmg-inc-total-val {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--accent);
+}
+
+.dmg-inc-stats-row {
+    display: flex;
+    gap: 10px;
+}
+
+.dmg-inc-stats-row .sub-stat-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.dmg-inc-stats-row .sub-stat-item span {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--accent);
+}
+
+.dmg-inc-divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.08);
+    margin: 2px 0;
+}
+
+.dmg-inc-container {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    position: relative;
+    overflow: hidden;
+}
+
+.dmg-inc-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.dmg-inc-col-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding-bottom: 6px;
+    margin-bottom: 6px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dmg-inc-col-header label {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    text-align: center;
+}
+
+.dmg-inc-col-header span {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--accent);
+}
+
+.dmg-inc-column h4 {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin: 0 0 8px 0;
+    text-align: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 5px;
+}
+
+.dmg-inc-elem2-hidden {
+    display: none !important;
+}
+
+/* ============ 저항 버튼 ============ */
+.res-btn {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: var(--text-muted);
+    padding: 2px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: all 0.2s;
+    width: 25px;
+    height: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.res-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+}
+
+.res-btn.active {
+    background: var(--accent);
+    color: #000;
+    border-color: var(--accent);
+    font-weight: bold;
+    box-shadow: 0 0 8px var(--accent-glow);
+}
+
+/* ============ 타일 드래그앤드롭 ============ */
+.tile-drag-ghost,
+.dmg-inc-box.tile-drag-ghost {
+    opacity: 0.35;
+    border: 2px dashed rgba(0, 217, 255, 0.5) !important;
+    background: rgba(0, 217, 255, 0.05) !important;
+    border-radius: 7px;
+}
+
+.tile-drag-chosen,
+.dmg-inc-box.tile-drag-chosen {
+    box-shadow: 0 0 0 2px var(--accent);
+    opacity: 0.9;
+}
+
+.tile-drag-active,
+.dmg-inc-box.tile-drag-active {
+    transform: scale(1.02);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    z-index: 200;
+}
+
+/* ============ 반응형 (설정 패널) ============ */
+@media (max-width: 1400px) {
+    .result-debuff-wrapper {
+        display: contents;
+    }
+
+    .result-area-row {
+        flex: none;
+    }
+
+    .debuff-icon-section {
+        flex-direction: row !important;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+}
+
+@media (max-width: 1024px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .comp-settings-body {
+        flex-direction: column;
+        gap: 10px;
+    }
+}

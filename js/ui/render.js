@@ -248,6 +248,9 @@ function renderResult(res) {
     if (typeof renderDamageContribution === 'function') {
         renderDamageContribution(cycleRes);
     }
+    if (typeof renderPartyContribution === 'function') {
+        renderPartyContribution();
+    }
 
     // 증폭/받는피해/취약 속성 분리 렌더링
     renderElemSplit('amp-container', displayRes.logs.amp, '증폭');

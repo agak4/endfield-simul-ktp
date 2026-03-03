@@ -1,56 +1,3 @@
-/* ============ 이미지 컨테이너 ============ */
-.op-image-container,
-.wep-image-container {
-    aspect-ratio: 1/1;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: var(--img-size);
-    background: #000;
-    border: 2px solid #333;
-    border-radius: 8px;
-    overflow: hidden;
-    position: relative;
-    box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.5);
-    transition: all 0.2s ease;
-    cursor: pointer;
-}
-
-.gear-image-container {
-    aspect-ratio: 1/1;
-    height: var(--gear-img-size);
-    width: var(--gear-img-size);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    border: 2px solid var(--border);
-}
-
-.op-image-container:hover,
-.wep-image-container:hover,
-.gear-image-container:hover {
-    border-color: var(--accent);
-    box-shadow: 0 0 15px rgba(88, 155, 255, 0.3);
-}
-
-.op-image-container img,
-.wep-image-container img,
-.gear-image-container img {
-    max-width: 90%;
-    max-height: 90%;
-    object-fit: contain;
-    filter: drop-shadow(0 5px 10px rgba(0, 0, 0, 0.7));
-    position: relative;
-    z-index: 1;
-    opacity: 0;
-    transition: opacity 0.3s ease-in-out;
-}
-
-.op-image-container img.loaded,
-.wep-image-container img.loaded,
-.gear-image-container img.loaded {
-    opacity: 1;
-}
-
 /* ============ 모달 ============ */
 .modal-overlay {
     display: none;
@@ -217,7 +164,7 @@
     background: rgba(255, 68, 68, 0.2);
 }
 
-/* 모달 썸네일 (인라인 스타일 대체) */
+/* 모달 썸네일 */
 .modal-thumb {
     width: 50px;
     height: 50px;
@@ -243,41 +190,7 @@
     color: #aaa;
 }
 
-/* ============ 메인 오퍼레이터 레이아웃 ============ */
-.main-op-row {
-    display: flex;
-    gap: 15px;
-}
-
-.main-op-right {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-/* ============ 컨트롤 공통 ============ */
-.control-row {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-.op-select-row {
-    flex-direction: row;
-}
-
-.op-select-btn {
-    flex: 1;
-}
-
-.op-preset-btn {
-    width: auto;
-    padding: 0 12px;
-    white-space: nowrap;
-}
-
-/* ============ 프리셋 컨테이너 ============ */
+/* ============ 프리셋 팝업 ============ */
 .preset-popup {
     display: none;
     position: absolute;
@@ -554,152 +467,6 @@
     font-size: 0.95rem;
 }
 
-.potency-row {
-    margin-top: 5px;
-}
-
-.potency-group {
-    display: flex;
-    gap: 0;
-    align-items: center;
-    flex-wrap: wrap;
-}
-
-.potency-btn {
-    width: 30px;
-    height: 30px;
-    border: 1px solid rgba(0, 217, 255, 0.3);
-    background: rgba(0, 0, 0, 0.4);
-    color: var(--text-primary);
-    border-radius: 0;
-    margin-right: -1px;
-    cursor: pointer;
-    transition: all var(--transition-speed) ease;
-    font-size: 0.95rem;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    z-index: 0;
-}
-
-.potency-btn:first-child {
-    border-top-left-radius: 8px;
-    border-bottom-left-radius: 8px;
-}
-
-.potency-btn:last-child {
-    border-top-right-radius: 8px;
-    border-bottom-right-radius: 8px;
-    margin-right: 0;
-}
-
-.potency-btn.active {
-    background: var(--accent);
-    color: #000;
-    border-color: var(--accent);
-    font-weight: 700;
-    box-shadow: 0 0 15px var(--accent-glow);
-    z-index: 1;
-}
-
-/* ============ 서브 오퍼레이터 카드 ============ */
-.sub-op-card {
-    background: var(--sidebar-bg);
-    padding: 18px;
-    border-radius: 10px;
-    border: 1px solid var(--border);
-    margin-bottom: 18px;
-    transition: all var(--transition-speed);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-}
-
-.sub-op-header {
-    font-weight: 600;
-    color: var(--accent);
-    cursor: pointer;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px 0;
-    transition: all var(--transition-speed);
-}
-
-.toggle-icon {
-    transition: transform var(--transition-speed) ease;
-}
-
-.sub-op-content {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    margin-top: 18px;
-    transition: all var(--transition-speed) ease;
-}
-
-.sub-op-content.collapsed {
-    display: none;
-}
-
-.sub-op-summary-text {
-    font-weight: normal;
-    color: var(--text-muted);
-    margin-left: 10px;
-}
-
-.sub-char-row,
-.sub-wep-row,
-.wep-row {
-    display: flex;
-    gap: 15px;
-    align-items: flex-start;
-}
-
-.sub-char-right,
-.sub-wep-right,
-.wep-right {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-/* ============ 장비 그리드 ============ */
-.gear-flex-row {
-    display: flex;
-    flex-flow: wrap;
-    justify-content: space-between;
-    gap: 10px;
-}
-
-.gear-slot {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    background: transparent;
-    padding: 0;
-    border: none;
-    flex: 1;
-}
-
-.forge-toggle-wrapper {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-}
-
-.forge-toggle-wrapper .toggle-btn {
-    width: 100%;
-    padding: 6px;
-    font-size: 0.9rem;
-}
-
-#main-forge-toggle {
-    width: 100%;
-}
-
 /* ============ 사이드바 ============ */
 .sidebar {
     position: fixed;
@@ -868,9 +635,7 @@
     font-size: 0.9rem;
     animation: tooltip-fade 0.15s ease-out;
     transform-origin: top left;
-
     display: none;
-    /* Changed from flex to none to match JS show/hide logic which toggles display: block/none */
     flex-direction: column;
     gap: 10px;
     max-height: 90vh;
@@ -1010,96 +775,114 @@
     color: var(--text-muted);
 }
 
-/* ============ 전투 분석 탭 ============ */
-.analysis-header {
+/* ============ 디버프 버블 팝업 ============ */
+.debuff-bubble-popup {
+    background: rgba(15, 15, 15, 0.95);
+    border: 1px solid rgba(0, 217, 255, 0.4);
+    border-radius: 8px;
+    padding: 8px;
     display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    margin-bottom: 20px;
-    border-bottom: 1px solid var(--border);
-    padding-bottom: 0;
+    gap: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.7);
+    transform-origin: top left;
+    animation: popupFadeIn 0.15s ease-out forwards;
 }
 
-.analysis-header h2 {
-    margin: 0;
-    padding-bottom: 10px;
-}
-
-.analysis-tabs {
-    display: flex;
-    gap: 4px;
-}
-
-.analysis-tab {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border);
-    border-bottom: none;
-    border-radius: 8px 8px 0 0;
-    padding: 8px 20px;
-    color: var(--text-muted);
-    font-size: 0.9rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    position: relative;
-    top: 1px;
-}
-
-.analysis-tab:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: var(--text-primary);
-}
-
-.analysis-tab.active {
-    background: var(--panel-bg);
-    border-color: var(--accent);
-    border-bottom: 1px solid var(--panel-bg);
-    color: var(--accent);
-    font-weight: bold;
-    z-index: 1;
-}
-
-.analysis-tab-content {
-    display: none;
-    flex-direction: column;
-    gap: 15px;
-    animation: tabFadeIn 0.3s ease;
-}
-
-.analysis-tab-content.active {
-    display: flex;
-}
-
-@keyframes tabFadeIn {
+@keyframes popupFadeIn {
     from {
         opacity: 0;
-        transform: translateY(5px);
+        transform: scale(0.9);
     }
 
     to {
         opacity: 1;
-        transform: translateY(0);
+        transform: scale(1);
     }
 }
 
-.empty-state-container {
+.bubble-item {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 60px 20px;
-    background: rgba(0, 0, 0, 0.2);
-    border: 1px dashed rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.2s;
+    user-select: none;
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.bubble-item:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0, 217, 255, 0.3);
+}
+
+.bubble-item.default-item {
+    font-size: 0.7rem;
+    font-weight: bold;
     color: var(--text-muted);
 }
 
-.empty-state-icon {
-    font-size: 2rem;
-    margin-bottom: 15px;
-    color: var(--accent);
-    opacity: 0.5;
+.bubble-item.default-item:hover {
+    color: var(--text-primary);
 }
 
-.empty-state-text {
-    font-size: 0.95rem;
+.bubble-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.debuff-attribution-icon {
+    position: absolute;
+    bottom: -4px;
+    left: -4px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 1px solid var(--accent);
+    background: #000;
+    object-fit: cover;
+    z-index: 10;
+    pointer-events: none;
+}
+
+/* ============ 반응형 (오버레이) ============ */
+@media (max-width: 1024px) {
+    .sidebar {
+        max-width: 85%;
+    }
+}
+
+@media (max-width: 768px) {
+    .gear-sidebar-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .modal-content {
+        width: 95%;
+        padding: 15px;
+        max-height: 90%;
+    }
+
+    .modal-grid {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 12px;
+        padding: 10px 5px;
+    }
+
+    .modal-item {
+        padding: 15px 10px;
+        min-height: 120px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
 }

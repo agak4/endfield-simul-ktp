@@ -8,13 +8,17 @@
     <link rel="icon" type="image/x-icon" href="images/favicon.ico">
     <!-- 리소스 우선순위 최적화 (Preload) -->
     <link rel="preload" href="css/base.css" as="style">
-    <link rel="preload" href="css/components.css" as="style">
-    <link rel="preload" href="css/dashboard.css?v=2" as="style">
+    <link rel="preload" href="css/overlay.css" as="style">
+    <link rel="preload" href="css/operator-panel.css" as="style">
+    <link rel="preload" href="css/setting-panel.css" as="style">
+    <link rel="preload" href="css/analysis-panel.css" as="style">
     <link rel="preload" href="js/data/data_operators.js" as="script">
     <link rel="preload" href="js/state.js" as="script">
     <link rel="stylesheet" href="css/base.css">
-    <link rel="stylesheet" href="css/components.css">
-    <link rel="stylesheet" href="css/dashboard.css?v=2">
+    <link rel="stylesheet" href="css/overlay.css">
+    <link rel="stylesheet" href="css/operator-panel.css">
+    <link rel="stylesheet" href="css/setting-panel.css">
+    <link rel="stylesheet" href="css/analysis-panel.css">
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.3/Sortable.min.js"></script>
     <script src="js/ui/sortable-grid.js" defer></script>
 </head>
@@ -34,7 +38,7 @@
         </div>
     </header>
     <div class="container">
-        <section class="panel left-panel">
+        <section class="panel operator-panel">
             <h2>오퍼레이터</h2>
             <div class="main-op-row">
                 <div class="main-op-left">
@@ -401,7 +405,7 @@
                 </div>
             </div>
         </section>
-        <section class="panel right-panel">
+        <section class="panel setting-panel">
             <h2>스킬 사이클 및 특성 설정</h2>
             <!-- 사이클 보드와 디버프 아이콘 구역 -->
             <div class="result-debuff-wrapper">
@@ -992,10 +996,7 @@
 
             <!-- 파티 분석 컨텐츠 -->
             <div id="analysis-party-content" class="analysis-tab-content">
-                <div class="empty-state-container">
-                    <div class="empty-state-icon">✦</div>
-                    <p class="empty-state-text">현재 준비 중인 기능입니다.</p>
-                </div>
+                <!-- party_contribution.js에서 동적으로 렌더링됨 -->
             </div>
         </section>
     </div>
@@ -1093,12 +1094,48 @@
     <script src="js/state.js" defer></script>
     <script src="js/calc.js" defer></script>
     <script src="js/ui/controls.js" defer></script>
+    <script src="js/ui/preset.js" defer></script>
     <script src="js/ui/sidebar.js" defer></script>
     <script src="js/ui/modal.js" defer></script>
-    <!-- <script src="js/ui/damage_contribution.js" defer></script> -->
+    <script>
+        (function () {
+            console.log('[ForceInit] Injection script started');
+            document.addEventListener('DOMContentLoaded', function () {
+                console.log('[ForceInit] DOMContentLoaded');
+                const h2s = Array.from(document.querySelectorAll('h2'));
+                const analysisHeader = h2s.find(h => h.innerText.includes('전투 분석'));
+
+                if (analysisHeader && !document.querySelector('.analysis-tabs')) {
+                    console.log('[ForceInit] Found target H2, injecting tabs...');
+                    const panel = analysisHeader.closest('.panel') || analysisHeader.parentElement;
+
+                    // 만약 panel이 tile-group 내부에 있다면 (빈 슬롯들이 있는 곳)
+                    if (panel && panel.classList.contains('tile-group')) {
+                        console.log('[ForceInit] Target is in tile-group, adjusting...');
+                    }
+
+                    // CSS 강제 주입
+                    const style = document.createElement('style');
+                    style.innerHTML = `
+                        .analysis-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
+                        .analysis-tabs { display: flex; gap: 10px; }
+                        .analysis-tab { padding: 5px 15px; border: 1px solid #444; background: #222; color: #888; cursor: pointer; border-radius: 4px; }
+                        .analysis-tab.active { background: #00d9ff; color: #000; border-color: #00d9ff; }
+                        .analysis-tab-content { display: none; }
+                        .analysis-tab-content.active { display: block; }
+                    `;
+                    document.head.appendChild(style);
+                    console.log('[ForceInit] CSS injected');
+                } else {
+                    console.log('[ForceInit] Target H2 not found or tabs already exist');
+                }
+            });
+        })();
+    </script>
+    <script src="js/ui/damage_contribution.js"></script>
+    <script src="js/ui/party_contribution.js"></script>
     <script src="js/ui/render.js" defer></script>
     <script src="js/ui/tooltip.js" defer></script>
-    <script src="js/ui/preset.js" defer></script>
     <script src="js/ui/init.js" defer></script>
 </body>
 

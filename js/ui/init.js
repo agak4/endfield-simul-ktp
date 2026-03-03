@@ -262,26 +262,37 @@ function initUI() {
     AppTooltip.init();
 
     // 전투 분석 탭 시스템
-    const tabs = document.querySelectorAll('.analysis-tab');
-    tabs.forEach(tab => {
-        tab.onclick = () => {
-            const target = tab.dataset.tab;
+    const initTabs = () => {
+        const tabs = document.querySelectorAll('.analysis-tab');
+        console.log('[Tabs Init] Found tabs:', tabs.length);
+        tabs.forEach(tab => {
+            tab.onclick = () => {
+                const target = tab.dataset.tab;
+                console.log('[Tabs Click] Switched to:', target);
 
-            // 탭 버튼 상태 업데이트
-            tabs.forEach(t => t.classList.remove('active'));
-            tab.classList.add('active');
+                // 탭 버튼 상태 업데이트
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
 
-            // 콘텐츠 표시 업데이트
-            document.querySelectorAll('.analysis-tab-content').forEach(content => {
-                content.classList.remove('active');
-            });
+                // 콘텐츠 표시 업데이트
+                document.querySelectorAll('.analysis-tab-content').forEach(content => {
+                    content.classList.remove('active');
+                });
 
-            const targetContent = document.getElementById(`analysis-${target}-content`);
-            if (targetContent) {
-                targetContent.classList.add('active');
-            }
-        };
-    });
+                const targetContent = document.getElementById(`analysis-${target}-content`);
+                if (targetContent) {
+                    targetContent.classList.add('active');
+                    console.log('[Tabs] Activated content:', `analysis-${target}-content`);
+                }
+            };
+        });
+    };
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initTabs);
+    } else {
+        initTabs();
+    }
 }
 
 // ============================================================

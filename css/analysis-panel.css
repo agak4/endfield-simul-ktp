@@ -1,0 +1,578 @@
+/* ============ 분석 패널 공통 ============ */
+.analysis-panel {
+    overflow-y: auto;
+}
+
+.analysis-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0;
+}
+
+.analysis-header h2 {
+    margin: 0;
+    padding-bottom: 10px;
+}
+
+.analysis-tabs {
+    display: flex;
+    gap: 4px;
+}
+
+.analysis-tab {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border);
+    border-bottom: none;
+    border-radius: 8px 8px 0 0;
+    padding: 8px 20px;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    top: 1px;
+}
+
+.analysis-tab:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+}
+
+.analysis-tab.active {
+    background: rgba(0, 217, 255, 0.15) !important;
+    border-color: var(--accent) !important;
+    color: var(--accent) !important;
+    font-weight: bold;
+}
+
+.analysis-tab-content {
+    display: none;
+    flex-direction: column;
+    gap: 15px;
+    animation: tabFadeIn 0.3s ease;
+}
+
+.analysis-tab-content.active {
+    display: flex;
+}
+
+@keyframes tabFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ============ 최종 데미지 박스 ============ */
+.total-dmg-box {
+    flex: 1;
+    text-align: center;
+    position: sticky;
+    top: 20px;
+    z-index: 100;
+    overflow: visible;
+    min-height: 150px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.total-dmg-box h4 {
+    font-size: 0.8rem;
+    margin-bottom: 10px;
+}
+
+.total-dmg-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    position: relative;
+}
+
+.info-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border: 1px solid var(--accent);
+    border-radius: 50%;
+    font-size: 0.7rem;
+    color: var(--accent);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.info-icon:hover {
+    background: var(--accent);
+    color: #000;
+}
+
+#final-damage {
+    font-size: 3.5rem;
+    font-weight: 900;
+    color: var(--accent);
+    position: relative;
+    z-index: 1;
+    letter-spacing: 2px;
+}
+
+/* ============ 사이클 데미지 ============ */
+.cycle-dmg-box {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.cycle-dmg-list {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.cycle-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.04);
+    transition: background 0.15s;
+}
+
+.cycle-row:hover {
+    background: rgba(255, 180, 0, 0.07);
+}
+
+.cycle-val {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    font-variant-numeric: tabular-nums;
+}
+
+.cycle-total-row {
+    margin-top: 4px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    background: transparent;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 10px;
+}
+
+.cycle-total-val {
+    font-size: 1.4rem;
+    color: var(--accent);
+    font-weight: 700;
+}
+
+/* ============ 공식 툴팁 ============ */
+.formula-tooltip {
+    display: none;
+    position: absolute;
+    top: -17px;
+    left: 100%;
+    background: rgba(20, 20, 20, 0.95);
+    border: 1px solid var(--accent);
+    padding: 15px;
+    border-radius: 8px;
+    width: 200px;
+    z-index: 100;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+    text-align: left;
+    pointer-events: none;
+}
+
+.formula-tooltip.open {
+    display: block;
+}
+
+.formula-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-gold);
+    margin-bottom: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 5px;
+}
+
+.formula-content {
+    font-size: 0.8rem;
+    line-height: 1.5;
+    color: var(--text-secondary);
+    word-break: keep-all;
+}
+
+/* ============ 스킬 카드 ============ */
+.skill-card {
+    flex: 1;
+    min-width: 140px;
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+}
+
+.skill-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    z-index: 2;
+}
+
+.skill-name {
+    font-size: 0.9rem;
+    color: var(--text-gold);
+    font-weight: 600;
+}
+
+.skill-dmg {
+    font-size: 1.1rem;
+    color: var(--accent);
+}
+
+.skill-logs {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    font-size: 0.75rem;
+}
+
+.skill-dmg-share {
+    min-width: 45px;
+    text-align: right;
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: var(--text-muted);
+}
+
+.skill-dmg-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    background-color: rgba(88, 155, 255, 0.3);
+    z-index: -1;
+    transition: width 0.3s ease;
+    border-right: 1px solid rgba(0, 217, 255, 0.3);
+}
+
+/* ============ 사이클 정렬 버튼 ============ */
+#btn-sort-cycle {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+#btn-sort-cycle:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+}
+
+#btn-sort-cycle.active {
+    background: var(--accent);
+    color: #000;
+    border-color: var(--accent);
+    font-weight: bold;
+}
+
+/* ============ 딜 지분 ============ */
+.dmg-contrib-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.dmg-contrib-item {
+    display: none;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+}
+
+.dmg-contrib-item.active {
+    display: flex;
+}
+
+.dmg-contrib-img-box {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dmg-contrib-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.dmg-contrib-info-col {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex-grow: 1;
+}
+
+.dmg-contrib-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.9rem;
+}
+
+.dmg-contrib-val-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.dmg-contrib-val {
+    font-size: 1.1rem;
+    color: var(--accent);
+}
+
+.dmg-contrib-pct {
+    font-weight: bold;
+    min-width: 55px;
+    text-align: right;
+}
+
+.dmg-contrib-bar-track {
+    height: 6px;
+    margin-top: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+.dmg-contrib-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.3s ease, background 0.3s ease;
+}
+
+.dmg-contrib-name.is-main-text {
+    color: var(--text-main);
+}
+
+/* ============ 무기 비교 ============ */
+.comparison-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.comp-item {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(0, 217, 255, 0.15);
+    border-radius: 10px;
+    padding: 12px;
+    transition: transform 0.4s cubic-bezier(0.2, 0, 0, 1), opacity 0.4s ease;
+    will-change: transform;
+}
+
+.comp-item.positive {
+    border-left: 3px solid var(--good);
+}
+
+.comp-item.negative {
+    border-left: 3px solid var(--error);
+}
+
+.comp-item.current {
+    border-left: 3px solid var(--accent);
+    background: rgba(255, 215, 0, 0.05);
+}
+
+.comp-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.comp-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.comp-dmg {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-left: auto;
+    margin-right: 15px;
+}
+
+.comp-pct {
+    font-size: 0.9rem;
+    font-weight: 700;
+    width: 60px;
+    text-align: right;
+}
+
+.positive .comp-pct {
+    color: var(--good);
+}
+
+.negative .comp-pct {
+    color: var(--error);
+}
+
+.current .comp-pct {
+    color: var(--accent);
+}
+
+.comp-bar-bg {
+    height: 6px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.comp-bar {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 3px;
+}
+
+.negative .comp-bar {
+    background: var(--error);
+}
+
+.comp-settings-panel {
+    margin-bottom: 20px;
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 12px;
+    border: 1px solid rgba(0, 217, 255, 0.2);
+}
+
+.comp-settings-header {
+    font-size: 0.8rem;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.comp-settings-indicator {
+    display: inline-block;
+    width: 4px;
+    height: 12px;
+    background: var(--accent);
+}
+
+.comp-settings-body {
+    display: flex;
+    gap: 12px;
+}
+
+/* ============ 세트 배지 ============ */
+.active-set-badge {
+    flex: 1;
+    background: #1a1a1a;
+    border: 1px solid var(--accent);
+    padding: 12px;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.active-set-badge .set-name {
+    display: block;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 4px;
+}
+
+.active-set-badge .set-desc {
+    font-size: 0.8rem;
+    line-height: 1.6;
+    white-space: pre-line;
+    border-top: 1px solid var(--border);
+    padding-top: 8px;
+}
+
+.viability.viable {
+    color: var(--good);
+}
+
+.viability.not-viable {
+    color: var(--error);
+}
+
+/* ============ 텍스트 유틸 ============ */
+.text-red {
+    color: #ff4d4d !important;
+}
+
+/* ============ 빈 상태 ============ */
+.empty-state-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px dashed rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    color: var(--text-muted);
+}
+
+.empty-state-icon {
+    font-size: 2rem;
+    margin-bottom: 15px;
+    color: var(--accent);
+    opacity: 0.5;
+}
+
+.empty-state-text {
+    font-size: 0.95rem;
+}
+
+/* ============ 반응형 (분석 패널) ============ */
+@media (max-width: 768px) {
+    #final-damage {
+        font-size: 2.5rem;
+    }
+
+    .total-dmg-box {
+        padding: 20px;
+        min-height: 120px;
+    }
+
+    .result-area-row {
+        top: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    #final-damage {
+        font-size: 2rem;
+    }
+}
