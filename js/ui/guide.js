@@ -23,6 +23,9 @@ function openGuideModal() {
                     <span class="modal-header-title">사용 가이드</span>
                     <button class="modal-close" onclick="closeGuideModal()">&times;</button>
                 </div>
+                <div style="text-align: right; margin-bottom: 10px; margin-top: -10px;">
+                    <button class="btn-select" style="padding: 5px 15px; font-size: 0.9em; display: inline-block; width: auto;" onclick="playInteractiveGuideFromModal()">가이드 다시보기</button>
+                </div>
                 <div class="guide-body">
                     <h3>개요</h3>
                     <p>이 시뮬레이터는 오퍼레이터의 세팅에 따른 이론적인 데미지 기댓값을 산출하기 위해 제작되었습니다. 실제 게임 내 데미지와는 차이가 있을 수 있습니다.</p>
@@ -61,5 +64,23 @@ function closeGuideModal() {
     const modal = document.getElementById('guide-modal');
     if (modal) {
         modal.classList.remove('open');
+
+        // 처음 방문하여 모달이 닫히는 경우 인터랙티브 가이드 실행
+        if (!localStorage.getItem('endfield_interactive_guide_seen')) {
+            localStorage.setItem('endfield_interactive_guide_seen', 'true');
+            if (typeof startInteractiveGuide === 'function') {
+                startInteractiveGuide();
+            }
+        }
+    }
+}
+
+/**
+ * 모달에서 수동으로 인터랙티브 가이드를 실행한다.
+ */
+function playInteractiveGuideFromModal() {
+    closeGuideModal();
+    if (typeof startInteractiveGuide === 'function') {
+        startInteractiveGuide();
     }
 }

@@ -12,6 +12,7 @@
     <link rel="preload" href="css/operator-panel.css" as="style">
     <link rel="preload" href="css/setting-panel.css" as="style">
     <link rel="preload" href="css/analysis-panel.css" as="style">
+    <link rel="preload" href="css/interactive-guide.css" as="style">
     <link rel="preload" href="js/data/data_operators.js" as="script">
     <link rel="preload" href="js/state.js" as="script">
     <link rel="stylesheet" href="css/base.css">
@@ -19,9 +20,11 @@
     <link rel="stylesheet" href="css/operator-panel.css">
     <link rel="stylesheet" href="css/setting-panel.css">
     <link rel="stylesheet" href="css/analysis-panel.css">
+    <link rel="stylesheet" href="css/interactive-guide.css">
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.3/Sortable.min.js"></script>
     <script src="js/ui/sortable-grid.js" defer></script>
     <script src="js/ui/guide.js" defer></script>
+    <script src="js/ui/interactive-guide.js" defer></script>
 </head>
 
 <body>
@@ -41,109 +44,111 @@
     <div class="container">
         <section class="panel operator-panel">
             <h2>오퍼레이터</h2>
-            <div class="main-op-row">
-                <div class="main-op-left">
-                    <div id="main-op-image-container" class="op-image-container"
-                        onclick="document.getElementById('main-op-select-btn').click()">
-                        <img id="main-op-image"
-                            src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
-                            alt="오퍼레이터 이미지">
-                    </div>
-                </div>
-                <div class="main-op-right">
-                    <div class="control-row op-select-row">
-                        <select id="main-op-select" class="u-display-none"></select>
-                        <button id="main-op-select-btn" class="visual-select-btn btn-select op-select-btn">== 선택 해제
-                            ==</button>
-                        <button id="main-op-preset-btn" class="visual-select-btn btn-select op-preset-btn"
-                            onclick="togglePresetPopup(this)">프리셋</button>
-                    </div>
-                    <div class="control-row potency-row">
-                        <label>잠재효과</label>
-                        <div class="potency-group" id="main-op-pot-group"></div>
-                        <input type="hidden" id="main-op-pot" value="0">
-                    </div>
-                </div>
-            </div>
-            <div class="wep-row">
-                <div class="wep-left">
-                    <div id="main-wep-image-container" class="op-image-container wep-image-container"
-                        onclick="document.getElementById('main-wep-select-btn').click()">
-                        <img id="main-wep-image"
-                            src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
-                            alt="무기 이미지">
-                    </div>
-                </div>
-                <div class="wep-right">
-                    <div class="control-row">
-                        <select id="main-wep-select" class="u-display-none"></select>
-                        <button id="main-wep-select-btn" class="visual-select-btn btn-select">== 선택 해제 ==</button>
-                    </div>
-                    <div class="control-row potency-row">
-                        <label>잠재효과</label>
-                        <div class="u-flex-center-wrap">
-                            <div class="potency-group" id="main-wep-pot-group"></div>
-                            <input type="checkbox" id="main-wep-state" class="hidden-checkbox">
+            <div id="guide-section-1" class="guide-target-section">
+                <div class="main-op-row">
+                    <div class="main-op-left">
+                        <div id="main-op-image-container" class="op-image-container"
+                            onclick="document.getElementById('main-op-select-btn').click()">
+                            <img id="main-op-image"
+                                src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+                                alt="오퍼레이터 이미지">
                         </div>
-                        <input type="hidden" id="main-wep-pot" value="0">
+                    </div>
+                    <div class="main-op-right">
+                        <div class="control-row op-select-row">
+                            <select id="main-op-select" class="u-display-none"></select>
+                            <button id="main-op-select-btn" class="visual-select-btn btn-select op-select-btn">== 선택 해제
+                                ==</button>
+                            <button id="main-op-preset-btn" class="visual-select-btn btn-select op-preset-btn"
+                                onclick="togglePresetPopup(this)">프리셋</button>
+                        </div>
+                        <div class="control-row potency-row">
+                            <label>잠재효과</label>
+                            <div class="potency-group" id="main-op-pot-group"></div>
+                            <input type="hidden" id="main-op-pot" value="0">
+                        </div>
                     </div>
                 </div>
+                <div class="wep-row">
+                    <div class="wep-left">
+                        <div id="main-wep-image-container" class="op-image-container wep-image-container"
+                            onclick="document.getElementById('main-wep-select-btn').click()">
+                            <img id="main-wep-image"
+                                src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+                                alt="무기 이미지">
+                        </div>
+                    </div>
+                    <div class="wep-right">
+                        <div class="control-row">
+                            <select id="main-wep-select" class="u-display-none"></select>
+                            <button id="main-wep-select-btn" class="visual-select-btn btn-select">== 선택 해제 ==</button>
+                        </div>
+                        <div class="control-row potency-row">
+                            <label>잠재효과</label>
+                            <div class="u-flex-center-wrap">
+                                <div class="potency-group" id="main-wep-pot-group"></div>
+                                <input type="checkbox" id="main-wep-state" class="hidden-checkbox">
+                            </div>
+                            <input type="hidden" id="main-wep-pot" value="0">
+                        </div>
+                    </div>
+                </div>
+                <!-- 장비 슬롯 -->
+                <div id="main-gear-slots" class="gear-flex-row">
+                    <div class="gear-slot" data-slot="gloves">
+                        <div class="gear-image-container op-image-container"
+                            onclick="openGearSidebar('gear-gloves-select', 'gloves')">
+                            <img id="gear-gloves-image"
+                                src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+                                alt="글러브">
+                        </div>
+                        <input type="hidden" id="gear-gloves-select" value="">
+                        <div class="forge-toggle-wrapper">
+                            <input type="checkbox" id="gear-gloves-forge" class="hidden-checkbox">
+                        </div>
+                    </div>
+                    <div class="gear-slot" data-slot="armor">
+                        <div class="gear-image-container op-image-container"
+                            onclick="openGearSidebar('gear-armor-select', 'armor')">
+                            <img id="gear-armor-image"
+                                src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+                                alt="방어구">
+                        </div>
+                        <input type="hidden" id="gear-armor-select" value="">
+                        <div class="forge-toggle-wrapper">
+                            <input type="checkbox" id="gear-armor-forge" class="hidden-checkbox">
+                        </div>
+                    </div>
+                    <div class="gear-slot" data-slot="kit1">
+                        <div class="gear-image-container op-image-container"
+                            onclick="openGearSidebar('gear-kit1-select', 'kit')">
+                            <img id="gear-kit1-image"
+                                src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+                                alt="부품">
+                        </div>
+                        <input type="hidden" id="gear-kit1-select" value="">
+                        <div class="forge-toggle-wrapper">
+                            <input type="checkbox" id="gear-kit1-forge" class="hidden-checkbox">
+                        </div>
+                    </div>
+                    <div class="gear-slot" data-slot="kit2">
+                        <div class="gear-image-container op-image-container"
+                            onclick="openGearSidebar('gear-kit2-select', 'kit')">
+                            <img id="gear-kit2-image"
+                                src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+                                alt="부품">
+                        </div>
+                        <input type="hidden" id="gear-kit2-select" value="">
+                        <div class="forge-toggle-wrapper">
+                            <input type="checkbox" id="gear-kit2-forge" class="hidden-checkbox">
+                        </div>
+                    </div>
+                </div>
+                <div id="main-forge-wrapper">
+                    <input type="checkbox" id="main-gear-forge" class="hidden-checkbox">
+                </div>
+                <div id="main-active-set" class="active-set-container"></div>
             </div>
-            <!-- 장비 슬롯 -->
-            <div id="main-gear-slots" class="gear-flex-row">
-                <div class="gear-slot" data-slot="gloves">
-                    <div class="gear-image-container op-image-container"
-                        onclick="openGearSidebar('gear-gloves-select', 'gloves')">
-                        <img id="gear-gloves-image"
-                            src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
-                            alt="글러브">
-                    </div>
-                    <input type="hidden" id="gear-gloves-select" value="">
-                    <div class="forge-toggle-wrapper">
-                        <input type="checkbox" id="gear-gloves-forge" class="hidden-checkbox">
-                    </div>
-                </div>
-                <div class="gear-slot" data-slot="armor">
-                    <div class="gear-image-container op-image-container"
-                        onclick="openGearSidebar('gear-armor-select', 'armor')">
-                        <img id="gear-armor-image"
-                            src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
-                            alt="방어구">
-                    </div>
-                    <input type="hidden" id="gear-armor-select" value="">
-                    <div class="forge-toggle-wrapper">
-                        <input type="checkbox" id="gear-armor-forge" class="hidden-checkbox">
-                    </div>
-                </div>
-                <div class="gear-slot" data-slot="kit1">
-                    <div class="gear-image-container op-image-container"
-                        onclick="openGearSidebar('gear-kit1-select', 'kit')">
-                        <img id="gear-kit1-image"
-                            src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
-                            alt="부품">
-                    </div>
-                    <input type="hidden" id="gear-kit1-select" value="">
-                    <div class="forge-toggle-wrapper">
-                        <input type="checkbox" id="gear-kit1-forge" class="hidden-checkbox">
-                    </div>
-                </div>
-                <div class="gear-slot" data-slot="kit2">
-                    <div class="gear-image-container op-image-container"
-                        onclick="openGearSidebar('gear-kit2-select', 'kit')">
-                        <img id="gear-kit2-image"
-                            src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
-                            alt="부품">
-                    </div>
-                    <input type="hidden" id="gear-kit2-select" value="">
-                    <div class="forge-toggle-wrapper">
-                        <input type="checkbox" id="gear-kit2-forge" class="hidden-checkbox">
-                    </div>
-                </div>
-            </div>
-            <div id="main-forge-wrapper">
-                <input type="checkbox" id="main-gear-forge" class="hidden-checkbox">
-            </div>
-            <div id="main-active-set" class="active-set-container"></div>
             <!-- 서브 오퍼레이터 -->
             <div style="margin-top: 20px;">
                 <h2>서브 오퍼레이터</h2>
@@ -743,7 +748,7 @@
                         </div>
                     </div>
                     <!-- 전용 스택 (오퍼레이터 종속, 메인 오퍼레이터 전용) -->
-                    <div class="debuff-group" id="special-stack-group" style="display: none;">
+                    <div class="debuff-group hidden" id="special-stack-group">
                         <div class="debuff-attach-row">
                             <div class="debuff-icon-wrap" id="debuff-icon-specialStack" data-debuff="specialStack"
                                 data-stacks="0" onclick="cycleSpecialStack(this)">
@@ -969,9 +974,9 @@
                     </div>
                 </div>
 
-                <!-- 현재 오퍼레이터 딜지분 -->
+                <!-- 메인 오퍼레이터 데미지 기여도 -->
                 <div class="result-box cycle-dmg-box" id="damage-contribution-box" style="display: none;">
-                    <h3 style="margin-top: 0; margin-bottom: 12px;">현재 오퍼레이터 딜지분</h3>
+                    <h3 style="margin-top: 0; margin-bottom: 12px;">메인 오퍼레이터 데미지 기여도</h3>
                     <div id="damage-contribution-list" class="dmg-contrib-list">
                         <!-- 4 pre-defined slots for Main + up to 3 Sub operators -->
                         <div class="dmg-contrib-item" id="contrib-item-0" style="order: 0;">
@@ -1173,6 +1178,19 @@
     <script src="js/ui/party_contribution.js"></script>
     <script src="js/ui/render.js" defer></script>
     <script src="js/ui/tooltip.js" defer></script>
+
+    <!-- 인터랙티브 가이드 오버레이 -->
+    <div id="interactive-guide-overlay" class="u-display-none">
+        <div class="guide-mask guide-mask-t"></div>
+        <div class="guide-mask guide-mask-b"></div>
+        <div class="guide-mask guide-mask-l"></div>
+        <div class="guide-mask guide-mask-r"></div>
+        <div class="interactive-guide-content">
+            <p id="interactive-guide-text"></p>
+            <span class="interactive-guide-hint">화면을 클릭하면 다음으로 넘어갑니다...</span>
+        </div>
+    </div>
+
     <script src="js/ui/init.js" defer></script>
 </body>
 

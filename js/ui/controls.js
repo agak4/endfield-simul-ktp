@@ -497,6 +497,7 @@ function updateUIStateVisuals() {
 
     if (mainOp?.specialStack) {
         specGroup.classList.remove('hidden');
+        specGroup.style.display = 'block';
         specGroup.innerHTML = '';
 
         const stacks = Array.isArray(mainOp.specialStack) ? mainOp.specialStack : [mainOp.specialStack];
@@ -548,6 +549,7 @@ function updateUIStateVisuals() {
         specGroup.appendChild(row);
     } else {
         specGroup.classList.add('hidden');
+        specGroup.style.display = 'none';
     }
 }
 

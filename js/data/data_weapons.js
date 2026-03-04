@@ -617,7 +617,7 @@ const DATA_WEAPONS = [
       { type: ['자연 피해'], valByLevel: ['5.56%', '10%', '14.44%', '18.89%', '23.33%', '27.78%', '32.22%', '36.67%', '43.33%'] },
       { type: ['공격력 증가'], valByLevel: ['7%', '8.4%', '9.8%', '11.2%', '12.6%', '14%', '15.4%', '16.8%', '19.6%'] },
       { type: ['아츠 피해'], valByLevel: ['5%', '6%', '7%', '8%', '9%', '10%', '11%', '12%', '14%'], target: '팀', trigger: ['자연 부착'], triggerType: ['배틀 스킬'], nonStack: true, targetFilter: '자신 제외' },
-      { type: ['아츠 피해'], valByLevel: ['2%', '2.4%', '2.8%', '3.2%', '3.6%', '4%', '4.4%', '4.8%', '5.6%'], target: '팀', triggerTarget: ['자연 부착'], nonStack: true, stack: 3, targetFilter: '자신 제외', desc: '<span style="color:var(--accent)">• </span>공격력 +7%~19.6%<br><span style="color:var(--accent)">• </span>장착자가 배틀 스킬로 자연 부착을 부여했을 때, 팀 내의 다른 오퍼레이터가 주는 아츠 피해 +5%~14%, 15초 동안 지속. 자연 부착이 부여된 적이 있을 때마다, 팀 내의 다른 오퍼레이터가 주는 아츠 피해 추가 +2%~5.6%, 최대 +6%~16.8%.<br><span style="color: #727272">같은 이름의 효과는 중첩되지 않습니다.</span>' }
+      { type: ['아츠 피해'], valByLevel: ['2%', '2.4%', '2.8%', '3.2%', '3.6%', '4%', '4.4%', '4.8%', '5.6%'], target: '팀', trigger: ['자연 부착'], nonStack: true, stack: 3, targetFilter: '자신 제외', desc: '<span style="color:var(--accent)">• </span>공격력 +7%~19.6%<br><span style="color:var(--accent)">• </span>장착자가 배틀 스킬로 자연 부착을 부여했을 때, 팀 내의 다른 오퍼레이터가 주는 아츠 피해 +5%~14%, 15초 동안 지속. 자연 부착이 부여된 적이 있을 때마다, 팀 내의 다른 오퍼레이터가 주는 아츠 피해 추가 +2%~5.6%, 최대 +6%~16.8%.<br><span style="color: #727272">같은 이름의 효과는 중첩되지 않습니다.</span>' }
     ]
   },
 

@@ -752,8 +752,8 @@ const AppTooltip = {
                 }
 
                 (Array.isArray(skillDef.bonus) ? skillDef.bonus : []).forEach(b => {
-                    const opTrMet = !b.trigger || evaluateTrigger(b.trigger, st, opDataLocal, null, false, null, true);
-                    const tgTrMet = !b.triggerTarget || evaluateTrigger(b.triggerTarget, st, opDataLocal, null, true, null, true);
+                    const opTrMet = !b.trigger || evaluateTrigger(b.trigger, st, opDataLocal, null, 'op', null, true);
+                    const tgTrMet = !b.triggerTarget || evaluateTrigger(b.triggerTarget, st, opDataLocal, null, 'target', null, true);
                     if ((b.trigger || b.triggerTarget) && opTrMet && tgTrMet) {
                         const triggers = [
                             ...(Array.isArray(b.trigger) ? b.trigger : (b.trigger ? [b.trigger] : [])),

@@ -107,12 +107,12 @@ function renderPartyContribution() {
     let html = `
         <div class="analysis-tab-inner">
             <div class="tile party-total-tile" data-tile-id="party-total" data-full-row="true">
-                <h3>파티 총합 데미지</h3>
+                <h3>파티 사이클 계산값 총합</h3>
                 <div class="party-total-dmg-value">${Math.floor(totalPartyDmg).toLocaleString()}</div>
             </div>
             
             <div class="tile" data-tile-id="party-contrib-list" data-full-row="true">
-                <h3>오퍼레이터별 데미지 기여도</h3>
+                <h3>파티 데미지 기여도</h3>
                 <div class="dmg-contrib-list">
     `;
 

@@ -270,13 +270,16 @@ function collectAllEffects(state, opData, wepData, stats, allEffects, forceMaxSt
         sources.forEach((eff, i) => {
             if (!eff) return;
 
-            let baseTriggerMet = true;
+            let triggerMet = true;
+            let targetMet = true;
             if (eff.trigger) {
-                baseTriggerMet = baseTriggerMet && evaluateTrigger(eff.trigger, state, effectiveOpData, eff.triggerType, false, eff.target, !!eff.sourceId);
+                triggerMet = evaluateTrigger(eff.trigger, state, effectiveOpData, eff.triggerType, 'op', eff.target, !!eff.sourceId);
             }
             if (eff.triggerTarget) {
-                baseTriggerMet = baseTriggerMet && evaluateTrigger(eff.triggerTarget, state, effectiveOpData, null, true, eff.target, !!eff.sourceId);
+                targetMet = evaluateTrigger(eff.triggerTarget, state, effectiveOpData, null, 'target', eff.target, !!eff.sourceId);
             }
+
+            let baseTriggerMet = triggerMet && targetMet;
 
             if (eff.targetFilter === '다른 속성') {
                 const sourceElem = effectiveOpData.element || effectiveOpData.type;
@@ -292,11 +295,14 @@ function collectAllEffects(state, opData, wepData, stats, allEffects, forceMaxSt
 
             const typeArr = eff.type ? (Array.isArray(eff.type) ? eff.type : [eff.type]).map(item => typeof item === 'string' ? { type: item } : item) : [];
             const bonuses = eff.bonus || [];
-            const activeBonuses = bonuses.filter(b => {
-                const triggerMet = !b.trigger || evaluateTrigger(b.trigger, state, effectiveOpData, null, false, b.target || eff.target, !!eff.sourceId);
-                const targetMet = !b.triggerTarget || evaluateTrigger(b.triggerTarget, state, effectiveOpData, null, true, b.target || eff.target, !!eff.sourceId);
-                return triggerMet && targetMet;
+
+            const evaluatedBonuses = bonuses.map(b => {
+                const bTriggerMet = !b.trigger || evaluateTrigger(b.trigger, state, effectiveOpData, null, 'op', b.target || eff.target, !!eff.sourceId);
+                const bTargetMet = !b.triggerTarget || evaluateTrigger(b.triggerTarget, state, effectiveOpData, null, 'target', b.target || eff.target, !!eff.sourceId);
+                return { ...b, _active: bTriggerMet && bTargetMet };
             });
+            const activeBonuses = evaluatedBonuses.filter(b => b._active);
+            const inactiveBonuses = evaluatedBonuses.filter(b => !b._active);
 
             // [추가] 오퍼레이터 속성과 일치하는 무기 효과인지 확인 (트리거 미충족 시 표시용)
             const isMatchOpType = typeArr.some(ta => {
@@ -308,7 +314,8 @@ function collectAllEffects(state, opData, wepData, stats, allEffects, forceMaxSt
             });
             const isWeaponSource = !!eff.sourceId;
             const isTargetClassFail = eff.targetClass && !baseTriggerMet;
-            const showEvenIfFailed = (!baseTriggerMet && (isWeaponSource || isMatchOpType)) || isTargetClassFail;
+            const hasFailedCondition = (eff.trigger && !triggerMet) || (eff.triggerTarget && !targetMet);
+            const showEvenIfFailed = hasFailedCondition || (!baseTriggerMet && (isWeaponSource || isMatchOpType)) || isTargetClassFail;
 
             if (baseTriggerMet || showEvenIfFailed) {
                 const triggerFailed = !baseTriggerMet;
@@ -317,7 +324,7 @@ function collectAllEffects(state, opData, wepData, stats, allEffects, forceMaxSt
                     if (!typeItem?.type) return;
 
                     if (typeItem.excludeTarget) {
-                        const isExcluded = evaluateTrigger(typeItem.excludeTarget, state, effectiveOpData, null, true, eff.target, !!eff.sourceId);
+                        const isExcluded = evaluateTrigger(typeItem.excludeTarget, state, effectiveOpData, null, 'target', eff.target, !!eff.sourceId);
                         if (isExcluded) return;
                     }
 
@@ -416,6 +423,19 @@ function collectAllEffects(state, opData, wepData, stats, allEffects, forceMaxSt
                         if (!isSub || isSubOpTargetValid(bonusEff)) {
                             const bUid = `${uidPrefix || name}_bonus_${bt.toString()}_v${i}_${j}_${bj}`;
                             allEffects.push({ ...bonusEff, name, forgeMult, uid: bUid, _triggerFailed: !baseTriggerMet });
+                        }
+                    });
+                }
+            });
+
+            inactiveBonuses.forEach((b, j) => {
+                const bonusTypes = b.type ? (Array.isArray(b.type) ? b.type : [b.type]) : (typeArr.length === 1 ? [typeArr[0].type] : []);
+                if (bonusTypes.length > 0) {
+                    bonusTypes.forEach((bt, bj) => {
+                        const bonusEff = { target: b.target || eff.target, ...b, type: bt };
+                        if (!isSub || isSubOpTargetValid(bonusEff)) {
+                            const bUid = `${uidPrefix || name}_bonus_${bt.toString()}_v${i}_fail_${j}_${bj}`;
+                            allEffects.push({ ...bonusEff, name, forgeMult, uid: bUid, _triggerFailed: true });
                         }
                     });
                 }
@@ -1438,56 +1458,59 @@ function checkSetViability(setId, opData) {
  * @param {object} currentState
  * @returns {boolean}
  */
-function evaluateTrigger(trigger, state, opData, triggerType, isTargetOnly = false, effectTarget = null, strictMode = false) {
+function evaluateTrigger(trigger, state, opData, triggerType, evalMode = 'both', effectTarget = null, strictMode = false) {
     if (!trigger || trigger.length === 0) return true;
 
     const triggers = Array.isArray(trigger) ? trigger : [trigger];
     return triggers.some(t => {
         // 1. 타겟 상태 확인 (TargetTrigger - TRIGGER_MAP 우선)
-        const specialStackVal = state.getSpecialStack ? state.getSpecialStack() : (state.mainOp?.specialStack || 0);
+        if (evalMode === 'both' || evalMode === 'target') {
+            const specialStackVal = state.getSpecialStack ? state.getSpecialStack() : (state.mainOp?.specialStack || 0);
 
-        const TRIGGER_MAP = {
-            '방어 불능': () => getAdjustedStackCount('방어 불능', state, opData, triggerType) > 0,
-            '갑옷 파괴': () => getAdjustedStackCount('갑옷 파괴', state, opData, triggerType) > 0,
-            '열기 부착': () => state.debuffState?.artsAttach?.type === '열기 부착',
-            '냉기 부착': () => state.debuffState?.artsAttach?.type === '냉기 부착',
-            '전기 부착': () => state.debuffState?.artsAttach?.type === '전기 부착',
-            '자연 부착': () => state.debuffState?.artsAttach?.type === '자연 부착',
-            '연소': () => getAdjustedStackCount('연소', state, opData, triggerType) > 0,
-            '감전': () => getAdjustedStackCount('감전', state, opData, triggerType) > 0,
-            '동결': () => getAdjustedStackCount('동결', state, opData, triggerType) > 0,
-            '부식': () => getAdjustedStackCount('부식', state, opData, triggerType) > 0,
-            '연타': () => (state.debuffState?.physDebuff?.combo || 0) > 0,
-            '띄우기': () => state.triggerActive?.['띄우기'] || state.triggerActive?.['강제 띄우기'],
-            '넘어뜨리기': () => state.triggerActive?.['넘어뜨리기'] || state.triggerActive?.['강제 넘어뜨리기'],
-            '강타': () => state.triggerActive?.['강타'],
-            '허약': () => state.triggerActive?.['허약'],
-            '물리 취약': () => state.triggerActive?.['물리 취약'],
-            '아츠 취약': () => state.triggerActive?.['아츠 취약'],
-            '열기 취약': () => state.triggerActive?.['열기 취약'],
-            '냉기 취약': () => state.triggerActive?.['냉기 취약'],
-            '전기 취약': () => state.triggerActive?.['전기 취약'],
-            '자연 취약': () => state.triggerActive?.['자연 취약'],
-            '불균형': () => !!state.enemyUnbalanced
-        };
+            const TRIGGER_MAP = {
+                '방어 불능': () => getAdjustedStackCount('방어 불능', state, opData, triggerType) > 0,
+                '갑옷 파괴': () => getAdjustedStackCount('갑옷 파괴', state, opData, triggerType) > 0,
+                '열기 부착': () => state.debuffState?.artsAttach?.type === '열기 부착',
+                '냉기 부착': () => state.debuffState?.artsAttach?.type === '냉기 부착',
+                '전기 부착': () => state.debuffState?.artsAttach?.type === '전기 부착',
+                '자연 부착': () => state.debuffState?.artsAttach?.type === '자연 부착',
+                '연소': () => getAdjustedStackCount('연소', state, opData, triggerType) > 0,
+                '감전': () => getAdjustedStackCount('감전', state, opData, triggerType) > 0,
+                '동결': () => getAdjustedStackCount('동결', state, opData, triggerType) > 0,
+                '부식': () => getAdjustedStackCount('부식', state, opData, triggerType) > 0,
+                '연타': () => (state.debuffState?.physDebuff?.combo || 0) > 0,
+                '띄우기': () => state.triggerActive?.['띄우기'] || state.triggerActive?.['강제 띄우기'],
+                '넘어뜨리기': () => state.triggerActive?.['넘어뜨리기'] || state.triggerActive?.['강제 넘어뜨리기'],
+                '강타': () => state.triggerActive?.['강타'],
+                '허약': () => state.triggerActive?.['허약'],
+                '물리 취약': () => state.triggerActive?.['물리 취약'],
+                '아츠 취약': () => state.triggerActive?.['아츠 취약'],
+                '열기 취약': () => state.triggerActive?.['열기 취약'],
+                '냉기 취약': () => state.triggerActive?.['냉기 취약'],
+                '전기 취약': () => state.triggerActive?.['전기 취약'],
+                '자연 취약': () => state.triggerActive?.['자연 취약'],
+                '불균형': () => !!state.enemyUnbalanced
+            };
 
-        const evalFn = TRIGGER_MAP[t];
-        if (evalFn && evalFn()) return true;
+            const evalFn = TRIGGER_MAP[t];
+            if (evalFn && evalFn()) return true;
 
-        const op = opData || DATA_OPERATORS.find(o => o.id === (state.mainOp?.id));
-        if (op && op.specialStack) {
-            const stacks = Array.isArray(op.specialStack) ? op.specialStack : [op.specialStack];
-            const matchingStack = stacks.find(s => s.triggers && s.triggers.includes(t));
-            if (matchingStack) {
-                const stackId = matchingStack.id || 'default';
-                const val = typeof specialStackVal === 'object' ? (specialStackVal[stackId] || 0) : specialStackVal;
-                if (val > 0) return true;
-                if (strictMode) return false;
+            const op = opData || DATA_OPERATORS.find(o => o.id === (state.mainOp?.id));
+            if (op && op.specialStack) {
+                const stacks = Array.isArray(op.specialStack) ? op.specialStack : [op.specialStack];
+                const matchingStack = stacks.find(s => s.triggers && s.triggers.includes(t));
+                if (matchingStack) {
+                    const stackId = matchingStack.id || 'default';
+                    const val = typeof specialStackVal === 'object' ? (specialStackVal[stackId] || 0) : specialStackVal;
+                    if (val > 0) return true;
+                    if (strictMode) return false;
+                }
             }
+
         }
 
         // 2. 오퍼레이터 역량 확인 (OpTrigger)
-        if (opData && !isTargetOnly) {
+        if (opData && (evalMode === 'both' || evalMode === 'op')) {
             const checkOpCapability = (targetOp) => {
                 if (!targetOp) return false;
                 let skillPool = targetOp.skill || [];
@@ -1615,8 +1638,8 @@ function calcSingleSkillDamage(type, state, res) {
 
     if (skillDef.bonus) {
         skillDef.bonus.forEach(b => {
-            const opTriggerMet = !b.trigger || evaluateTrigger(b.trigger, state, opData, b.triggerType, false, b.target, true);
-            const targetTriggerMet = !b.triggerTarget || evaluateTrigger(b.triggerTarget, state, opData, b.triggerType, true, b.target, true);
+            const opTriggerMet = !b.trigger || evaluateTrigger(b.trigger, state, opData, b.triggerType, 'op', b.target, true);
+            const targetTriggerMet = !b.triggerTarget || evaluateTrigger(b.triggerTarget, state, opData, b.triggerType, 'target', b.target, true);
             let triggerMet = opTriggerMet && targetTriggerMet;
 
             const combinedTriggers = [
@@ -1733,13 +1756,23 @@ function calcSingleSkillDamage(type, state, res) {
 
         // 추가: 단일 스킬 연산 시 excludeTarget 검사
         if (typeof t === 'object' && t.excludeTarget) {
-            const isExcluded = evaluateTrigger(t.excludeTarget, state, opData, null, true, skillDef.target);
+            const isExcluded = evaluateTrigger(t.excludeTarget, state, opData, null, 'target', skillDef.target);
             if (isExcluded) return;
+        }
+
+        // 추가: 단일 스킬 연산 시 조건(triggerTarget) 검사
+        if (typeof t === 'object' && t.triggerTarget) {
+            const isTargetMet = evaluateTrigger(t.triggerTarget, state, opData, null, 'target', skillDef.target);
+            if (!isTargetMet) return;
         }
 
         // 추가: 단일 스킬 연산 시 조건(trigger) 검사
         if (typeof t === 'object' && t.trigger) {
-            const isTriggerMet = evaluateTrigger(t.trigger, state, opData, null, false, skillDef.target);
+            // 중첩은 수집 시점에만 계산하고 결과에서 곱함
+            const maxStack = t.stack || 1;
+            let currentStack = maxStack;
+
+            const isTriggerMet = evaluateTrigger(t.trigger, state, opData, null, 'op', skillDef.target);
             if (!isTriggerMet) return;
         }
 

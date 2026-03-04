@@ -53,10 +53,10 @@ const DATA_OPERATORS = [
             {
                 skillType: ['배틀 스킬'], element: 'phys', desc: '오리지늄 아츠를 사용해 전방 일정 범위 내의 적을 공격하여 물리 피해를 주고 강타합니다.',
                 levels: {
-                    M0: { dmg: '280%', type: ['강타'], target: '적', bonus: [{ trigger: ['오리지늄 결정'], val: '320%' }] },
-                    M1: { dmg: '300%', type: ['강타'], target: '적', bonus: [{ trigger: ['오리지늄 결정'], val: '342%' }] },
-                    M2: { dmg: '323%', type: ['강타'], target: '적', bonus: [{ trigger: ['오리지늄 결정'], val: '369%' }] },
-                    M3: { dmg: '350%', type: ['강타'], target: '적', bonus: [{ trigger: ['오리지늄 결정'], val: '400%' }] }
+                    M0: { dmg: '280%', type: ['강타'], target: '적', bonus: [{ triggerTarget: ['오리지늄 결정'], val: '320%' }] },
+                    M1: { dmg: '300%', type: ['강타'], target: '적', bonus: [{ triggerTarget: ['오리지늄 결정'], val: '342%' }] },
+                    M2: { dmg: '323%', type: ['강타'], target: '적', bonus: [{ triggerTarget: ['오리지늄 결정'], val: '369%' }] },
+                    M3: { dmg: '350%', type: ['강타'], target: '적', bonus: [{ triggerTarget: ['오리지늄 결정'], val: '400%' }] }
                 }
             },
             {
@@ -71,10 +71,10 @@ const DATA_OPERATORS = [
             {
                 skillType: ['궁극기'], element: 'phys', cost: 80, desc: '오리지늄 아츠로 지면을 강타하여, 전방 부채꼴 범위 내의 적에게 대량의 물리 피해를 줍니다. 적에게 오리지늄 결정이 부착되어 있을 경우, 오리지늄 결정을 파괴하며 1회에 한하여 추가로 물리 피해를 줍니다.',
                 levels: {
-                    M0: { dmg: '640%', bonus: [{ trigger: ['오리지늄 결정'], val: '480%' }] },
-                    M1: { dmg: '684%', bonus: [{ trigger: ['오리지늄 결정'], val: '514%' }] },
-                    M2: { dmg: '738%', bonus: [{ trigger: ['오리지늄 결정'], val: '554%' }] },
-                    M3: { dmg: '800%', bonus: [{ trigger: ['오리지늄 결정'], val: '600%' }] }
+                    M0: { dmg: '640%', bonus: [{ triggerTarget: ['오리지늄 결정'], val: '480%' }] },
+                    M1: { dmg: '684%', bonus: [{ triggerTarget: ['오리지늄 결정'], val: '514%' }] },
+                    M2: { dmg: '738%', bonus: [{ triggerTarget: ['오리지늄 결정'], val: '554%' }] },
+                    M3: { dmg: '800%', bonus: [{ triggerTarget: ['오리지늄 결정'], val: '600%' }] }
                 }
             }
         ],
@@ -249,19 +249,19 @@ const DATA_OPERATORS = [
             {
                 skillType: ['연계 스킬'], element: 'phys', desc: '적이 동결 상태일 때 사용할 수 있습니다. 빠르게 적에게 접근하여 좁은 범위 내의 적에게 물리 피해를 주고, 강제 띄우기 상태로 만듭니다. 동결 상태의 적에게 명중했을 경우, 추가로 피해를 주고 6초간 물리 취약 상태를 부여합니다.',
                 levels: {
-                    M0: { dmg: '288%', type: [{ type: '물리 취약', val: '10%', target: '적' }, { type: '강제 띄우기', target: '적' }], bonus: [{ trigger: ['동결'], val: '216%' }] },
-                    M1: { dmg: '308%', type: [{ type: '물리 취약', val: '15%', target: '적' }, { type: '강제 띄우기', target: '적' }], bonus: [{ trigger: ['동결'], val: '231%' }] },
-                    M2: { dmg: '332%', type: [{ type: '물리 취약', val: '15%', target: '적' }, { type: '강제 띄우기', target: '적' }], bonus: [{ trigger: ['동결'], val: '249%' }] },
-                    M3: { dmg: '360%', type: [{ type: '물리 취약', val: '15%', target: '적' }, { type: '강제 띄우기', target: '적' }], bonus: [{ trigger: ['동결'], val: '270%' }] }
+                    M0: { dmg: '288%', type: [{ type: '물리 취약', val: '10%', target: '적' }, { type: '강제 띄우기', target: '적' }], bonus: [{ triggerTarget: ['동결'], val: '216%' }] },
+                    M1: { dmg: '308%', type: [{ type: '물리 취약', val: '15%', target: '적' }, { type: '강제 띄우기', target: '적' }], bonus: [{ triggerTarget: ['동결'], val: '231%' }] },
+                    M2: { dmg: '332%', type: [{ type: '물리 취약', val: '15%', target: '적' }, { type: '강제 띄우기', target: '적' }], bonus: [{ triggerTarget: ['동결'], val: '249%' }] },
+                    M3: { dmg: '360%', type: [{ type: '물리 취약', val: '15%', target: '적' }, { type: '강제 띄우기', target: '적' }], bonus: [{ triggerTarget: ['동결'], val: '270%' }] }
                 }
             },
             {
                 skillType: ['궁극기'], element: 'phys', cost: 70, desc: '모든 힘을 쏟아 창을 힘껏 내려찍어 주변 원형 범위 내의 적에게 물리 피해를 줍니다. 적이 물리 취약 상태라면, 대상을 강제 띄우기 상태로 만듭니다.',
                 levels: {
-                    M0: { dmg: '880%', bonus: [{ trigger: ['물리 취약'], type: ['강제 띄우기'], target: '적' }] },
-                    M1: { dmg: '941%', bonus: [{ trigger: ['물리 취약'], type: ['강제 띄우기'], target: '적' }] },
-                    M2: { dmg: '1014%', bonus: [{ trigger: ['물리 취약'], type: ['강제 띄우기'], target: '적' }] },
-                    M3: { dmg: '1100%', bonus: [{ trigger: ['물리 취약'], type: ['강제 띄우기'], target: '적' }] }
+                    M0: { dmg: '880%', bonus: [{ triggerTarget: ['물리 취약'], type: ['강제 띄우기'], target: '적' }] },
+                    M1: { dmg: '941%', bonus: [{ triggerTarget: ['물리 취약'], type: ['강제 띄우기'], target: '적' }] },
+                    M2: { dmg: '1014%', bonus: [{ triggerTarget: ['물리 취약'], type: ['강제 띄우기'], target: '적' }] },
+                    M3: { dmg: '1100%', bonus: [{ triggerTarget: ['물리 취약'], type: ['강제 띄우기'], target: '적' }] }
                 }
             }
         ],
@@ -506,10 +506,10 @@ const DATA_OPERATORS = [
             {
                 skillType: ['궁극기'], element: 'nature', cost: 90, desc: '5초간 지속되는 중력 혼란 구역을 생성하여, 구역 내의 적에게 즉시 1회의 자연 피해를 주고 자연 부착 상태를 부여합니다. 구역 내 목표에게 감속과 아츠 취약 상태(기본 30%)를 부여합니다. 목표가 방어 불능 상태일 경우, 아츠 취약 효과는 방어 불능 1스택당 3%씩 추가로 증가됩니다(최대 4스택). 구역 내 목표가 띄우기 상태일 경우, 구역 효과가 종료될 때까지 띄우기 상태를 유지합니다.',
                 levels: {
-                    M0: { dmg: '600%', type: [{ type: '자연 부착', target: '적' }, { type: '아츠 취약', val: '26%', target: '적', trigger: ['방어 불능'], perStack: '2.5%' }, { type: '감속', target: '적' }] },
-                    M1: { dmg: '642%', type: [{ type: '자연 부착', target: '적' }, { type: '아츠 취약', val: '30%', target: '적', trigger: ['방어 불능'], perStack: '3%' }, { type: '감속', target: '적' }] },
-                    M2: { dmg: '692%', type: [{ type: '자연 부착', target: '적' }, { type: '아츠 취약', val: '30%', target: '적', trigger: ['방어 불능'], perStack: '3%' }, { type: '감속', target: '적' }] },
-                    M3: { dmg: '750%', type: [{ type: '자연 부착', target: '적' }, { type: '아츠 취약', val: '30%', target: '적', trigger: ['방어 불능'], perStack: '3%' }, { type: '감속', target: '적' }] }
+                    M0: { dmg: '600%', type: [{ type: '자연 부착', target: '적' }, { type: '아츠 취약', val: '26%', target: '적', triggerTarget: ['방어 불능'], perStack: '2.5%' }, { type: '감속', target: '적' }] },
+                    M1: { dmg: '642%', type: [{ type: '자연 부착', target: '적' }, { type: '아츠 취약', val: '30%', target: '적', triggerTarget: ['방어 불능'], perStack: '3%' }, { type: '감속', target: '적' }] },
+                    M2: { dmg: '692%', type: [{ type: '자연 부착', target: '적' }, { type: '아츠 취약', val: '30%', target: '적', triggerTarget: ['방어 불능'], perStack: '3%' }, { type: '감속', target: '적' }] },
+                    M3: { dmg: '750%', type: [{ type: '자연 부착', target: '적' }, { type: '아츠 취약', val: '30%', target: '적', triggerTarget: ['방어 불능'], perStack: '3%' }, { type: '감속', target: '적' }] }
                 }
             }
         ],
@@ -523,7 +523,7 @@ const DATA_OPERATORS = [
             [{ desc: '배틀 스킬 비전 지팡이 · 중력 모드의 효과 범위 +20%' }],
             [
                 { type: ['방어 불능 보정'], val: 1, skillType: ['궁극기'] },
-                { type: ['아츠 취약'], trigger: ['방어 불능'], perStack: '3%', target: '적', skillType: ['궁극기'], desc: '잠재2: 궁극기 판정 시 방어 불능 스택 +1 및 스택당 아츠 취약 +3% 추가', desc: '적이 궁극기 비전 지팡이 · 중력장의 중력 혼란 구역에 영향받을 때, 방어 불능 1스택마다 아츠 취약의 증폭 효과가 두 배로 증가합니다. 또한 판정 시 목표가 추가로 방어 불능 1스택을 가진 것으로 간주합니다.(최대 4스택을 초과할 수 없습니다)' }
+                { type: ['아츠 취약'], triggerTarget: ['방어 불능'], perStack: '3%', target: '적', skillType: ['궁극기'], desc: '잠재2: 궁극기 판정 시 방어 불능 스택 +1 및 스택당 아츠 취약 +3% 추가', desc: '적이 궁극기 비전 지팡이 · 중력장의 중력 혼란 구역에 영향받을 때, 방어 불능 1스택마다 아츠 취약의 증폭 효과가 두 배로 증가합니다. 또한 판정 시 목표가 추가로 방어 불능 1스택을 가진 것으로 간주합니다.(최대 4스택을 초과할 수 없습니다)' }
             ],
             [{ type: ['궁극기 충전 효율'], val: '5%', target: '팀', targetClass: ['guard', 'caster', 'supporter'], desc: '재능 "전달자의 노래" 효과 강화: 궁극기 충전 효율 추가 +5%' }],
             [{ type: ['궁극기 에너지 감소'], val: '15%', desc: '궁극기 비전 지팡이 · 중력장의 사용에 필요한 궁극기 에너지 -15%' }],
@@ -847,10 +847,10 @@ const DATA_OPERATORS = [
             {
                 skillType: ['배틀 스킬'], element: 'heat', desc: '목표를 연속으로 사격하여 소량의 열기 피해를 주고, 마지막 한 발은 열기 부착 상태를 부여합니다. 목표가 연소 또는 감전 상태일 경우 열기 부착 상태를 부여하지 않고, 해당 상태를 소모하여 추가로 1회 사격하며, 대량의 열기 피해를 줍니다.',
                 levels: {
-                    M0: { dmg: '184%', type: [{ type: '열기 부착', excludeTarget: ['연소', '감전'] }, '연소 소모', '감전 소모'], target: '적', bonus: [{ trigger: ['연소', '감전'], val: '680%' }] },
-                    M1: { dmg: '196%', type: [{ type: '열기 부착', excludeTarget: ['연소', '감전'] }, '연소 소모', '감전 소모'], target: '적', bonus: [{ trigger: ['연소', '감전'], val: '727%' }] },
-                    M2: { dmg: '212%', type: [{ type: '열기 부착', excludeTarget: ['연소', '감전'] }, '연소 소모', '감전 소모'], target: '적', bonus: [{ trigger: ['연소', '감전'], val: '784%' }] },
-                    M3: { dmg: '230%', type: [{ type: '열기 부착', excludeTarget: ['연소', '감전'] }, '연소 소모', '감전 소모'], target: '적', bonus: [{ trigger: ['연소', '감전'], val: '850%' }] }
+                    M0: { dmg: '184%', type: [{ type: '열기 부착', excludeTarget: ['연소', '감전'] }, '연소 소모', '감전 소모'], target: '적', bonus: [{ triggerTarget: ['연소', '감전'], val: '680%' }] },
+                    M1: { dmg: '196%', type: [{ type: '열기 부착', excludeTarget: ['연소', '감전'] }, '연소 소모', '감전 소모'], target: '적', bonus: [{ triggerTarget: ['연소', '감전'], val: '727%' }] },
+                    M2: { dmg: '212%', type: [{ type: '열기 부착', excludeTarget: ['연소', '감전'] }, '연소 소모', '감전 소모'], target: '적', bonus: [{ triggerTarget: ['연소', '감전'], val: '784%' }] },
+                    M3: { dmg: '230%', type: [{ type: '열기 부착', excludeTarget: ['연소', '감전'] }, '연소 소모', '감전 소모'], target: '적', bonus: [{ triggerTarget: ['연소', '감전'], val: '850%' }] }
                 }
             },
             {
@@ -982,21 +982,21 @@ const DATA_OPERATORS = [
                 }
             },
             {
-                skillType: ['배틀 스킬'], element: 'heat', desc: '몰튼 코어 조각을 소환해 지속적으로 전방의 적을 공격합니다. 열기 피해를 주며, 적을 명중하면 녹아내린 불꽃 1스택을 획득합니다. 이미 녹아내린 불꽃 4스택이 쌓였을 경우, 마지막에 모든 스택 수치를 소모해 넓은 범위 내의 적에게 추가로 1회 공격하며, 열기 피해를 주고, 5초간 강제 연소 상태를 부여합니다. 추가 공격이 적에게 명중했다면 추가로 궁극기 에너지를 100포인트 획득합니다. 궁극기 사용 중에는 배틀 스킬의 효과가 강화됩니다.',
+                skillType: ['배틀 스킬'], element: 'heat', desc: '몰튼 코어 조각을 소환해 지속적으로 전방의 적을 공격합니다. 열기 피해를 주며, 적을 명중하면 녹아내린 불꽃 1스택을 획득합니다. 이미 녹아내린 불꽃 4스택이 쌓였을 경우, 마지막에 모든 스택 수치를 소모해 넓은 범위 내의 적에게 추가로 1회 공격하며, 열기 피해를 주고, 5초간 강제 연소 상태를 부여합니다. 추가 공격이 적에게 명중했다면 추가로 궁극기 에너지를 100포인트 획득합니다.<br>궁극기 사용 중에는 배틀 스킬의 효과가 강화됩니다.',
                 levels: {
-                    M0: { dmg: '112%', type: [{ type: '연소 부여', trigger: ['녹아내린 불꽃'], abnormalMult: 120, potOverrides: { 3: { abnormalMult: 252 } } }], target: '적', bonus: [{ trigger: ['녹아내린 불꽃'], val: '616%' }] },
-                    M1: { dmg: '120%', type: [{ type: '연소 부여', trigger: ['녹아내린 불꽃'], abnormalMult: 120, potOverrides: { 3: { abnormalMult: 252 } } }], target: '적', bonus: [{ trigger: ['녹아내린 불꽃'], val: '658%' }] },
-                    M2: { dmg: '129%', type: [{ type: '연소 부여', trigger: ['녹아내린 불꽃'], abnormalMult: 120, potOverrides: { 3: { abnormalMult: 252 } } }], target: '적', bonus: [{ trigger: ['녹아내린 불꽃'], val: '710%' }] },
-                    M3: { dmg: '140%', type: [{ type: '연소 부여', trigger: ['녹아내린 불꽃'], abnormalMult: 120, potOverrides: { 3: { abnormalMult: 252 } } }], target: '적', bonus: [{ trigger: ['녹아내린 불꽃'], val: '770%' }] }
+                    M0: { dmg: '112%', type: [{ type: '연소 부여', triggerTarget: ['녹아내린 불꽃'], abnormalMult: 120, potOverrides: { 3: { abnormalMult: 252 } } }], target: '적', bonus: [{ triggerTarget: ['녹아내린 불꽃'], val: '616%' }] },
+                    M1: { dmg: '120%', type: [{ type: '연소 부여', triggerTarget: ['녹아내린 불꽃'], abnormalMult: 120, potOverrides: { 3: { abnormalMult: 252 } } }], target: '적', bonus: [{ triggerTarget: ['녹아내린 불꽃'], val: '658%' }] },
+                    M2: { dmg: '129%', type: [{ type: '연소 부여', triggerTarget: ['녹아내린 불꽃'], abnormalMult: 120, potOverrides: { 3: { abnormalMult: 252 } } }], target: '적', bonus: [{ triggerTarget: ['녹아내린 불꽃'], val: '710%' }] },
+                    M3: { dmg: '140%', type: [{ type: '연소 부여', triggerTarget: ['녹아내린 불꽃'], abnormalMult: 120, potOverrides: { 3: { abnormalMult: 252 } } }], target: '적', bonus: [{ triggerTarget: ['녹아내린 불꽃'], val: '770%' }] }
                 }
             },
             {
-                skillType: ['강화 배틀 스킬'], masterySource: '배틀 스킬', element: 'heat', desc: '궁극기 사용 중에는 배틀 스킬의 효과가 강화됩니다.',
+                skillType: ['강화 배틀 스킬'], masterySource: '배틀 스킬', element: 'heat', desc: '궁극기 사용 중에는 배틀 스킬의 효과가 강화됩니다. 몰튼 코어 조각을 소환해 지속적으로 전방의 적을 공격합니다. 열기 피해를 주며, 적을 명중하면 녹아내린 불꽃 1스택을 획득합니다. 이미 녹아내린 불꽃 4스택이 쌓였을 경우, 마지막에 모든 스택 수치를 소모해 넓은 범위 내의 적에게 추가로 1회 공격하며, 열기 피해를 주고, 5초간 강제 연소 상태를 부여합니다.',
                 levels: {
-                    M0: { dmg: '560%', type: [{ type: '연소 부여', trigger: ['녹아내린 불꽃'], abnormalMult: 120, potOverrides: { 3: { abnormalMult: 252 } } }], target: '적', bonus: [{ trigger: ['녹아내린 불꽃'], val: '720%' }] },
-                    M1: { dmg: '598%', type: [{ type: '연소 부여', trigger: ['녹아내린 불꽃'], abnormalMult: 120, potOverrides: { 3: { abnormalMult: 252 } } }], target: '적', bonus: [{ trigger: ['녹아내린 불꽃'], val: '770%' }] },
-                    M2: { dmg: '645%', type: [{ type: '연소 부여', trigger: ['녹아내린 불꽃'], abnormalMult: 120, potOverrides: { 3: { abnormalMult: 252 } } }], target: '적', bonus: [{ trigger: ['녹아내린 불꽃'], val: '830%' }] },
-                    M3: { dmg: '700%', type: [{ type: '연소 부여', trigger: ['녹아내린 불꽃'], abnormalMult: 120, potOverrides: { 3: { abnormalMult: 252 } } }], target: '적', bonus: [{ trigger: ['녹아내린 불꽃'], val: '900%' }] }
+                    M0: { dmg: '560%', type: [{ type: '연소 부여', triggerTarget: ['녹아내린 불꽃'], abnormalMult: 120, potOverrides: { 3: { abnormalMult: 252 } } }], target: '적', bonus: [{ triggerTarget: ['녹아내린 불꽃'], val: '720%' }] },
+                    M1: { dmg: '598%', type: [{ type: '연소 부여', triggerTarget: ['녹아내린 불꽃'], abnormalMult: 120, potOverrides: { 3: { abnormalMult: 252 } } }], target: '적', bonus: [{ triggerTarget: ['녹아내린 불꽃'], val: '770%' }] },
+                    M2: { dmg: '645%', type: [{ type: '연소 부여', triggerTarget: ['녹아내린 불꽃'], abnormalMult: 120, potOverrides: { 3: { abnormalMult: 252 } } }], target: '적', bonus: [{ triggerTarget: ['녹아내린 불꽃'], val: '830%' }] },
+                    M3: { dmg: '700%', type: [{ type: '연소 부여', triggerTarget: ['녹아내린 불꽃'], abnormalMult: 120, potOverrides: { 3: { abnormalMult: 252 } } }], target: '적', bonus: [{ triggerTarget: ['녹아내린 불꽃'], val: '900%' }] }
                 }
             },
             {
@@ -1081,7 +1081,7 @@ const DATA_OPERATORS = [
             }
         ],
         talents: [
-            [{ type: ['냉기 취약'], val: '4%', trigger: ['냉기 부착'], target: '적', stack: 4, desc: '라스트 라이트가 임의의 아츠 부착을 소모할 때, 해당 목표에 소모한 아츠 부착의 스택 수치×4%만큼의 냉기 취약을 부여합니다. 15초 동안 지속.<br><span style="color: #727272">해당 효과는 중첩되지 않습니다.</span>' }],
+            [{ type: ['냉기 취약'], val: '4%', triggerTarget: ['냉기 부착'], target: '적', stack: 4, desc: '라스트 라이트가 임의의 아츠 부착을 소모할 때, 해당 목표에 소모한 아츠 부착의 스택 수치×4%만큼의 냉기 취약을 부여합니다. 15초 동안 지속.<br><span style="color: #727272">해당 효과는 중첩되지 않습니다.</span>' }],
             [{ type: ['취약 증폭'], val: 0.5, targetEffect: ['아츠 취약', '냉기 취약'], skillType: ['궁극기'], desc: '궁극기 피해를 줄 때, 적이 아츠 취약 혹은 냉기 취약 상태일 경우, 해당 효과를 기존의 1.5배로 간주합니다.' }]
         ],
         potential: [
@@ -1153,7 +1153,7 @@ const DATA_OPERATORS = [
         ],
         talents: [
             [{ desc: '배틀 스킬 얼음 폭탄 · β형이 동결을 발동한 후, 다음 일반 공격에서 바로 강력한 일격을 사용합니다. 해당 강력한 일격이 주는 피해 +50%' }],
-            [{ type: ['치명타 피해'], val: '20%', trigger: ['냉기 부착', '동결'], bonus: [{ type: ['치명타 피해'], val: '20%', trigger: ['동결'] }], desc: '냉기 부착 상태의 적에게 주는 치명타 피해 +20%. 동결 상태의 적에게는 효과가 두 배로 적용됩니다.' }]
+            [{ type: ['치명타 피해'], val: '20%', triggerTarget: ['냉기 부착', '동결'], bonus: [{ type: ['치명타 피해'], val: '20%', triggerTarget: ['동결'] }], desc: '냉기 부착 상태의 적에게 주는 치명타 피해 +20%. 동결 상태의 적에게는 효과가 두 배로 적용됩니다.' }]
         ],
         potential: [
             [{
@@ -1168,7 +1168,7 @@ const DATA_OPERATORS = [
                 }
             }],
             [{ type: ['스탯'], stats: '지능', val: 20 }, { type: ['치명타 확률'], val: '7%', desc: '지능 +20, 치명타 확률 +7%' }],
-            [{ type: ['치명타 피해'], val: '10%', trigger: ['냉기 부착', '동결'], bonus: [{ type: ['치명타 피해'], val: '10%', trigger: ['동결'] }], desc: '재능 빙점 효과 강화: 냉기 부착 상태의 적에게 주는 추가 치명타 피해 +10%, 동결 상태의 적에게도 동일하게 효과가 두 배로 적용됩니다.' }],
+            [{ type: ['치명타 피해'], val: '10%', triggerTarget: ['냉기 부착', '동결'], bonus: [{ type: ['치명타 피해'], val: '10%', triggerTarget: ['동결'] }], desc: '재능 빙점 효과 강화: 냉기 부착 상태의 적에게 주는 추가 치명타 피해 +10%, 동결 상태의 적에게도 동일하게 효과가 두 배로 적용됩니다.' }],
             [{ desc: '배틀 스킬 얼음 폭탄 · β형의 첫 번째 폭발이 단일 목표에 명중했을 때, 스킬 게이지 10포인트를 반환합니다.' }],
             [{ type: ['공격력 증가'], val: '10%', skillType: ['강화 일반 공격'] }, { type: ['치명타 피해'], val: '30%', skillType: ['강화 일반 공격'], desc: '궁극기 아이스 슈터가 지속되는 동안, 공격력 +10%, 치명타 피해 +30%' }]
         ]
@@ -1335,10 +1335,10 @@ const DATA_OPERATORS = [
             {
                 skillType: ['연계 스킬'], element: 'phys', desc: '적이 강타 혹은 갑옷 파괴로 인해 방어 불능의 스택 수치가 소모되었을 때 사용할 수 있습니다. 소모한 최대 방어 불능 스택 수치에 따라, 적에게 동일 횟수의 베기 공격(최대 3회)을 하여 물리 피해를 주고, 일정량의 스킬 게이지를 회복하며 베기 공격마다 주는 피해와 스킬 게이지 회복 효과가 증가합니다. 만약 방어 불능 4스택을 소모할 경우, 세 번째 베기 공격이 강화됩니다.',
                 levels: {
-                    M0: { dmg: '0%', type: ['스킬 게이지 회복'], bonus: [{ trigger: ['방어 불능'], stackValues: { 1: '76%', 2: '97%', 3: '216%', 4: '335%' } }] },
-                    M1: { dmg: '0%', type: ['스킬 게이지 회복'], bonus: [{ trigger: ['방어 불능'], stackValues: { 1: '81%', 2: '104%', 3: '231%', 4: '358%' } }] },
-                    M2: { dmg: '0%', type: ['스킬 게이지 회복'], bonus: [{ trigger: ['방어 불능'], stackValues: { 1: '87%', 2: '112%', 3: '259%', 4: '396%' } }] },
-                    M3: { dmg: '0%', type: ['스킬 게이지 회복'], bonus: [{ trigger: ['방어 불능'], stackValues: { 1: '95%', 2: '122%', 3: '271%', 4: '419%' } }] }
+                    M0: { dmg: '0%', type: ['스킬 게이지 회복'], bonus: [{ triggerTarget: ['방어 불능'], stackValues: { 1: '76%', 2: '97%', 3: '216%', 4: '335%' } }] },
+                    M1: { dmg: '0%', type: ['스킬 게이지 회복'], bonus: [{ triggerTarget: ['방어 불능'], stackValues: { 1: '81%', 2: '104%', 3: '231%', 4: '358%' } }] },
+                    M2: { dmg: '0%', type: ['스킬 게이지 회복'], bonus: [{ triggerTarget: ['방어 불능'], stackValues: { 1: '87%', 2: '112%', 3: '259%', 4: '396%' } }] },
+                    M3: { dmg: '0%', type: ['스킬 게이지 회복'], bonus: [{ triggerTarget: ['방어 불능'], stackValues: { 1: '95%', 2: '122%', 3: '271%', 4: '419%' } }] }
                 }
             },
             {
