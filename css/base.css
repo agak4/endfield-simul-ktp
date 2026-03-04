@@ -5,13 +5,6 @@
     font-display: swap;
 }
 
-@font-face {
-    font-family: 'Sunchon';
-    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2202-2@1.0/SuncheonR.woff') format('woff');
-    font-weight: normal;
-    font-display: swap;
-}
-
 /* ============ 테마 변수 ============ */
 :root {
     --bg-color: #121212;
@@ -101,7 +94,7 @@ body {
     background-image: radial-gradient(circle at center, #2a2a2a 0%, #121212 100%);
     background-attachment: fixed;
     color: var(--text-primary);
-    font-family: 'Sunchon';
+    font-family: 'NexonLv1Gothic';
     min-height: 100vh;
     overflow-y: auto;
     display: flex;
@@ -237,7 +230,7 @@ input:focus {
     height: 30px;
     align-items: center;
     justify-content: center;
-    font-family: 'OneStoreMobileGothicBody';
+    font-family: 'NexonLv1Gothic';
 }
 
 .btn-select:hover,
