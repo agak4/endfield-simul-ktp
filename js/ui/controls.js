@@ -266,73 +266,70 @@ function updateEntityImage(entityId, imgElementId, folder) {
     container?.classList.remove('rarity-6', 'rarity-5', 'rarity-4');
     imgElement.classList.remove('loaded');
 
-    if (!entityId) {
-        imgElement.src = TRANSPARENT_PIXEL;
-        imgElement.style.display = 'none';
-        imgElement.removeAttribute('data-tooltip-id');
-        imgElement.removeAttribute('data-tooltip-type');
-        return;
-    }
-
     let fileName = '', rarity = 0;
-    if (folder === 'operators') {
-        const op = DATA_OPERATORS.find(o => o.id === entityId);
-        fileName = op?.name; rarity = op?.rarity || 0;
-    } else if (folder === 'weapons') {
-        const wep = DATA_WEAPONS.find(w => w.id === entityId);
-        fileName = wep?.name; rarity = wep?.rarity || 0;
-    } else if (folder === 'gears') {
-        fileName = DATA_GEAR.find(g => g.id === entityId)?.name;
+
+    if (entityId) {
+        if (folder === 'operators') {
+            const op = DATA_OPERATORS.find(o => o.id === entityId);
+            fileName = op?.name; rarity = op?.rarity || 0;
+        } else if (folder === 'weapons') {
+            const wep = DATA_WEAPONS.find(w => w.id === entityId);
+            fileName = wep?.name; rarity = wep?.rarity || 0;
+        } else if (folder === 'gears') {
+            fileName = DATA_GEAR.find(g => g.id === entityId)?.name;
+        }
     }
 
-    if (!fileName) {
+    if (!fileName || !entityId) {
         imgElement.src = TRANSPARENT_PIXEL;
         imgElement.style.display = 'none';
         imgElement.removeAttribute('data-tooltip-id');
         imgElement.removeAttribute('data-tooltip-type');
-        return;
-    }
+        imgElement.removeAttribute('data-tooltip-pot');
+        imgElement.removeAttribute('data-tooltip-forged');
+        container?.removeAttribute('data-tooltip-forged');
+    } else {
+        if (rarity && container) container.classList.add(`rarity-${rarity}`);
 
-    if (rarity && container) container.classList.add(`rarity-${rarity}`);
+        imgElement.onload = () => imgElement.classList.add('loaded');
+        imgElement.onerror = () => {
+            imgElement.style.display = 'none';
+            imgElement.classList.remove('loaded');
+        };
 
-    imgElement.onload = () => imgElement.classList.add('loaded');
-    imgElement.onerror = () => {
-        imgElement.style.display = 'none';
-        imgElement.classList.remove('loaded');
-    };
+        imgElement.src = `images/${folder}/${fileName}.webp?v=${APP_VERSION}`;
+        imgElement.loading = 'eager';
+        imgElement.style.display = 'block';
+        imgElement.setAttribute('data-tooltip-id', entityId);
+        imgElement.setAttribute('data-tooltip-type',
+            folder === 'operators' ? 'operator' : folder === 'weapons' ? 'weapon' : 'gear');
 
-    imgElement.src = `images/${folder}/${fileName}.webp?v=${APP_VERSION}`;
-    imgElement.loading = 'eager';
-    imgElement.style.display = 'block';
-    imgElement.setAttribute('data-tooltip-id', entityId);
-    imgElement.setAttribute('data-tooltip-type',
-        folder === 'operators' ? 'operator' : folder === 'weapons' ? 'weapon' : 'gear');
-
-    // 잠재 레벨 속성 (오퍼레이터/무기 전용)
-    if (folder === 'operators' || folder === 'weapons') {
-        const inputId = POT_INPUT_TO_IMAGE[imgElementId.replace('-image', '-pot')]
-            ? imgElementId.replace('-image', '-pot')
-            : imgElementId.startsWith('sub-') ? imgElementId.replace('-image', '-pot') : '';
-        imgElement.setAttribute('data-tooltip-pot', Number(document.getElementById(inputId)?.value) || 0);
-    }
-
-    // 단조 속성 (장비 전용)
-    if (folder === 'gears') {
-        let isForged = false;
-        if (imgElementId.startsWith('sub-')) {
-            const parts = imgElementId.split('-'); // e.g., sub-0-gear-gloves-image
-            const subIdx = parseInt(parts[1], 10);
-            const slotKey = parts[3];
-            const slotIdx = GEAR_SLOT_KEYS.indexOf(slotKey);
-            if (subIdx >= 0 && slotIdx >= 0 && state.subOps[subIdx]) {
-                isForged = state.subOps[subIdx].gearForged[slotIdx];
-            }
-        } else {
-            const slot = imgElementId.replace('gear-', '').replace('-image', '');
-            isForged = document.getElementById(`gear-${slot}-forge`)?.checked || false;
+        // 잠재 레벨 속성 (오퍼레이터/무기 전용)
+        if (folder === 'operators' || folder === 'weapons') {
+            const inputId = POT_INPUT_TO_IMAGE[imgElementId.replace('-image', '-pot')]
+                ? imgElementId.replace('-image', '-pot')
+                : imgElementId.startsWith('sub-') ? imgElementId.replace('-image', '-pot') : '';
+            imgElement.setAttribute('data-tooltip-pot', Number(document.getElementById(inputId)?.value) || 0);
         }
-        imgElement.setAttribute('data-tooltip-forged', isForged);
-        container?.setAttribute('data-tooltip-forged', isForged);
+
+        // 단조 속성 (장비 전용)
+        if (folder === 'gears') {
+            let isForged = false;
+            if (imgElementId.startsWith('sub-')) {
+                const parts = imgElementId.split('-'); // e.g., sub-0-gear-gloves-image
+                const subIdx = parseInt(parts[1], 10);
+                const slotKey = parts[3];
+                const slotIdx = GEAR_SLOT_KEYS.indexOf(slotKey);
+                if (subIdx >= 0 && slotIdx >= 0 && state.subOps[subIdx]) {
+                    isForged = state.subOps[subIdx].gearForged[slotIdx];
+                }
+            } else {
+                const slot = imgElementId.replace('gear-', '').replace('-image', '');
+                isForged = document.getElementById(`gear-${slot}-forge`)?.checked || false;
+            }
+            imgElement.setAttribute('data-tooltip-forged', isForged);
+            container?.setAttribute('data-tooltip-forged', isForged);
+        }
     }
 
     // 서브 오퍼레이터 요약 아이콘 동기화
