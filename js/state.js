@@ -114,7 +114,7 @@ let state = {
      */
     usables: DEFAULT_USABLES(),
 
-    selectedSeqId: null, // 현재 선택된 사이클 아이템의 id
+    selectedSeqIds: [], // 현재 선택된 사이클 아이템들의 id 배열
     skillSequence: [],   // { id: 'seq_...', type: '일반 공격', customState: null | {...} }
 };
 
@@ -178,7 +178,7 @@ function lsGet(key) {
  * @param {'unbalanced'|'debuff'|'specialStack'|'effects'} type
  */
 window.propagateGlobalStateToCustom = function (type) {
-    if (state.selectedSeqId) return;
+    if (state.selectedSeqIds && state.selectedSeqIds.length > 0) return;
 
     state.skillSequence.forEach(item => {
         if (!item.customState) return;
@@ -288,18 +288,55 @@ function updateState() {
  * customState가 이미 있으면 아무 작업도 하지 않는다.
  */
 function ensureCustomState() {
-    if (!state.selectedSeqId) return;
-    const item = state.skillSequence.find(s => s.id === state.selectedSeqId);
-    if (item && !item.customState) {
-        item.customState = {
-            disabledEffects: [...state.disabledEffects],
-            effectStacks: deepClone(state.effectStacks),
-            debuffState: deepClone(state.debuffState),
-            enemyUnbalanced: state.enemyUnbalanced,
-            specialStack: state.mainOp.specialStack,
-            usables: deepClone(state.usables)
-        };
+    if (!state.selectedSeqIds || state.selectedSeqIds.length === 0) return;
+
+    state.selectedSeqIds.forEach(id => {
+        const item = state.skillSequence.find(s => s.id === id);
+        if (item && !item.customState) {
+            item.customState = {
+                disabledEffects: [...state.disabledEffects],
+                effectStacks: deepClone(state.effectStacks),
+                debuffState: deepClone(state.debuffState),
+                enemyUnbalanced: state.enemyUnbalanced,
+                specialStack: state.mainOp.specialStack ? deepClone(state.mainOp.specialStack) : {},
+                usables: deepClone(state.usables)
+            };
+        }
+    });
+}
+
+/**
+ * 활성 상태인 모든 커스텀 state에 대한 프록시 접근자 배열을 반환한다.
+ * 다중 선택 시 선택된 모든 아이템의 customState를 동시에 변경해야 할 때 사용한다.
+ */
+function getActiveCustomStates() {
+    if (state.selectedSeqIds && state.selectedSeqIds.length > 0) {
+        return state.skillSequence
+            .filter(s => state.selectedSeqIds.includes(s.id) && s.customState)
+            .map(s => {
+                const cs = s.customState;
+                return {
+                    disabledEffects: cs.disabledEffects,
+                    effectStacks: cs.effectStacks,
+                    debuffState: cs.debuffState,
+                    usables: cs.usables,
+                    isUnbalanced: () => cs.enemyUnbalanced,
+                    setUnbalanced: (v) => { cs.enemyUnbalanced = v; },
+                    getSpecialStack: () => cs.specialStack,
+                    setSpecialStack: (v) => { cs.specialStack = v; }
+                };
+            });
     }
+    return [{
+        disabledEffects: state.disabledEffects,
+        effectStacks: state.effectStacks,
+        debuffState: state.debuffState,
+        usables: state.usables,
+        isUnbalanced: () => state.enemyUnbalanced,
+        setUnbalanced: (v) => { state.enemyUnbalanced = v; },
+        getSpecialStack: () => state.mainOp.specialStack,
+        setSpecialStack: (v) => { state.mainOp.specialStack = v; }
+    }];
 }
 
 /**
@@ -310,8 +347,8 @@ function ensureCustomState() {
  *             getSpecialStack: ()=>object, setSpecialStack: (val:object)=>void }}
  */
 function getTargetState() {
-    if (state.selectedSeqId) {
-        const item = state.skillSequence.find(s => s.id === state.selectedSeqId);
+    if (state.selectedSeqIds && state.selectedSeqIds.length > 0) {
+        const item = state.skillSequence.find(s => s.id === state.selectedSeqIds[0]);
         if (item?.customState) {
             const cs = item.customState;
             return {

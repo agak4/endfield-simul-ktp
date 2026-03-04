@@ -27,6 +27,9 @@
 .cycle-board-box,
 .cycle-sequence-box {
     flex: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
 }
 
 .cycle-input-box h3,
@@ -206,7 +209,11 @@
     align-items: center;
     flex-wrap: wrap;
     gap: 5px;
-    min-height: 40px;
+    border: 1px solid var(--accent);
+    border-radius: 8px;
+    padding: 10px;
+    height: 100%;
+    align-content: flex-start;
 }
 
 .seq-arrow {
@@ -267,6 +274,23 @@
 .cycle-sequence-item.seq-selected {
     outline: 2px solid #FFBA03;
     outline-offset: 1px;
+}
+
+.cycle-selection-box {
+    position: absolute;
+    border: 1px solid rgba(0, 217, 255, 0.8);
+    background: rgba(0, 217, 255, 0.15);
+    left: var(--sel-left);
+    top: var(--sel-top);
+    width: var(--sel-width);
+    height: var(--sel-height);
+    pointer-events: none;
+    z-index: 1000;
+}
+
+body.no-select {
+    user-select: none;
+    -webkit-user-select: none;
 }
 
 .seq-icon {

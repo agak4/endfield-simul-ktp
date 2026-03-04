@@ -57,7 +57,7 @@ function makeSeqId() {
  */
 function commitDebuffChange(propagateType) {
     saveState();
-    if (!state.selectedSeqId) propagateGlobalStateToCustom(propagateType);
+    if (!state.selectedSeqIds || state.selectedSeqIds.length === 0) propagateGlobalStateToCustom(propagateType);
     updateState();
 }
 
@@ -667,27 +667,36 @@ function showDebuffOperatorBubble(el, debuffName) {
 
 function applyDebuffWithOperator(el, debuffNameRaw, opId) {
     ensureCustomState();
-    const ds = getTargetState().debuffState;
-    if (!ds.attribution) ds.attribution = { '갑옷 파괴': null, '감전': null, '부식': null };
-
-    const key = debuffNameRaw === 'armorBreak' ? '갑옷 파괴' : debuffNameRaw;
-    ds.attribution[key] = opId || null;
+    const tsFirst = getTargetState();
+    const dsFirst = tsFirst.debuffState;
+    if (!dsFirst.attribution) dsFirst.attribution = { '갑옷 파괴': null, '감전': null, '부식': null };
 
     let nextStack;
     if (debuffNameRaw === 'armorBreak') {
-        const cur = ds.physDebuff?.armorBreak || 0;
+        const cur = dsFirst.physDebuff?.armorBreak || 0;
         nextStack = (cur + 1) % 5;
-        if (!ds.physDebuff) ds.physDebuff = {};
-        ds.physDebuff.armorBreak = nextStack;
     } else {
-        const cur = ds.artsAbnormal?.[debuffNameRaw] || 0;
+        const cur = dsFirst.artsAbnormal?.[debuffNameRaw] || 0;
         nextStack = (cur + 1) % 5;
-        ds.artsAbnormal[debuffNameRaw] = nextStack;
     }
 
-    if (nextStack === 0) ds.attribution[key] = null;
+    const key = debuffNameRaw === 'armorBreak' ? '갑옷 파괴' : debuffNameRaw;
+    const finalOpId = nextStack === 0 ? null : (opId || null);
 
-    applyAttributionIcon(el, key, ds.attribution);
+    getActiveCustomStates().forEach(ts => {
+        const ds = ts.debuffState;
+        if (!ds.attribution) ds.attribution = { '갑옷 파괴': null, '감전': null, '부식': null };
+        ds.attribution[key] = finalOpId;
+
+        if (debuffNameRaw === 'armorBreak') {
+            if (!ds.physDebuff) ds.physDebuff = {};
+            ds.physDebuff.armorBreak = nextStack;
+        } else {
+            ds.artsAbnormal[debuffNameRaw] = nextStack;
+        }
+    });
+
+    applyAttributionIcon(el, key, dsFirst.attribution);
     applyDebuffIconState(el, nextStack);
     commitDebuffChange('debuff');
 }
@@ -714,24 +723,19 @@ function applyAttributionIcon(el, type, attr) {
 // 디버프 사이클 핸들러
 // ============================================================
 
-/**
- * 방어불능/갑옷파괴/연타 아이콘 클릭: 0→1→2→3→4→0 순환.
- * data-debuff 속성을 읽어 state.debuffState.physDebuff[type]을 갱신한다.
- * @param {HTMLElement} el  - 클릭된 .debuff-icon-wrap
- * @param {number}      dir - 순환 방향 (+1 증가 / -1 감소)
- */
 function cycleDebuff(el, dir = 1) {
     ensureCustomState();
 
     // 사용 아이템인 경우 토글 처리
     if (el.dataset.usable) {
         const type = el.dataset.usable;
-        const ts = getTargetState();
-        if (!ts.usables) ts.usables = {};
+        const tsFirst = getTargetState();
+        const next = dir === 1 ? !(tsFirst.usables?.[type]) : false;
 
-        // 클릭(dir=1) 시 토글, 우클릭(dir=-1) 시 끄기
-        const next = dir === 1 ? !ts.usables[type] : false;
-        ts.usables[type] = next;
+        getActiveCustomStates().forEach(ts => {
+            if (!ts.usables) ts.usables = {};
+            ts.usables[type] = next;
+        });
 
         applyDebuffIconState(el, next ? 1 : 0);
         commitDebuffChange('debuff');
@@ -739,30 +743,35 @@ function cycleDebuff(el, dir = 1) {
     }
 
     const type = el.dataset.debuff;
-    const ds = getTargetState().debuffState;
-    if (!ds.attribution) ds.attribution = { '갑옷 파괴': null, '감전': null, '부식': null };
+    const tsFirst = getTargetState();
+    const dsFirst = tsFirst.debuffState;
+    if (!dsFirst.attribution) dsFirst.attribution = { '갑옷 파괴': null, '감전': null, '부식': null };
 
-    const currentStacks = ds.physDebuff?.[type] !== undefined ? ds.physDebuff[type] : (ds[type] || 0);
+    const currentStacks = dsFirst.physDebuff?.[type] !== undefined ? dsFirst.physDebuff[type] : (dsFirst[type] || 0);
 
-    if (dir === 1 && type === 'armorBreak') {
-        if (currentStacks === 0) {
-            const validOps = getValidOperatorsForDebuff(type);
-            if (validOps.length > 0) {
-                showDebuffOperatorBubble(el, type);
-                return;
-            }
+    if (dir === 1 && type === 'armorBreak' && currentStacks === 0) {
+        const validOps = getValidOperatorsForDebuff(type);
+        if (validOps.length > 0) {
+            showDebuffOperatorBubble(el, type);
+            return;
         }
     }
 
     const next = ((parseInt(el.dataset.stacks, 10) || 0) + dir + 5) % 5;
 
-    if (next === 0 && type === 'armorBreak') {
-        ds.attribution['갑옷 파괴'] = null;
-        applyAttributionIcon(el, '갑옷 파괴', ds.attribution);
-    }
+    getActiveCustomStates().forEach(ts => {
+        const ds = ts.debuffState;
+        if (!ds.attribution) ds.attribution = { '갑옷 파괴': null, '감전': null, '부식': null };
+        if (next === 0 && type === 'armorBreak') {
+            ds.attribution['갑옷 파괴'] = null;
+        }
+        if (ds.physDebuff?.[type] !== undefined) ds.physDebuff[type] = next;
+        else if (ds[type] !== undefined) ds[type] = next;
+    });
 
-    if (ds.physDebuff?.[type] !== undefined) ds.physDebuff[type] = next;
-    else if (ds[type] !== undefined) ds[type] = next;
+    if (next === 0 && type === 'armorBreak') {
+        applyAttributionIcon(el, '갑옷 파괴', dsFirst.attribution);
+    }
 
     applyDebuffIconState(el, next);
     commitDebuffChange('debuff');
@@ -775,10 +784,16 @@ function cycleDebuff(el, dir = 1) {
 function cycleDebuffToggle(el) {
     ensureCustomState();
     const type = el.dataset.debuff;
-    const ds = getTargetState().debuffState;
-    if (!ds.physDebuff) ds.physDebuff = {};
-    const next = ds.physDebuff[type] ? 0 : 1;
-    ds.physDebuff[type] = next;
+    const dsFirst = getTargetState().debuffState;
+    if (!dsFirst.physDebuff) dsFirst.physDebuff = {};
+    const next = dsFirst.physDebuff[type] ? 0 : 1;
+
+    getActiveCustomStates().forEach(ts => {
+        const ds = ts.debuffState;
+        if (!ds.physDebuff) ds.physDebuff = {};
+        ds.physDebuff[type] = next;
+    });
+
     applyDebuffIconState(el, next);
     commitDebuffChange('debuff');
 }
@@ -791,21 +806,26 @@ function cycleDebuffToggle(el) {
 function cycleDebuffAttach(el, dir = 1) {
     ensureCustomState();
     const attachType = el.dataset.attachType;
-    const ds = getTargetState().debuffState.artsAttach;
+    const dsFirst = getTargetState().debuffState.artsAttach;
 
     // 다른 타입이 활성화된 상태에서 클릭하면 해당 타입으로 즉시 교체
-    const nextStacks = (ds.type !== null && ds.type !== attachType)
+    const nextStacks = (dsFirst.type !== null && dsFirst.type !== attachType)
         ? (dir === 1 ? 1 : 4)
         : ((parseInt(el.dataset.stacks, 10) || 0) + dir + 5) % 5;
 
-    ds.type = nextStacks === 0 ? null : attachType;
-    ds.stacks = nextStacks;
+    const nextType = nextStacks === 0 ? null : attachType;
+
+    getActiveCustomStates().forEach(ts => {
+        const ds = ts.debuffState.artsAttach;
+        ds.type = nextType;
+        ds.stacks = nextStacks;
+    });
 
     ATTACH_TYPES.forEach(t => {
         const wrap = document.getElementById(`debuff-icon-${t}`);
         if (!wrap) return;
         applyDebuffIconState(wrap, t === attachType && nextStacks > 0 ? nextStacks : 0);
-        wrap.classList.toggle('attach-disabled', ds.type !== null && t !== ds.type);
+        wrap.classList.toggle('attach-disabled', nextType !== null && t !== nextType);
     });
 
     commitDebuffChange('debuff');
@@ -819,10 +839,10 @@ function cycleDebuffAttach(el, dir = 1) {
 function cycleDebuffAbnormal(el, dir = 1) {
     ensureCustomState();
     const abnType = el.dataset.abnormalType;
-    const ds = getTargetState().debuffState;
-    if (!ds.attribution) ds.attribution = { '갑옷 파괴': null, '감전': null, '부식': null };
+    const dsFirst = getTargetState().debuffState;
+    if (!dsFirst.attribution) dsFirst.attribution = { '갑옷 파괴': null, '감전': null, '부식': null };
 
-    const currentStacks = ds.artsAbnormal?.[abnType] || 0;
+    const currentStacks = dsFirst.artsAbnormal?.[abnType] || 0;
 
     if (dir === 1 && (abnType === '감전' || abnType === '부식')) {
         if (currentStacks === 0) {
@@ -836,12 +856,19 @@ function cycleDebuffAbnormal(el, dir = 1) {
 
     const next = ((parseInt(el.dataset.stacks, 10) || 0) + dir + 5) % 5;
 
+    getActiveCustomStates().forEach(ts => {
+        const ds = ts.debuffState;
+        if (!ds.attribution) ds.attribution = { '갑옷 파괴': null, '감전': null, '부식': null };
+        if (next === 0 && (abnType === '감전' || abnType === '부식')) {
+            ds.attribution[abnType] = null;
+        }
+        ds.artsAbnormal[abnType] = next;
+    });
+
     if (next === 0 && (abnType === '감전' || abnType === '부식')) {
-        ds.attribution[abnType] = null;
-        applyAttributionIcon(el, abnType, ds.attribution);
+        applyAttributionIcon(el, abnType, dsFirst.attribution);
     }
 
-    ds.artsAbnormal[abnType] = next;
     applyDebuffIconState(el, next);
     commitDebuffChange('debuff');
 }
@@ -858,9 +885,9 @@ function cycleSpecialStack(el, dir = 1) {
     if (!op?.specialStack) return;
 
     const stackId = el.dataset.stackId || 'default';
-    const ts = getTargetState();
-    const specStacks = ts.getSpecialStack ? ts.getSpecialStack() : (state.mainOp.specialStack || {});
-    const cur = specStacks[stackId] || 0;
+    const tsFirst = getTargetState();
+    const specStacksFirst = tsFirst.getSpecialStack ? tsFirst.getSpecialStack() : (state.mainOp.specialStack || {});
+    const cur = specStacksFirst[stackId] || 0;
 
     const stacksData = Array.isArray(op.specialStack) ? op.specialStack : [op.specialStack];
     const specData = stacksData.find(s => (s.id || 'default') === stackId);
@@ -875,8 +902,11 @@ function cycleSpecialStack(el, dir = 1) {
         else if (next < 0) next = max;
     }
 
-    if (ts.setSpecialStack) ts.setSpecialStack({ ...specStacks, [stackId]: next });
-    else state.mainOp.specialStack[stackId] = next;
+    getActiveCustomStates().forEach(ts => {
+        const specStacks = ts.getSpecialStack ? ts.getSpecialStack() : (state.mainOp.specialStack || {});
+        if (ts.setSpecialStack) ts.setSpecialStack({ ...specStacks, [stackId]: next });
+        else state.mainOp.specialStack[stackId] = next;
+    });
 
     applyDebuffIconState(el, next);
     commitDebuffChange('specialStack');
@@ -962,7 +992,7 @@ function removeCycleItem(index) {
     if (!state.skillSequence) return;
     const removedId = state.skillSequence[index]?.id;
     state.skillSequence.splice(index, 1);
-    if (state.selectedSeqId === removedId) state.selectedSeqId = null;
+    if (state.selectedSeqIds && state.selectedSeqIds.includes(removedId)) state.selectedSeqIds = state.selectedSeqIds.filter(id => id !== removedId);
     saveState();
     if (typeof AppTooltip !== 'undefined' && AppTooltip.hide) AppTooltip.hide();
     updateState();
@@ -973,7 +1003,7 @@ function removeCycleItem(index) {
  */
 function clearCycleItems() {
     state.skillSequence = [];
-    state.selectedSeqId = null;
+    state.selectedSeqIds = [];
     saveState();
     if (typeof AppTooltip !== 'undefined' && AppTooltip.hide) AppTooltip.hide();
     updateState();

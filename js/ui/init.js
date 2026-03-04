@@ -190,12 +190,13 @@ function initUI() {
         enemyCb.style.display = 'none';
         enemyBtn.onclick = () => {
             ensureCustomState();
-            const ts = getTargetState();
             const next = !enemyCb.checked;
             enemyCb.checked = next;
-            ts.setUnbalanced(next);
+            getActiveCustomStates().forEach(ts => {
+                ts.setUnbalanced(next);
+            });
             updateToggleButton(enemyBtn, next, '불균형');
-            if (!state.selectedSeqId) propagateGlobalStateToCustom('unbalanced');
+            if (!state.selectedSeqIds || state.selectedSeqIds.length === 0) propagateGlobalStateToCustom('unbalanced');
             updateState();
         };
         updateToggleButton(enemyBtn, enemyCb.checked, '불균형');
@@ -293,6 +294,123 @@ function initUI() {
     } else {
         initTabs();
     }
+
+    setupCycleMultiSelect();
+}
+
+/**
+ * 스킬 사이클 보드 내 다중 드래그 선택 기능 초기화
+ */
+function setupCycleMultiSelect() {
+    const container = document.getElementById('cycle-sequence-display');
+    if (!container) return;
+
+    let isSelecting = false;
+    let startX = 0;
+    let startY = 0;
+    let selectionBox = null;
+    let initialSelected = [];
+
+    container.addEventListener('mousedown', (e) => {
+        if (e.button !== 0) return; // 좌클릭만 허용
+        // 아이템 위에서 드래그를 시작한 경우는 무시 (원래 있는 드래그 앤 드롭 방해 방지)
+        if (e.target.closest('.cycle-sequence-item') || e.target.closest('.cycle-btn') || e.target.closest('.seq-delete-btn')) {
+            return;
+        }
+
+        isSelecting = true;
+        startX = e.clientX;
+        startY = e.clientY;
+
+        if (!e.ctrlKey && !e.metaKey && !e.shiftKey) {
+            state.selectedSeqIds = [];
+            initialSelected = [];
+        } else {
+            initialSelected = [...state.selectedSeqIds];
+        }
+
+        selectionBox = document.createElement('div');
+        selectionBox.className = 'cycle-selection-box';
+
+        // CSS 변수를 통한 동적 위치, 크기 제어 (인라인 스타일 제한 우회)
+        selectionBox.style.setProperty('--sel-left', `${startX}px`);
+        selectionBox.style.setProperty('--sel-top', `${startY}px`);
+        selectionBox.style.setProperty('--sel-width', `0px`);
+        selectionBox.style.setProperty('--sel-height', `0px`);
+
+        document.body.appendChild(selectionBox);
+
+        // 드래그 중 텍스트 선택 방지
+        document.body.classList.add('no-select');
+    });
+
+    document.addEventListener('mousemove', (e) => {
+        if (!isSelecting || !selectionBox) return;
+
+        const currentX = e.clientX;
+        const currentY = e.clientY;
+
+        const x = Math.min(startX, currentX);
+        const y = Math.min(startY, currentY);
+        const w = Math.abs(currentX - startX);
+        const h = Math.abs(currentY - startY);
+
+        selectionBox.style.setProperty('--sel-left', `${x}px`);
+        selectionBox.style.setProperty('--sel-top', `${y}px`);
+        selectionBox.style.setProperty('--sel-width', `${w}px`);
+        selectionBox.style.setProperty('--sel-height', `${h}px`);
+
+        // 충돌 검사
+        const boxRect = selectionBox.getBoundingClientRect();
+        const items = container.querySelectorAll('.cycle-sequence-item');
+
+        const newSelected = new Set(initialSelected);
+
+        items.forEach(item => {
+            const itemRect = item.getBoundingClientRect();
+            // AABB(Axis-Aligned Bounding Box) 충돌
+            const isIntersecting = !(
+                boxRect.right < itemRect.left ||
+                boxRect.left > itemRect.right ||
+                boxRect.bottom < itemRect.top ||
+                boxRect.top > itemRect.bottom
+            );
+
+            const id = state.skillSequence[item.dataset.index]?.id;
+            if (id) {
+                if (isIntersecting) {
+                    newSelected.add(id);
+                } else if (!initialSelected.includes(id)) {
+                    newSelected.delete(id);
+                }
+            }
+        });
+
+        const newArr = Array.from(newSelected);
+        // 상태가 변경되었을 때만 DOM 갱신
+        if (newArr.length !== state.selectedSeqIds.length || !newArr.every((val, index) => val === state.selectedSeqIds[index])) {
+            state.selectedSeqIds = newArr;
+            updateUIStateVisuals();
+
+            // 실시간 선택 박스 시각화 업데이트
+            items.forEach(item => {
+                const id = state.skillSequence[item.dataset.index]?.id;
+                item.classList.toggle('seq-selected', state.selectedSeqIds.includes(id));
+            });
+        }
+    });
+
+    document.addEventListener('mouseup', () => {
+        if (!isSelecting) return;
+        isSelecting = false;
+
+        if (selectionBox) {
+            selectionBox.remove();
+            selectionBox = null;
+        }
+        document.body.classList.remove('no-select');
+        updateState();
+    });
 }
 
 // ============================================================
@@ -764,7 +882,7 @@ function applyOpSettingsToUI(opId, type, subIdx) {
         state.mainOp.specialStack = s?.specialStack ? { ...s.specialStack } : {};
         state.debuffState = s?.debuffState ? migrateDebuffState(s.debuffState) : DEFAULT_DEBUFF_STATE();
         state.usables = s?.usables ? { ...s.usables } : DEFAULT_USABLES();
-        state.selectedSeqId = null;
+        state.selectedSeqIds = [];
         state.disabledEffects = s?.disabledEffects ? [...s.disabledEffects] : [];
         state.effectStacks = s?.effectStacks ? deepClone(s.effectStacks) : {};
 

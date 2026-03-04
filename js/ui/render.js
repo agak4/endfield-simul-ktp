@@ -121,15 +121,17 @@ function createEffectListItem(log, options = {}) {
     li.onclick = (e) => {
         if (e) e.stopPropagation();
         ensureCustomState();
-        const ts2 = getTargetState();
+
+        const tsFirst = getTargetState();
+        let nextCur;
+        let uidsToToggle = [];
+        let isPush = true;
+
         if (log.stack) {
-            if (!ts2.effectStacks) ts2.effectStacks = {};
-            let cur = ts2.effectStacks[uid] !== undefined ? ts2.effectStacks[uid] : 1;
-            cur = (cur >= log.stack) ? 0 : cur + 1;
-            ts2.effectStacks[uid] = cur;
+            let cur = tsFirst.effectStacks?.[uid] !== undefined ? tsFirst.effectStacks[uid] : 1;
+            nextCur = (cur >= log.stack) ? 0 : cur + 1;
         } else {
-            if (!ts2.disabledEffects) ts2.disabledEffects = [];
-            const uidsToToggle = [uiUid];
+            uidsToToggle = [uiUid];
             // [New] skillType이 여러 개인 경우(잠재 등), 모든 카테고리 태그(#cat)를 함께 토글
             if (log.skillType && log.uid && uiUid.includes('#')) {
                 log.skillType.forEach(st => {
@@ -140,14 +142,28 @@ function createEffectListItem(log, options = {}) {
                     }
                 });
             }
-
-            uidsToToggle.forEach(u => {
-                const idx = ts2.disabledEffects.indexOf(u);
-                if (idx > -1) ts2.disabledEffects.splice(idx, 1);
-                else ts2.disabledEffects.push(u);
-            });
+            if (tsFirst.disabledEffects && tsFirst.disabledEffects.indexOf(uidsToToggle[0]) > -1) {
+                isPush = false;
+            }
         }
-        if (!state.selectedSeqId) propagateGlobalStateToCustom('effects');
+
+        getActiveCustomStates().forEach(ts2 => {
+            if (log.stack) {
+                if (!ts2.effectStacks) ts2.effectStacks = {};
+                ts2.effectStacks[uid] = nextCur;
+            } else {
+                if (!ts2.disabledEffects) ts2.disabledEffects = [];
+                uidsToToggle.forEach(u => {
+                    const idx = ts2.disabledEffects.indexOf(u);
+                    if (isPush) {
+                        if (idx === -1) ts2.disabledEffects.push(u);
+                    } else {
+                        if (idx > -1) ts2.disabledEffects.splice(idx, 1);
+                    }
+                });
+            }
+        });
+        if (!state.selectedSeqIds || state.selectedSeqIds.length === 0) propagateGlobalStateToCustom('effects');
         updateState();
     };
 
@@ -195,8 +211,8 @@ function renderResult(res) {
 
     // 2. Identify if we are viewing an individual custom item and extract its calculation results
     let displayRes = res;
-    if (state.selectedSeqId && cycleRes && cycleRes.sequence) {
-        const item = cycleRes.sequence.find(s => s.id === state.selectedSeqId);
+    if (state.selectedSeqIds && state.selectedSeqIds.length > 0 && cycleRes && cycleRes.sequence) {
+        const item = cycleRes.sequence.find(s => s.id === state.selectedSeqIds[0]);
         if (item && item.cRes) {
             displayRes = item.cRes;
         }
@@ -473,17 +489,48 @@ function renderCycleSequence(cycleRes) {
         const cardContainer = document.createElement('div');
         cardContainer.className = 'cycle-sequence-item';
         if (customState) cardContainer.classList.add('seq-is-custom');
-        if (state.selectedSeqId === id) cardContainer.classList.add('seq-selected');
+        if (state.selectedSeqIds && state.selectedSeqIds.includes(id)) cardContainer.classList.add('seq-selected');
 
         cardContainer.draggable = true;
         cardContainer.dataset.index = index;
 
         // 클릭 시 선택/해제 토글
         cardContainer.onclick = (e) => {
-            if (state.selectedSeqId === id) {
-                state.selectedSeqId = null; // 이미 선택된 경우 해제
+            if (e.shiftKey) {
+                // [New] Shift-click range selection
+                if (state.selectedSeqIds.length > 0) {
+                    const lastSelectedId = state.selectedSeqIds[state.selectedSeqIds.length - 1];
+                    const lastSelectedIndex = state.skillSequence.findIndex(s => s.id === lastSelectedId);
+                    const currentIndex = index; // Current card index
+
+                    if (lastSelectedIndex !== -1 && currentIndex !== -1) {
+                        const start = Math.min(lastSelectedIndex, currentIndex);
+                        const end = Math.max(lastSelectedIndex, currentIndex);
+
+                        // Add all items in range (start to end inclusive)
+                        for (let i = start; i <= end; i++) {
+                            const rangeId = state.skillSequence[i].id;
+                            if (!state.selectedSeqIds.includes(rangeId)) {
+                                state.selectedSeqIds.push(rangeId);
+                            }
+                        }
+                    }
+                } else {
+                    // Fallback to normal selection if nothing is currently selected
+                    state.selectedSeqIds = [id];
+                }
+            } else if (e.ctrlKey || e.metaKey) {
+                if (state.selectedSeqIds.includes(id)) {
+                    state.selectedSeqIds = state.selectedSeqIds.filter(v => v !== id);
+                } else {
+                    state.selectedSeqIds.push(id);
+                }
             } else {
-                state.selectedSeqId = id; // 새로 선택
+                if (state.selectedSeqIds.length === 1 && state.selectedSeqIds[0] === id) {
+                    state.selectedSeqIds = [];
+                } else {
+                    state.selectedSeqIds = [id];
+                }
             }
             updateUIStateVisuals();
             updateState();

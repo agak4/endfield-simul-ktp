@@ -86,7 +86,7 @@ function renderPartyContribution() {
         virtualState.usables = settings.usables ? { ...settings.usables } : DEFAULT_USABLES();
         virtualState.disabledEffects = [];
         virtualState.effectStacks = {};
-        virtualState.selectedSeqId = null;
+        virtualState.selectedSeqIds = [];
 
         // 데미지 계산
         const res = calculateDamage(virtualState);
