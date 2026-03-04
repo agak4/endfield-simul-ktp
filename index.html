@@ -1120,41 +1120,6 @@
     <script src="js/ui/preset.js" defer></script>
     <script src="js/ui/sidebar.js" defer></script>
     <script src="js/ui/modal.js" defer></script>
-    <script>
-        (function () {
-            console.log('[ForceInit] Injection script started');
-            document.addEventListener('DOMContentLoaded', function () {
-                console.log('[ForceInit] DOMContentLoaded');
-                const h2s = Array.from(document.querySelectorAll('h2'));
-                const analysisHeader = h2s.find(h => h.innerText.includes('전투 분석'));
-
-                if (analysisHeader && !document.querySelector('.analysis-tabs')) {
-                    console.log('[ForceInit] Found target H2, injecting tabs...');
-                    const panel = analysisHeader.closest('.panel') || analysisHeader.parentElement;
-
-                    // 만약 panel이 tile-group 내부에 있다면 (빈 슬롯들이 있는 곳)
-                    if (panel && panel.classList.contains('tile-group')) {
-                        console.log('[ForceInit] Target is in tile-group, adjusting...');
-                    }
-
-                    // CSS 강제 주입
-                    const style = document.createElement('style');
-                    style.innerHTML = `
-                        .analysis-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
-                        .analysis-tabs { display: flex; gap: 10px; }
-                        .analysis-tab { padding: 5px 15px; border: 1px solid #444; background: #222; color: #888; cursor: pointer; border-radius: 4px; }
-                        .analysis-tab.active { background: #00d9ff; color: #000; border-color: #00d9ff; }
-                        .analysis-tab-content { display: none; }
-                        .analysis-tab-content.active { display: block; }
-                    `;
-                    document.head.appendChild(style);
-                    console.log('[ForceInit] CSS injected');
-                } else {
-                    console.log('[ForceInit] Target H2 not found or tabs already exist');
-                }
-            });
-        })();
-    </script>
     <script src="js/ui/damage_contribution.js"></script>
     <!-- <script src="js/ui/party_contribution.js"></script> -->
     <script src="js/ui/render.js" defer></script>

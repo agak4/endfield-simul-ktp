@@ -36,12 +36,11 @@
     border: 2px solid var(--accent);
     border-radius: 12px;
     padding: 20px;
-    max-width: 400px;
+    max-width: 500px;
     text-align: center;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 15px var(--accent-glow);
     animation: popupSlideIn 0.3s ease-out;
     pointer-events: none;
-    /* 클릭 방해 금지 */
 }
 
 #interactive-guide-text {
