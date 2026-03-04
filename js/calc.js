@@ -694,7 +694,7 @@ function collectAllEffects(state, opData, wepData, stats, allEffects, forceMaxSt
         const uidPrefix = `set_${entry.setId}_${idx}`;
 
         const setEffectsWithId = setEffects.map(e => ({ ...e, setId: entry.setId }));
-        addEffect(setEffectsWithId, setLabel, 1.0, !isSelf, false, forceMaxStack, entry.opData, uidPrefix);
+        addEffect(setEffectsWithId, setLabel, 1.0, !isSelf, false, false, entry.opData, uidPrefix);
     });
 }
 
@@ -1494,7 +1494,7 @@ function evaluateTrigger(trigger, state, opData, triggerType, evalMode = 'both',
             const specialStackVal = state.getSpecialStack ? state.getSpecialStack() : (state.mainOp?.specialStack || 0);
 
             let isTriggerMet = false;
-            switch(t) {
+            switch (t) {
                 case '방어 불능': isTriggerMet = getAdjustedStackCount('방어 불능', state, opData, triggerType) > 0; break;
                 case '갑옷 파괴': isTriggerMet = getAdjustedStackCount('갑옷 파괴', state, opData, triggerType) > 0; break;
                 case '열기 부착': isTriggerMet = state.debuffState?.artsAttach?.type === '열기 부착'; break;
@@ -1538,7 +1538,7 @@ function evaluateTrigger(trigger, state, opData, triggerType, evalMode = 'both',
         if (opData && (evalMode === 'both' || evalMode === 'op')) {
             const checkOpCapability = (targetOp) => {
                 if (!targetOp) return false;
-                
+
                 const triggerTypeStr = Array.isArray(triggerType) ? triggerType.join(',') : (triggerType || '');
                 const cacheKey = `${targetOp.id}_${t}_${triggerTypeStr}`;
                 if (OP_CAPABILITY_CACHE.has(cacheKey)) return OP_CAPABILITY_CACHE.get(cacheKey);
@@ -1567,7 +1567,7 @@ function evaluateTrigger(trigger, state, opData, triggerType, evalMode = 'both',
                         return Array.isArray(tName) ? tName.some(tn => checkTypes.includes(tn)) : checkTypes.includes(tName);
                     });
                 });
-                
+
                 if (hasInSkill) {
                     result = true;
                 } else if (!triggerType || (Array.isArray(triggerType) ? triggerType.length === 0 : !triggerType)) {
@@ -1579,7 +1579,7 @@ function evaluateTrigger(trigger, state, opData, triggerType, evalMode = 'both',
                     if (hasInOther) result = true;
                     else if (t === targetOp.type || t === targetOp.element) result = true;
                 }
-                
+
                 OP_CAPABILITY_CACHE.set(cacheKey, result);
                 return result;
             };
