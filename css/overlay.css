@@ -316,6 +316,7 @@
 .preset-row-second {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 7px;
     padding-top: 8px;
     border-top: 1px solid rgba(255, 255, 255, 0.05);
@@ -343,6 +344,11 @@
     align-items: center;
     justify-content: center;
     overflow: hidden;
+}
+
+.preset-icon[data-tooltip-forged="true"] {
+    border-color: var(--accent);
+    box-shadow: 0 0 8px var(--accent-glow);
 }
 
 .preset-icon img {
@@ -426,6 +432,8 @@
     border-radius: 4px;
     cursor: pointer;
     transition: all 0.2s;
+    flex-shrink: 0;
+    white-space: nowrap;
 }
 
 .btn-preset.save {

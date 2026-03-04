@@ -356,7 +356,8 @@
                                     <input type="hidden" id="sub-1-gear-kit2" value="">
                                 </div>
                             </div>
-                            <button class="sub-swap-btn" id="sub-1-swap-btn" onclick="swapMainSub(1)">메인으로 선택</button>
+                            <button class="sub-swap-btn toggle-btn" id="sub-1-swap-btn" onclick="swapMainSub(1)">메인으로
+                                선택</button>
                         </div>
                     </div>
                 </div>
@@ -461,14 +462,15 @@
                                     <input type="hidden" id="sub-2-gear-kit2" value="">
                                 </div>
                             </div>
-                            <button class="sub-swap-btn" id="sub-2-swap-btn" onclick="swapMainSub(2)">메인으로 선택</button>
+                            <button class="sub-swap-btn toggle-btn" id="sub-2-swap-btn" onclick="swapMainSub(2)">메인으로
+                                선택</button>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
         <section class="panel setting-panel">
-            <h2>스킬 사이클 및 특성 설정</h2>
+            <h2>스킬 사이클 및 옵션 설정</h2>
             <!-- 사이클 보드와 디버프 아이콘 구역 -->
             <div class="result-debuff-wrapper">
                 <div class="result-area-row">
@@ -792,19 +794,6 @@
                     </div>
                     <ul id="list-atk" class="detail-list"></ul>
                 </div>
-                <!-- 주는 피해 -->
-                <div class="result-box dmg-inc-box" id="dmg-inc-box" data-tile-id="dmg-inc" data-full-row="true">
-                    <h4>주는 피해</h4>
-                    <div id="dmg-inc-stats-top" class="dmg-inc-stats-row">
-                    </div>
-                    <div id="dmg-inc-list-top" class="dmg-inc-container dmg-inc-list-row">
-                    </div>
-                    <div class="dmg-inc-divider"></div>
-                    <div id="dmg-inc-stats-bottom" class="dmg-inc-stats-row">
-                    </div>
-                    <div id="dmg-inc-list-bottom" class="dmg-inc-container dmg-inc-list-row">
-                    </div>
-                </div>
                 <!-- 치명타 기대값 -->
                 <div class="tile" data-tile-id="crit">
                     <h4>치명타 기대값</h4>
@@ -823,6 +812,33 @@
                     </div>
                     <ul id="list-crit" class="detail-list"></ul>
                 </div>
+                <!-- 궁극기 충전 효율 -->
+                <div class="tile" data-tile-id="ult-recharge">
+                    <h4>궁극기 충전 효율</h4>
+                    <div class="tile-main-stat-row">
+                        <span id="stat-ult-recharge">0%</span>
+                        <div class="tile-sub-stats">
+                            <div class="sub-stat-item">
+                                <label>필요 궁극기 게이지</label>
+                                <span id="stat-ult-cost">0</span>
+                            </div>
+                        </div>
+                    </div>
+                    <ul id="list-ult-recharge" class="detail-list"></ul>
+                </div>
+                <!-- 주는 피해 -->
+                <div class="result-box dmg-inc-box" id="dmg-inc-box" data-tile-id="dmg-inc" data-full-row="true">
+                    <h4>주는 피해</h4>
+                    <div id="dmg-inc-stats-top" class="dmg-inc-stats-row">
+                    </div>
+                    <div id="dmg-inc-list-top" class="dmg-inc-container dmg-inc-list-row">
+                    </div>
+                    <div class="dmg-inc-divider"></div>
+                    <div id="dmg-inc-stats-bottom" class="dmg-inc-stats-row">
+                    </div>
+                    <div id="dmg-inc-list-bottom" class="dmg-inc-container dmg-inc-list-row">
+                    </div>
+                </div>
                 <!-- 증폭 -->
                 <div class="result-box dmg-inc-box" id="amp-box" data-tile-id="amp">
                     <h4>증폭</h4>
@@ -837,6 +853,18 @@
                 <div class="result-box dmg-inc-box" id="vuln-box" data-tile-id="vuln">
                     <h4>취약</h4>
                     <div id="vuln-container" class="dmg-inc-container"></div>
+                </div>
+                <!-- 불균형 피해 -->
+                <div class="tile" data-tile-id="unbal">
+                    <h4>불균형 피해</h4>
+                    <div class="tile-main-stat-row">
+                        <span id="stat-unbal">0%</span>
+                        <div class="tile-ctrl-group u-ml-auto">
+                            <input type="checkbox" id="enemy-unbalanced" class="hidden-checkbox">
+                            <button id="enemy-unbalanced-toggle" class="toggle-btn enemy-toggle-btn">OFF</button>
+                        </div>
+                    </div>
+                    <ul id="list-unbal" class="detail-list"></ul>
                 </div>
                 <!-- 오리지늄 아츠 강도 -->
                 <div class="tile" data-tile-id="arts">
@@ -881,32 +909,6 @@
                     </div>
                     <ul id="list-res" class="detail-list"></ul>
                 </div>
-                <!-- 불균형 피해 -->
-                <div class="tile" data-tile-id="unbal">
-                    <h4>불균형 피해</h4>
-                    <div class="tile-main-stat-row">
-                        <span id="stat-unbal">0%</span>
-                        <div class="tile-ctrl-group u-ml-auto">
-                            <input type="checkbox" id="enemy-unbalanced" class="hidden-checkbox">
-                            <button id="enemy-unbalanced-toggle" class="toggle-btn enemy-toggle-btn">OFF</button>
-                        </div>
-                    </div>
-                    <ul id="list-unbal" class="detail-list"></ul>
-                </div>
-                <!-- 궁극기 충전 효율 -->
-                <div class="tile" data-tile-id="ult-recharge">
-                    <h4>궁극기 충전 효율</h4>
-                    <div class="tile-main-stat-row">
-                        <span id="stat-ult-recharge">0%</span>
-                        <div class="tile-sub-stats">
-                            <div class="sub-stat-item">
-                                <label>필요 궁극기 게이지</label>
-                                <span id="stat-ult-cost">0</span>
-                            </div>
-                        </div>
-                    </div>
-                    <ul id="list-ult-recharge" class="detail-list"></ul>
-                </div>
                 <!-- 적 방어력 -->
                 <div class="tile" data-tile-id="def">
                     <h4>적 방어력</h4>
@@ -920,6 +922,9 @@
                         </div>
                     </div>
                 </div>
+            </div>
+            <div class="dashboard-grid-controls">
+                <button id="btn-reset-tile-order" class="btn-select">타일 정렬 초기화</button>
             </div>
         </section>
         <section class="panel analysis-panel">
@@ -937,7 +942,7 @@
                 <div class="result-box cycle-dmg-box">
                     <div
                         style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                        <h3 style="margin: 0;">사이클 상세 합산</h3>
+                        <h3 style="margin: 0;">사이클 계산값 총합</h3>
                         <button id="btn-sort-cycle" class="icon-btn" title="데미지 순 정렬">⇅</button>
                     </div>
                     <div class="cycle-row"

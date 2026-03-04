@@ -263,19 +263,6 @@ function loadPreset(opId, index) {
         }
     }
 
-    // 4. 장비 적용
-    const GEAR_SELECT_IDS = ['gear-gloves-select', 'gear-armor-select', 'gear-kit1-select', 'gear-kit2-select'];
-    const GEAR_FORGE_IDS = ['gear-gloves-forge', 'gear-armor-forge', 'gear-kit1-forge', 'gear-kit2-forge'];
-
-    GEAR_SELECT_IDS.forEach((id, idx) => {
-        const el = document.getElementById(id);
-        const val = p.gears && p.gears[idx] ? p.gears[idx] : '';
-        if (el) {
-            el.value = val;
-            if (typeof updateEntityImage === 'function') updateEntityImage(val, id.replace('-select', '-image'), 'gears');
-        }
-    });
-
     // 5. 단조 적용
     GEAR_FORGE_IDS.forEach((id, idx) => {
         const checked = p.gearForged && p.gearForged[idx] ? p.gearForged[idx] : false;
@@ -285,6 +272,16 @@ function loadPreset(opId, index) {
             const toggleBtn = document.getElementById(id + '-toggle');
             if (toggleBtn && typeof updateToggleButton === 'function') updateToggleButton(toggleBtn, checked, '단조');
             if (typeof syncForgedToTooltip === 'function') syncForgedToTooltip(id, checked);
+        }
+    });
+
+    // 5. 장비 적용
+    GEAR_SELECT_IDS.forEach((id, idx) => {
+        const el = document.getElementById(id);
+        const val = p.gears && p.gears[idx] ? p.gears[idx] : '';
+        if (el) {
+            el.value = val;
+            if (typeof updateEntityImage === 'function') updateEntityImage(val, id.replace('-select', '-image'), 'gears');
         }
     });
 

@@ -574,6 +574,18 @@
     gap: 7px;
 }
 
+.dashboard-grid-controls {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 10px;
+}
+
+.dashboard-grid-controls .btn-select {
+    padding: 6px 12px;
+    font-size: 0.85rem;
+}
+
+.tile-full-row,
 [data-full-row="true"] {
     grid-column: span 2;
 }
@@ -930,6 +942,36 @@ h4.has-drag-handle {
 @media (max-width: 768px) {
     .dashboard-grid {
         grid-template-columns: 1fr;
+    }
+
+    .tile-full-row,
+    [data-full-row="true"] {
+        grid-column: span 1 !important;
+    }
+
+    .cycle-btn {
+        padding-bottom: 52px;
+    }
+
+    .skill-level-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: 26px 26px;
+        height: 52px;
+    }
+
+    .skill-lvl-btn {
+        border-right: 1px solid rgba(255, 255, 255, 0.1);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        height: 100%;
+    }
+
+    .skill-lvl-btn:nth-child(2n) {
+        border-right: none;
+    }
+
+    .skill-lvl-btn:nth-child(n+3) {
+        border-bottom: none;
     }
 }
 

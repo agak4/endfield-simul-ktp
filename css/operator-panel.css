@@ -259,6 +259,13 @@
     flex: 1;
 }
 
+.gear-image-container[data-tooltip-forged="true"],
+.sub-gear-slot[data-tooltip-forged="true"],
+.sub-summary-icon-container[data-tooltip-forged="true"] {
+    border-color: var(--accent);
+    box-shadow: 0 0 10px var(--accent-glow);
+}
+
 .forge-toggle-wrapper {
     width: 100%;
     display: flex;

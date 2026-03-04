@@ -39,13 +39,13 @@
         }
     }
 
-    /** full-row 타일의 grid-column을 업데이트 */
+    /** full-row 타일의 크기를 CSS 클래스로 업데이트 */
     function updateFullRowStyles(grid) {
         Array.from(grid.children).forEach(el => {
             if (el.dataset.fullRow === 'true') {
-                el.style.gridColumn = 'span 2';
+                el.classList.add('tile-full-row');
             } else {
-                el.style.gridColumn = '';
+                el.classList.remove('tile-full-row');
             }
         });
     }
@@ -113,6 +113,12 @@
         const grid = getGrid();
         if (!grid || typeof Sortable === 'undefined') return;
 
+        // 초기 상태(HTML 순서 기반) 저장
+        const defaultOrder = Array.from(grid.children)
+            .filter(el => !el.classList.contains('tile-placeholder'))
+            .map(el => el.dataset.tileId)
+            .filter(Boolean);
+
         // 저장된 순서 복원
         restoreOrder(grid);
         updateFullRowStyles(grid);
@@ -141,6 +147,29 @@
                 ensurePlaceholders(grid);
             }
         });
+
+        // 타일 정렬 초기화 버튼 바인딩
+        const resetBtn = document.getElementById('btn-reset-tile-order');
+        if (resetBtn) {
+            resetBtn.addEventListener('click', () => {
+                // 1. Storage 지우기
+                localStorage.removeItem(STORAGE_KEY);
+
+                // 2. Placeholder 지우기
+                const placeholders = grid.querySelectorAll('.tile-placeholder');
+                placeholders.forEach(el => el.remove());
+
+                // 3. defaultOrder를 바탕으로 재배치
+                defaultOrder.forEach(tileId => {
+                    const el = grid.querySelector(`[data-tile-id="${tileId}"]`);
+                    if (el) grid.appendChild(el);
+                });
+
+                // 4. 스타일 및 더미타일 재생성
+                updateFullRowStyles(grid);
+                ensurePlaceholders(grid);
+            });
+        }
     }
 
     // DOMContentLoaded 이후 또는 defer 스크립트들이 로드된 후 초기화

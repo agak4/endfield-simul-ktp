@@ -286,6 +286,10 @@ function collectAllEffects(state, opData, wepData, stats, allEffects, forceMaxSt
                 if (effectiveOpData.id === opData.id) baseTriggerMet = false;
             }
 
+            if (eff.targetClass && Array.isArray(eff.targetClass)) {
+                if (!eff.targetClass.includes(opData.class)) baseTriggerMet = false;
+            }
+
             const typeArr = eff.type ? (Array.isArray(eff.type) ? eff.type : [eff.type]).map(item => typeof item === 'string' ? { type: item } : item) : [];
             const bonuses = eff.bonus || [];
             const activeBonuses = bonuses.filter(b => {
@@ -303,7 +307,8 @@ function collectAllEffects(state, opData, wepData, stats, allEffects, forceMaxSt
                 return (t && (t.includes(opTypeK) || (opElK && t.includes(opElK)) || t.includes('취약') || t.includes('증폭') || t.includes('불균형')));
             });
             const isWeaponSource = !!eff.sourceId;
-            const showEvenIfFailed = !baseTriggerMet && (isWeaponSource || isMatchOpType);
+            const isTargetClassFail = eff.targetClass && !baseTriggerMet;
+            const showEvenIfFailed = (!baseTriggerMet && (isWeaponSource || isMatchOpType)) || isTargetClassFail;
 
             if (baseTriggerMet || showEvenIfFailed) {
                 const triggerFailed = !baseTriggerMet;
@@ -1238,7 +1243,7 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects, act
         const ultSkill = opData.skill.find(s => s.skillType && s.skillType.includes('궁극기'));
         if (ultSkill) baseUltCost = ultSkill.cost || 0;
     }
-    const finalUltCost = Math.max(0, (baseUltCost * (1 + ultCostReduction / 100)) / (1 + ultRecharge / 100));
+    const finalUltCost = Math.max(0, (baseUltCost * (1 - ultCostReduction / 100)) / (1 + ultRecharge / 100));
 
     // 부가 효과 증강: (2 * arts) / (300 + arts)
     const artsSecondary = (2 * originiumArts) / (300 + originiumArts) * 100;
@@ -1666,6 +1671,33 @@ function calcSingleSkillDamage(type, state, res) {
                                 stack: isStackable ? stackCount : undefined,
                                 isStackable: isStackable
                             });
+                        }
+                    }
+                } else if (b.stackValues !== undefined) {
+                    let stackCount = 0;
+                    for (const t of combinedTriggers) {
+                        const count = getAdjustedStackCount(t, state, opData, skillDef.skillType);
+                        stackCount = Math.max(stackCount, count);
+                    }
+
+                    const valAtStack = b.stackValues[stackCount] || b.stackValues[String(stackCount)];
+                    if (valAtStack) {
+                        const bonusVal = parsePct(valAtStack) * (1 + bMult / 100);
+                        if (bonusVal > 0) {
+                            if (b.element && b.element !== baseSkillElement) {
+                                bonusList.push({
+                                    name: trName + ` (${stackCount}스택)`,
+                                    val: bonusVal,
+                                    isSeparateHit: true,
+                                    element: b.element
+                                });
+                            } else {
+                                dmgMult += bonusVal;
+                                bonusList.push({
+                                    name: trName + ` (${stackCount}스택)`,
+                                    val: bonusVal
+                                });
+                            }
                         }
                     }
                 } else if (b.val) {

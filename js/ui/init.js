@@ -794,18 +794,18 @@ function applyOpSettingsToUI(opId, type, subIdx) {
             state.subOps[subIdx].skillLevels = DEFAULT_SKILL_LEVELS();
         }
 
+        if (s?.gearForged) {
+            state.subOps[subIdx].gearForged = [...s.gearForged];
+        } else {
+            state.subOps[subIdx].gearForged = [false, false, false, false];
+        }
+
         GEAR_SLOT_KEYS.forEach((k, j) => {
             const gearId = s?.gears?.[j] || null;
             const inp = document.getElementById(`sub-${subIdx}-gear-${k}`);
             if (inp) inp.value = gearId || '';
             updateEntityImage(gearId, `sub-${subIdx}-gear-${k}-image`, 'gears');
         });
-
-        if (s?.gearForged) {
-            state.subOps[subIdx].gearForged = [...s.gearForged];
-        } else {
-            state.subOps[subIdx].gearForged = [false, false, false, false];
-        }
     }
 }
 
@@ -963,6 +963,15 @@ window.swapMainSub = function (i) {
         document.getElementById(`sub-${i}-wep-pot`).value = prevMainWepPot;
         setupPotencyButtons(`sub-${i}-wep-pot`, `sub-${i}-wep-pot-group`);
         applyToggle(`sub-${i}-wep-state`, `sub-${i}-wep-toggle`, '기질', prevMainWepState);
+        // state 즉시 반영
+        state.subOps[i].id = prevMainId;
+        state.subOps[i].pot = prevMainPot;
+        state.subOps[i].wepId = prevMainWepId;
+        state.subOps[i].wepPot = prevMainWepPot;
+        state.subOps[i].wepState = prevMainWepState;
+        state.subOps[i].gears = [...prevMainGears];
+        state.subOps[i].gearForged = [...prevMainGearForged];
+
         // 장비 복원
         GEAR_SLOT_KEYS.forEach((k, j) => {
             const gearId = prevMainGears[j] || null;
@@ -980,6 +989,16 @@ window.swapMainSub = function (i) {
         document.getElementById(`sub-${i}-wep-pot`).value = 0;
         setupPotencyButtons(`sub-${i}-wep-pot`, `sub-${i}-wep-pot-group`);
         applyToggle(`sub-${i}-wep-state`, `sub-${i}-wep-toggle`, '기질', false);
+
+        // state 즉시 반영
+        state.subOps[i].id = null;
+        state.subOps[i].pot = 0;
+        state.subOps[i].wepId = null;
+        state.subOps[i].wepPot = 0;
+        state.subOps[i].wepState = false;
+        state.subOps[i].gears = [null, null, null, null];
+        state.subOps[i].gearForged = [false, false, false, false];
+
         GEAR_SLOT_KEYS.forEach(k => {
             const inp = document.getElementById(`sub-${i}-gear-${k}`);
             if (inp) inp.value = '';
@@ -987,15 +1006,6 @@ window.swapMainSub = function (i) {
         });
         state.subOps[i].skillLevels = DEFAULT_SKILL_LEVELS();
     }
-
-    // state 즉시 반영
-    state.subOps[i].id = prevMainId;
-    state.subOps[i].pot = prevMainPot;
-    state.subOps[i].wepId = prevMainWepId;
-    state.subOps[i].wepPot = prevMainWepPot;
-    state.subOps[i].wepState = prevMainWepState;
-    state.subOps[i].gears = [...prevMainGears];
-    state.subOps[i].gearForged = [...prevMainGearForged];
 
     updateState();
 };

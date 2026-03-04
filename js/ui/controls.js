@@ -117,8 +117,12 @@ function syncPotencyToTooltip(inputId, potValue) {
  * @param {boolean} isForged   - 단조 ON/OFF
  */
 function syncForgedToTooltip(checkboxId, isForged) {
-    document.getElementById(FORGE_CB_TO_IMAGE[checkboxId])
-        ?.setAttribute('data-tooltip-forged', isForged);
+    const imgId = FORGE_CB_TO_IMAGE[checkboxId];
+    const imgEl = document.getElementById(imgId);
+    if (imgEl) {
+        imgEl.setAttribute('data-tooltip-forged', isForged);
+        imgEl.parentElement?.setAttribute('data-tooltip-forged', isForged);
+    }
 }
 
 /**
@@ -314,9 +318,21 @@ function updateEntityImage(entityId, imgElementId, folder) {
 
     // 단조 속성 (장비 전용)
     if (folder === 'gears') {
-        const slot = imgElementId.replace('gear-', '').replace('-image', '');
-        imgElement.setAttribute('data-tooltip-forged',
-            document.getElementById(`gear-${slot}-forge`)?.checked || false);
+        let isForged = false;
+        if (imgElementId.startsWith('sub-')) {
+            const parts = imgElementId.split('-'); // e.g., sub-0-gear-gloves-image
+            const subIdx = parseInt(parts[1], 10);
+            const slotKey = parts[3];
+            const slotIdx = GEAR_SLOT_KEYS.indexOf(slotKey);
+            if (subIdx >= 0 && slotIdx >= 0 && state.subOps[subIdx]) {
+                isForged = state.subOps[subIdx].gearForged[slotIdx];
+            }
+        } else {
+            const slot = imgElementId.replace('gear-', '').replace('-image', '');
+            isForged = document.getElementById(`gear-${slot}-forge`)?.checked || false;
+        }
+        imgElement.setAttribute('data-tooltip-forged', isForged);
+        container?.setAttribute('data-tooltip-forged', isForged);
     }
 
     // 서브 오퍼레이터 요약 아이콘 동기화
@@ -339,6 +355,16 @@ function updateEntityImage(entityId, imgElementId, folder) {
 
                 summaryImg.src = imgElement.src;
                 summaryImg.style.display = imgElement.style.display;
+
+                // 단조 속성 동기화
+                const isForgedAttr = imgElement.getAttribute('data-tooltip-forged');
+                if (isForgedAttr !== null) {
+                    summaryImg.setAttribute('data-tooltip-forged', isForgedAttr);
+                    summaryContainer?.setAttribute('data-tooltip-forged', isForgedAttr);
+                } else {
+                    summaryImg.removeAttribute('data-tooltip-forged');
+                    summaryContainer?.removeAttribute('data-tooltip-forged');
+                }
 
                 if (imgElement.classList.contains('loaded')) {
                     summaryImg.classList.add('loaded');

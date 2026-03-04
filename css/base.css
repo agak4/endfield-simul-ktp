@@ -6,8 +6,8 @@
 }
 
 @font-face {
-    font-family: 'OneStoreMobileGothicBody';
-    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2105_2@1.0/ONE-Mobile-Regular.woff') format('woff');
+    font-family: 'Sunchon';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2202-2@1.0/SuncheonR.woff') format('woff');
     font-weight: normal;
     font-display: swap;
 }
@@ -101,7 +101,7 @@ body {
     background-image: radial-gradient(circle at center, #2a2a2a 0%, #121212 100%);
     background-attachment: fixed;
     color: var(--text-primary);
-    font-family: 'OneStoreMobileGothicBody';
+    font-family: 'Sunchon';
     min-height: 100vh;
     overflow-y: auto;
     display: flex;
