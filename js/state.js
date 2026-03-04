@@ -261,6 +261,8 @@ function updateState() {
         skillSequence: state.skillSequence || [],
         debuffState: state.debuffState,
         usables: state.usables,
+        disabledEffects: state.disabledEffects,
+        effectStacks: state.effectStacks,
     });
 
     // 무기별 설정 자동 저장 (메인만)

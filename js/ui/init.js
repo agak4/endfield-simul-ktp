@@ -765,8 +765,8 @@ function applyOpSettingsToUI(opId, type, subIdx) {
         state.debuffState = s?.debuffState ? migrateDebuffState(s.debuffState) : DEFAULT_DEBUFF_STATE();
         state.usables = s?.usables ? { ...s.usables } : DEFAULT_USABLES();
         state.selectedSeqId = null;
-        state.disabledEffects = [];
-        state.effectStacks = {};
+        state.disabledEffects = s?.disabledEffects ? [...s.disabledEffects] : [];
+        state.effectStacks = s?.effectStacks ? deepClone(s.effectStacks) : {};
 
         updateUIStateVisuals?.();
         updateEnhancedSkillButtons?.(opId);
@@ -926,6 +926,8 @@ window.swapMainSub = function (i) {
     const prevMainSkillSequence = state.skillSequence ? [...state.skillSequence] : [];
     const prevMainDebuffState = deepClone(state.debuffState);
     const prevMainUsables = deepClone(state.usables);
+    const prevMainDisabledEffects = [...state.disabledEffects];
+    const prevMainEffectStacks = deepClone(state.effectStacks);
 
     // --- 1. 메인 오퍼레이터를 새 오퍼레이터로 교체 ---
     const mainOpSel = document.getElementById('main-op-select');
@@ -1005,6 +1007,24 @@ window.swapMainSub = function (i) {
             updateEntityImage('', `sub-${i}-gear-${k}-image`, 'gears');
         });
         state.subOps[i].skillLevels = DEFAULT_SKILL_LEVELS();
+    }
+
+    // --- 3. 원래 메인이던 애의 전역/기타 설정 저장 (옵션: opSettings에 바로 갱신) ---
+    // 기존에 메인이었던 오퍼레이터의 설정(효과 중첩 등)은 swap 시점에 저장해두어야
+    // 나중에 다시 메인으로 불러올 때 날아가지 않습니다.
+    if (prevMainId) {
+        saveOpSettings(prevMainId, {
+            pot: prevMainPot,
+            wepId: prevMainWepId, wepPot: prevMainWepPot, wepState: prevMainWepState,
+            gears: prevMainGears, gearForged: prevMainGearForged, gearForge: prevMainGearForge,
+            specialStack: prevMainSpecialStack,
+            skillLevels: prevMainSkillLevels,
+            skillSequence: prevMainSkillSequence,
+            debuffState: prevMainDebuffState,
+            usables: prevMainUsables,
+            disabledEffects: prevMainDisabledEffects,
+            effectStacks: prevMainEffectStacks,
+        });
     }
 
     updateState();

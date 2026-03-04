@@ -405,7 +405,7 @@ function collectAllEffects(state, opData, wepData, stats, allEffects, forceMaxSt
                     if (isSub && !isSubOpTargetValid(expanded)) return;
 
                     if (expanded.nonStack) {
-                        const key = `${expanded.sourceId || name}_${expanded.traitIdx || ''}_${expanded.type}`;
+                        const key = `${expanded.setId || expanded.sourceId || name}_${expanded.traitIdx || ''}_${expanded.type}`;
                         if (activeNonStackTypes.has(key)) return;
                         activeNonStackTypes.add(key);
                     }
@@ -665,7 +665,8 @@ function collectAllEffects(state, opData, wepData, stats, allEffects, forceMaxSt
         const setLabel = `${entry.name} ${setName} 세트효과`;
         const uidPrefix = `set_${entry.setId}_${idx}`;
 
-        addEffect(setEffects, setLabel, 1.0, !isSelf, false, forceMaxStack, entry.opData, uidPrefix);
+        const setEffectsWithId = setEffects.map(e => ({ ...e, setId: entry.setId }));
+        addEffect(setEffectsWithId, setLabel, 1.0, !isSelf, false, forceMaxStack, entry.opData, uidPrefix);
     });
 }
 
