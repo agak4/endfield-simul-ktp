@@ -319,8 +319,8 @@ function setupCycleMultiSelect() {
         }
 
         isSelecting = true;
-        startX = e.clientX;
-        startY = e.clientY;
+        startX = e.pageX;
+        startY = e.pageY;
 
         if (!e.ctrlKey && !e.metaKey && !e.shiftKey) {
             state.selectedSeqIds = [];
@@ -347,8 +347,8 @@ function setupCycleMultiSelect() {
     document.addEventListener('mousemove', (e) => {
         if (!isSelecting || !selectionBox) return;
 
-        const currentX = e.clientX;
-        const currentY = e.clientY;
+        const currentX = e.pageX;
+        const currentY = e.pageY;
 
         const x = Math.min(startX, currentX);
         const y = Math.min(startY, currentY);
