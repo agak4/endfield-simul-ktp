@@ -135,7 +135,9 @@ function getStatName(key) {
  * @param {T} obj
  * @returns {T}
  */
-function deepClone(obj) { return JSON.parse(JSON.stringify(obj)); }
+function deepClone(obj) { 
+    return typeof structuredClone === 'function' ? structuredClone(obj) : JSON.parse(JSON.stringify(obj)); 
+}
 
 // ============================================================
 // localStorage 헬퍼

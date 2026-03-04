@@ -46,11 +46,12 @@ const SKILL_TYPE_CAT_MAP = {
 const KO_ELEM_MAP = {
     '물리': 'phys', '열기': 'heat', '전기': 'elec', '냉기': 'cryo', '자연': 'nature', '아츠': 'arts'
 };
+const KO_ELEM_ENTRIES = Object.entries(KO_ELEM_MAP);
 
 // 효과 type 문자열에서 속성 element 키를 추출한다.
 // 아츠는 opData.element로 변환. 없으면 null 반환.
 function extractElemTag(typeStr, opData) {
-    for (const [ko, key] of Object.entries(KO_ELEM_MAP)) {
+    for (const [ko, key] of KO_ELEM_ENTRIES) {
         if (typeStr.includes(ko)) {
             if (key === 'arts') return opData?.element || null;
             return key;
@@ -147,12 +148,13 @@ function calculateDamage(currentState, forceMaxStack = false, isStatCalcOnly = f
 }
 
 // ---- 스탯 키 정규화 ----
+const REVERSE_STAT_NAME_MAP = { '힘': 'str', '민첩': 'agi', '지능': 'int', '의지': 'wil' };
 function resolveStatKey(target, container) {
     if (container[target] !== undefined) return target;
     const mapped = STAT_NAME_MAP[target];
     if (mapped && container[mapped] !== undefined) return mapped;
     // 한글 이름 역방향 조회 (예: '민첩' → 'agi')
-    const reverseKey = Object.keys(STAT_NAME_MAP).find(k => STAT_NAME_MAP[k] === target);
+    const reverseKey = REVERSE_STAT_NAME_MAP[target];
     if (reverseKey && container[reverseKey] !== undefined) return reverseKey;
     return target;
 }
@@ -173,17 +175,19 @@ function getAdjustedStackCount(triggerName, state, opData, skillTypes) {
                 if (subMatch) opPot = Number(subMatch.pot) || 0;
             }
             // 잠재/재능에서 '방어 불능 보정' 수집
-            const pools = [
-                ...(op.talents || []).flat(),
-                ...((op.potential || []).slice(0, opPot)).flat()
-            ];
-            pools.forEach(pEff => {
-                const pTypes = Array.isArray(pEff.type) ? pEff.type : [pEff.type];
-                if (pTypes.includes('방어 불능 보정')) {
-                    const matchSkill = !pEff.skillType || (skillTypes && skillTypes.some(st => pEff.skillType.includes(st)));
-                    if (matchSkill) count += (pEff.val || 0);
-                }
-            });
+            const checkPool = (subArr) => {
+                if (!subArr) return;
+                subArr.forEach(pEff => {
+                    if (!pEff || !pEff.type) return;
+                    const pTypes = Array.isArray(pEff.type) ? pEff.type : [pEff.type];
+                    if (pTypes.includes('방어 불능 보정')) {
+                        const matchSkill = !pEff.skillType || (skillTypes && skillTypes.some(st => pEff.skillType.includes(st)));
+                        if (matchSkill) count += (pEff.val || 0);
+                    }
+                });
+            };
+            if (op.talents) op.talents.forEach(checkPool);
+            if (op.potential) op.potential.slice(0, opPot).forEach(checkPool);
         }
         return Math.min(4, count);
     }
@@ -237,7 +241,7 @@ function collectAllEffects(state, opData, wepData, stats, allEffects, forceMaxSt
             const key = `${typeStr}|${triggerStr}|${eff.target}|${skillTypeStr}|${eff.cond}`;
 
             if (!groups[key]) {
-                groups[key] = JSON.parse(JSON.stringify(eff));
+                groups[key] = deepClone(eff);
             } else {
                 const g = groups[key];
                 if (eff.val !== undefined) g.val = combineValues(g.val, eff.val);
@@ -255,7 +259,7 @@ function collectAllEffects(state, opData, wepData, stats, allEffects, forceMaxSt
                         if (existingBonus) {
                             if (eb.val !== undefined) existingBonus.val = combineValues(existingBonus.val, eb.val);
                         } else {
-                            g.bonus.push(JSON.parse(JSON.stringify(eb)));
+                            g.bonus.push(deepClone(eb));
                         }
                     });
                 }
@@ -1337,17 +1341,18 @@ function isSubOpTargetValid(effect) {
     return effect && (effect.target === '팀' || effect.target === '팀_외' || effect.target === '적');
 }
 
+const ALWAYS_ON_EFFECTS = new Set([
+    '공격력 증가', '치명타 확률', '치명타 피해', '최대 생명력', '궁극기 충전 효율', '궁극기 에너지 감소', '치유 효율', '연타',
+    '주는 피해', '스탯', '스탯%', '스킬 피해', '궁극기 피해', '연계 스킬 피해', '배틀 스킬 피해',
+    '일반 공격 피해', '오리지늄 아츠', '오리지늄 아츠 강도', '모든 스킬 피해', '스킬 배율 증가',
+    '스킬 치명타 확률', '스킬 치명타 피해', '상태 이상 배율', '추가 공격 피해 배율 증가'
+]);
+
 function isApplicableEffect(opData, effectType, effectName) {
     if (!effectType) return false;
     const type = effectType.toString();
 
-    const ALWAYS_ON = [
-        '공격력 증가', '치명타 확률', '치명타 피해', '최대 생명력', '궁극기 충전 효율', '궁극기 에너지 감소', '치유 효율', '연타',
-        '주는 피해', '스탯', '스탯%', '스킬 피해', '궁극기 피해', '연계 스킬 피해', '배틀 스킬 피해',
-        '일반 공격 피해', '오리지늄 아츠', '오리지늄 아츠 강도', '모든 스킬 피해', '스킬 배율 증가',
-        '스킬 치명타 확률', '스킬 치명타 피해', '상태 이상 배율', '추가 공격 피해 배율 증가'
-    ];
-    if (ALWAYS_ON.includes(type) || type === '불균형 목표에 주는 피해') return true;
+    if (ALWAYS_ON_EFFECTS.has(type) || type === '불균형 목표에 주는 피해') return true;
 
     const checkElement = (prefix) => {
         const p = prefix ? prefix.trim() : '';
@@ -1462,33 +1467,32 @@ function evaluateTrigger(trigger, state, opData, triggerType, evalMode = 'both',
         if (evalMode === 'both' || evalMode === 'target') {
             const specialStackVal = state.getSpecialStack ? state.getSpecialStack() : (state.mainOp?.specialStack || 0);
 
-            const TRIGGER_MAP = {
-                '방어 불능': () => getAdjustedStackCount('방어 불능', state, opData, triggerType) > 0,
-                '갑옷 파괴': () => getAdjustedStackCount('갑옷 파괴', state, opData, triggerType) > 0,
-                '열기 부착': () => state.debuffState?.artsAttach?.type === '열기 부착',
-                '냉기 부착': () => state.debuffState?.artsAttach?.type === '냉기 부착',
-                '전기 부착': () => state.debuffState?.artsAttach?.type === '전기 부착',
-                '자연 부착': () => state.debuffState?.artsAttach?.type === '자연 부착',
-                '연소': () => getAdjustedStackCount('연소', state, opData, triggerType) > 0,
-                '감전': () => getAdjustedStackCount('감전', state, opData, triggerType) > 0,
-                '동결': () => getAdjustedStackCount('동결', state, opData, triggerType) > 0,
-                '부식': () => getAdjustedStackCount('부식', state, opData, triggerType) > 0,
-                '연타': () => (state.debuffState?.physDebuff?.combo || 0) > 0,
-                '띄우기': () => state.triggerActive?.['띄우기'] || state.triggerActive?.['강제 띄우기'],
-                '넘어뜨리기': () => state.triggerActive?.['넘어뜨리기'] || state.triggerActive?.['강제 넘어뜨리기'],
-                '강타': () => state.triggerActive?.['강타'],
-                '허약': () => state.triggerActive?.['허약'],
-                '물리 취약': () => state.triggerActive?.['물리 취약'],
-                '아츠 취약': () => state.triggerActive?.['아츠 취약'],
-                '열기 취약': () => state.triggerActive?.['열기 취약'],
-                '냉기 취약': () => state.triggerActive?.['냉기 취약'],
-                '전기 취약': () => state.triggerActive?.['전기 취약'],
-                '자연 취약': () => state.triggerActive?.['자연 취약'],
-                '불균형': () => !!state.enemyUnbalanced
-            };
-
-            const evalFn = TRIGGER_MAP[t];
-            if (evalFn && evalFn()) return true;
+            let isTriggerMet = false;
+            switch(t) {
+                case '방어 불능': isTriggerMet = getAdjustedStackCount('방어 불능', state, opData, triggerType) > 0; break;
+                case '갑옷 파괴': isTriggerMet = getAdjustedStackCount('갑옷 파괴', state, opData, triggerType) > 0; break;
+                case '열기 부착': isTriggerMet = state.debuffState?.artsAttach?.type === '열기 부착'; break;
+                case '냉기 부착': isTriggerMet = state.debuffState?.artsAttach?.type === '냉기 부착'; break;
+                case '전기 부착': isTriggerMet = state.debuffState?.artsAttach?.type === '전기 부착'; break;
+                case '자연 부착': isTriggerMet = state.debuffState?.artsAttach?.type === '자연 부착'; break;
+                case '연소': isTriggerMet = getAdjustedStackCount('연소', state, opData, triggerType) > 0; break;
+                case '감전': isTriggerMet = getAdjustedStackCount('감전', state, opData, triggerType) > 0; break;
+                case '동결': isTriggerMet = getAdjustedStackCount('동결', state, opData, triggerType) > 0; break;
+                case '부식': isTriggerMet = getAdjustedStackCount('부식', state, opData, triggerType) > 0; break;
+                case '연타': isTriggerMet = (state.debuffState?.physDebuff?.combo || 0) > 0; break;
+                case '띄우기': isTriggerMet = state.triggerActive?.['띄우기'] || state.triggerActive?.['강제 띄우기']; break;
+                case '넘어뜨리기': isTriggerMet = state.triggerActive?.['넘어뜨리기'] || state.triggerActive?.['강제 넘어뜨리기']; break;
+                case '강타': isTriggerMet = state.triggerActive?.['강타']; break;
+                case '허약': isTriggerMet = state.triggerActive?.['허약']; break;
+                case '물리 취약': isTriggerMet = state.triggerActive?.['물리 취약']; break;
+                case '아츠 취약': isTriggerMet = state.triggerActive?.['아츠 취약']; break;
+                case '열기 취약': isTriggerMet = state.triggerActive?.['열기 취약']; break;
+                case '냉기 취약': isTriggerMet = state.triggerActive?.['냉기 취약']; break;
+                case '전기 취약': isTriggerMet = state.triggerActive?.['전기 취약']; break;
+                case '자연 취약': isTriggerMet = state.triggerActive?.['자연 취약']; break;
+                case '불균형': isTriggerMet = !!state.enemyUnbalanced; break;
+            }
+            if (isTriggerMet) return true;
 
             const op = opData || DATA_OPERATORS.find(o => o.id === (state.mainOp?.id));
             if (op && op.specialStack) {
@@ -1534,9 +1538,11 @@ function evaluateTrigger(trigger, state, opData, triggerType, evalMode = 'both',
                 if (hasInSkill) return true;
 
                 if (!triggerType || (Array.isArray(triggerType) ? triggerType.length === 0 : !triggerType)) {
-                    const talentPool = (targetOp.talents || []).flat();
-                    const potentialPool = (targetOp.potential || []).flat();
-                    const hasInOther = [...talentPool, ...potentialPool].some(e => e.type && (Array.isArray(e.type) ? e.type.some(et => checkTypes.includes(et)) : checkTypes.includes(e.type)));
+                    let hasInOther = false;
+                    const checkArr = (arr) => arr.some(subArr => subArr && subArr.some(e => e.type && (Array.isArray(e.type) ? e.type.some(et => checkTypes.includes(et)) : checkTypes.includes(e.type))));
+                    if (targetOp.talents && checkArr(targetOp.talents)) hasInOther = true;
+                    if (!hasInOther && targetOp.potential && checkArr(targetOp.potential)) hasInOther = true;
+
                     if (hasInOther) return true;
                     if (t === targetOp.type || t === targetOp.element) return true;
                 }
@@ -1606,7 +1612,7 @@ function calcSingleSkillDamage(type, state, res) {
     };
     let dmgMult = parseDmgPct(skillDef.dmg);
 
-    const op = DATA_OPERATORS.find(o => o.id === state.mainOp?.id);
+    const op = opData;
     const specialStackVal = state.getSpecialStack ? state.getSpecialStack() : (state.mainOp?.specialStack || 0);
 
     const bonusList = [];
@@ -2154,7 +2160,7 @@ function calcSingleSkillDamage(type, state, res) {
         abnormalDesc = ` (${descParts.join(', ')})`;
     }
 
-    const myLogs = JSON.parse(JSON.stringify(res.logs));
+    const myLogs = deepClone(res.logs);
 
     // 스킬 전용 로그 필터링
     myLogs.dmgInc = (res.logs.dmgInc || []).filter(l => {
@@ -2365,7 +2371,7 @@ function calculateCycleDamage(currentState, baseRes, forceMaxStack = false) {
 
         const res = calcSingleSkillDamage(type, currentState, specificRes);
         if (res) {
-            perSkill[type] = { ...perSkill[type], ...res, dmg: 0, count: 0 };
+            perSkill[type] = { ...perSkill[type], ...res, dmg: 0, count: 0, _specificRes: specificRes };
         }
     });
 
@@ -2415,19 +2421,19 @@ function calculateCycleDamage(currentState, baseRes, forceMaxStack = false) {
             customStateMerged.usables = itemObj.customState.usables;
         }
 
-        customStateMerged.calculationTag = SKILL_TYPE_CAT_MAP[type] || 'common';
-
-        // 스킬에 지정된 속성이 있다면 덮어쓰기를 설정합니다.
-        if (skillDef && skillDef.element) {
-            customStateMerged.overrideSkillElement = skillDef.element;
-        }
-
-        // 개별 설정을 선택했을 때, 대시보드가 해당 옵션과 스킬 속성 기준으로 표시될 수 있도록 cRes를 항상 구합니다.
-        cRes = calculateDamage(customStateMerged, forceMaxStack);
-
-        if (hasCustomState && cRes) {
-            const sRes = calcSingleSkillDamage(type, customStateMerged, cRes);
-            if (sRes) skillData = { ...sRes };
+        if (hasCustomState) {
+            customStateMerged.calculationTag = SKILL_TYPE_CAT_MAP[type] || 'common';
+            // 스킬에 지정된 속성이 있다면 덮어쓰기를 설정합니다.
+            if (skillDef && skillDef.element) {
+                customStateMerged.overrideSkillElement = skillDef.element;
+            }
+            cRes = calculateDamage(customStateMerged, forceMaxStack);
+            if (cRes) {
+                const sRes = calcSingleSkillDamage(type, customStateMerged, cRes);
+                if (sRes) skillData = { ...sRes };
+            }
+        } else {
+            cRes = pSkill._specificRes || baseRes;
         }
 
         const skillBaseDmg = skillData.baseUnitDmg || 0;

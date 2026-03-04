@@ -895,7 +895,8 @@ function renderWeaponComparison(res, cycleRes, skipAnimation = false) {
             // [Fix] 전역 state 직접 수정 방지: 깊은 복사하여 독립적으로 계산
             // state에는 저항, 디버프, 비활성화된 효과(disabledEffects) 등 현재 설정이 모두 포함되어 있음
             // 따라서 현재 옵션 상태 그대로 무기만 변경하여 비교함
-            const tempState = deepClone(state);
+            const tempState = { ...state, mainOp: { ...state.mainOp } };
+            if (state.disabledEffects) tempState.disabledEffects = [...state.disabledEffects];
 
             // [Fix] 서브 무기 등의 특성 설정은 유지하고, 비교 대상 무기(w)의 특성만 강제로 활성화(기본값)한다.
             if (tempState.disabledEffects) {
