@@ -506,6 +506,7 @@ function renderCycleSequence(cycleRes) {
 
         // 클릭 시 선택/해제 토글
         cardContainer.onclick = (e) => {
+            if (typeof AppTooltip !== 'undefined' && AppTooltip.hide) AppTooltip.hide();
             if (e.shiftKey) {
                 // [New] Shift-click range selection
                 if (state.selectedSeqIds.length > 0) {

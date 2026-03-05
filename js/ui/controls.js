@@ -993,6 +993,7 @@ function addCycleItem(skillType) {
     if (!state.skillSequence) state.skillSequence = [];
     state.skillSequence.push({ id: makeSeqId(), type: skillType, customState: null });
     saveState();
+    if (typeof AppTooltip !== 'undefined' && AppTooltip.hide) AppTooltip.hide();
     updateState();
 }
 
