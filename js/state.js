@@ -135,8 +135,8 @@ function getStatName(key) {
  * @param {T} obj
  * @returns {T}
  */
-function deepClone(obj) { 
-    return typeof structuredClone === 'function' ? structuredClone(obj) : JSON.parse(JSON.stringify(obj)); 
+function deepClone(obj) {
+    return typeof structuredClone === 'function' ? structuredClone(obj) : JSON.parse(JSON.stringify(obj));
 }
 
 // ============================================================
@@ -178,8 +178,9 @@ function lsGet(key) {
  * [Sync] 전역 설정을 개별 설정(customState)이 있는 모든 시퀀스 항목에 전파한다.
  * 특정 시퀀스 항목이 선택된 상태에서는 전파하지 않는다.
  * @param {'unbalanced'|'debuff'|'specialStack'|'effects'} type
+ * @param {string|string[]} [keys] - 전파할 특정 키 (생략 시 전체 전파)
  */
-window.propagateGlobalStateToCustom = function (type) {
+window.propagateGlobalStateToCustom = function (type, keys) {
     if (state.selectedSeqIds && state.selectedSeqIds.length > 0) return;
 
     state.skillSequence.forEach(item => {
@@ -187,8 +188,26 @@ window.propagateGlobalStateToCustom = function (type) {
         switch (type) {
             case 'unbalanced': item.customState.enemyUnbalanced = state.enemyUnbalanced; break;
             case 'debuff':
-                item.customState.debuffState = deepClone(state.debuffState);
-                item.customState.usables = deepClone(state.usables);
+                if (keys) {
+                    const keysArr = Array.isArray(keys) ? keys : [keys];
+                    keysArr.forEach(k => {
+                        const parts = k.split('.');
+                        if (parts[0] === 'physDebuff' || parts[0] === 'artsAbnormal' || parts[0] === 'attribution') {
+                            // debuffState 내부 정밀 전파 (e.g., 'physDebuff.armorBreak')
+                            const sub = parts[0];
+                            const field = parts[1];
+                            if (!item.customState.debuffState[sub]) item.customState.debuffState[sub] = {};
+                            item.customState.debuffState[sub][field] = deepClone(state.debuffState[sub][field]);
+                        } else if (k === 'artsAttach') {
+                            item.customState.debuffState.artsAttach = deepClone(state.debuffState.artsAttach);
+                        } else if (k === 'usables') {
+                            item.customState.usables = deepClone(state.usables);
+                        }
+                    });
+                } else {
+                    item.customState.debuffState = deepClone(state.debuffState);
+                    item.customState.usables = deepClone(state.usables);
+                }
                 break;
             case 'specialStack': item.customState.specialStack = deepClone(state.mainOp.specialStack); break;
             case 'effects':
@@ -245,9 +264,18 @@ function updateState() {
     state.enemyDefense = defenseEl ? (parseInt(defenseEl.value || defenseEl.innerText) || 0) : 100;
 
     // 서브 오퍼레이터 설정 해시 생성하여 캐시 유지 여부 결정
-    const newSubHash = JSON.stringify(state.subOps.map(sub => ({
-        id: sub.id, pot: sub.pot, wepId: sub.wepId, wepPot: sub.wepPot, wepState: sub.wepState, gears: sub.gears, gearForged: sub.gearForged, skillLevels: sub.skillLevels
-    })));
+    // [Fix] 메인 오퍼레이터 설정 혹은 비활성화 효과가 변경되어도 서브 오퍼레이터 시너지 계산이 갱신되도록 해시에 포함
+    const newSubHash = JSON.stringify({
+        subOps: state.subOps.map(sub => ({
+            id: sub.id, pot: sub.pot, wepId: sub.wepId, wepPot: sub.wepPot, wepState: sub.wepState, gears: sub.gears, gearForged: sub.gearForged, skillLevels: sub.skillLevels
+        })),
+        mainOp: {
+            id: state.mainOp.id, pot: state.mainOp.pot, wepId: state.mainOp.wepId, wepPot: state.mainOp.wepPot, wepState: state.mainOp.wepState,
+            gearForge: state.mainOp.gearForge, gears: state.mainOp.gears, gearForged: state.mainOp.gearForged, skillLevels: state.mainOp.skillLevels
+        },
+        disabledEffects: state.disabledEffects,
+        effectStacks: state.effectStacks
+    });
     if (state._subHash !== newSubHash) {
         state._subStatsCache = null;
         state._subHash = newSubHash;

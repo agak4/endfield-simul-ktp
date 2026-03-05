@@ -44,18 +44,32 @@ function calculateDamageContribution(targetState, cycleRes) {
         excludedState.effectStacks = targetState.effectStacks ? { ...targetState.effectStacks } : {};
 
         // attribution에서 제외 대상 오퍼레이터의 귀속을 null로 처리한다.
-        // 귀속 오퍼레이터가 제외되면 그 오퍼레이터의 부가 효과 증강도 제외되어야 한다.
+        // 귀속 오퍼레이터가 제외되면 부가 효과 증강 뿐만 아니라 기본 데미지(스택)도 함께 제거하여 지분에 합산한다.
         if (excludedOpIds.length > 0 && targetState.debuffState?.attribution) {
-            const newAttribution = { ...targetState.debuffState.attribution };
-            let attributionChanged = false;
+            const oldDS = targetState.debuffState;
+            const newAttribution = { ...oldDS.attribution };
+            const newPhysDebuff = { ...oldDS.physDebuff };
+            const newArtsAbnormal = { ...oldDS.artsAbnormal };
+            let debuffStateChanged = false;
+
             for (const key of Object.keys(newAttribution)) {
                 if (excludedOpIds.includes(newAttribution[key])) {
                     newAttribution[key] = null;
-                    attributionChanged = true;
+                    debuffStateChanged = true;
+
+                    // 스택 정보도 0으로 초기화하여 해당 오퍼레이터의 기여도로 산정되게 함
+                    if (key === '갑옷 파괴') { newPhysDebuff.armorBreak = 0; }
+                    else if (key === '감전') { newArtsAbnormal['감전'] = 0; }
+                    else if (key === '부식') { newArtsAbnormal['부식'] = 0; }
                 }
             }
-            if (attributionChanged) {
-                excludedState.debuffState = { ...targetState.debuffState, attribution: newAttribution };
+            if (debuffStateChanged) {
+                excludedState.debuffState = {
+                    ...oldDS,
+                    attribution: newAttribution,
+                    physDebuff: newPhysDebuff,
+                    artsAbnormal: newArtsAbnormal
+                };
             }
         }
 
@@ -89,15 +103,23 @@ function calculateDamageContribution(targetState, cycleRes) {
                         }
                     });
 
-                    // customState의 attribution도 동일하게 제외 처리
-                    let customAttribution = seq.customState.debuffState?.attribution;
-                    let customAttributionChanged = false;
+                    // customState의 attribution도 동일하게 제외 처리 (스택 포함)
+                    let customDS = seq.customState.debuffState;
+                    let customAttribution = customDS?.attribution;
+                    let customPhysDebuff = customDS ? { ...customDS.physDebuff } : null;
+                    let customArtsAbnormal = customDS ? { ...customDS.artsAbnormal } : null;
+                    let customDebuffChanged = false;
+
                     if (excludedOpIds.length > 0 && customAttribution) {
                         customAttribution = { ...customAttribution };
                         for (const key of Object.keys(customAttribution)) {
                             if (excludedOpIds.includes(customAttribution[key])) {
                                 customAttribution[key] = null;
-                                customAttributionChanged = true;
+                                customDebuffChanged = true;
+
+                                if (key === '갑옷 파괴' && customPhysDebuff) { customPhysDebuff.armorBreak = 0; }
+                                else if (key === '감전' && customArtsAbnormal) { customArtsAbnormal['감전'] = 0; }
+                                else if (key === '부식' && customArtsAbnormal) { customArtsAbnormal['부식'] = 0; }
                             }
                         }
                     }
@@ -108,8 +130,15 @@ function calculateDamageContribution(targetState, cycleRes) {
                             ...seq.customState,
                             disabledEffects: customDisabled,
                             effectStacks: customStacks,
-                            ...(customAttributionChanged && seq.customState.debuffState
-                                ? { debuffState: { ...seq.customState.debuffState, attribution: customAttribution } }
+                            ...(customDebuffChanged && customDS
+                                ? {
+                                    debuffState: {
+                                        ...customDS,
+                                        attribution: customAttribution,
+                                        physDebuff: customPhysDebuff,
+                                        artsAbnormal: customArtsAbnormal
+                                    }
+                                }
                                 : {})
                         }
                     };

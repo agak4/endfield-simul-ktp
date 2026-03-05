@@ -2468,6 +2468,9 @@ function calculateCycleDamage(currentState, baseRes, forceMaxStack = false) {
 
         if (hasCustomState) {
             customStateMerged.calculationTag = SKILL_TYPE_CAT_MAP[type] || 'common';
+            // [Fix] 개별 설정 항목의 경우 전역 캐시를 사용하지 않고 새로 계산하도록 처리 (비활성화 효과 등 반영)
+            customStateMerged._subStatsCache = null;
+
             // 스킬에 지정된 속성이 있다면 덮어쓰기를 설정합니다.
             if (skillDef && skillDef.element) {
                 customStateMerged.overrideSkillElement = skillDef.element;

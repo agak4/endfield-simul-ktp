@@ -52,15 +52,13 @@ function makeSeqId() {
 
 /**
  * 디버프 변경 후 공통으로 필요한 저장·전파·갱신을 실행한다.
- * cycleDebuff, cycleDebuffAttach, cycleDebuffAbnormal, cycleSpecialStack에서 공통 사용.
  * @param {'debuff'|'specialStack'} propagateType
+ * @param {string|string[]} [keys] - 전파할 특정 키 ( granular 전파용 )
  */
-function commitDebuffChange(propagateType) {
+function commitDebuffChange(propagateType, keys) {
     saveState();
-    // 'debuff' 타입은 customState가 있는 스킬의 개별 디버프 설정을 보호하기 위해 전파하지 않는다.
-    // customState가 존재한다는 것은 해당 스킬이 별도의 디버프 설정을 갖고 있다는 의미이다.
     if (!state.selectedSeqIds || state.selectedSeqIds.length === 0) {
-        if (propagateType !== 'debuff') propagateGlobalStateToCustom(propagateType);
+        propagateGlobalStateToCustom(propagateType, keys);
     }
     updateState();
 }
@@ -702,7 +700,10 @@ function applyDebuffWithOperator(el, debuffNameRaw, opId) {
 
     applyAttributionIcon(el, key, dsFirst.attribution);
     applyDebuffIconState(el, nextStack);
-    commitDebuffChange('debuff');
+    commitDebuffChange('debuff', [
+        key === '갑옷 파괴' ? 'physDebuff.armorBreak' : 'artsAbnormal.' + debuffNameRaw,
+        'attribution.' + key
+    ]);
 }
 
 function applyAttributionIcon(el, type, attr) {
@@ -733,16 +734,23 @@ function cycleDebuff(el, dir = 1) {
     // 사용 아이템인 경우 토글 처리
     if (el.dataset.usable) {
         const type = el.dataset.usable;
-        const tsFirst = getTargetState();
-        const next = dir === 1 ? !(tsFirst.usables?.[type]) : false;
+        // 선택 여부와 상관없이 항상 전역 상태를 기준으로 토글
+        const next = dir === 1 ? !state.usables[type] : false;
 
-        getActiveCustomStates().forEach(ts => {
-            if (!ts.usables) ts.usables = {};
-            ts.usables[type] = next;
+        // 전역 상태 업데이트
+        if (!state.usables) state.usables = {};
+        state.usables[type] = next;
+
+        // 모든 개별 설정에도 강제 전파 (사용자 요청: 사용 아이템은 항상 모든 사이클에 적용)
+        state.skillSequence.forEach(item => {
+            if (item.customState) {
+                if (!item.customState.usables) item.customState.usables = {};
+                item.customState.usables[type] = next;
+            }
         });
 
         applyDebuffIconState(el, next ? 1 : 0);
-        commitDebuffChange('debuff');
+        commitDebuffChange('debuff', 'usables');
         return;
     }
 
