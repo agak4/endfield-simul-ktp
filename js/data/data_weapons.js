@@ -70,7 +70,7 @@ const DATA_WEAPONS = [
       { type: ['스탯'], stat: '주스탯', valByLevel: [17, 30, 44, 57, 71, 85, 98, 112, 132] },
       { type: ['치명타 확률'], valByLevel: ['2.5%', '4.5%', '6.5%', '8.5%', '10.5%', '12.5%', '14.5%', '16.5%', '19.5%'] },
       { type: ['물리 피해'], valByLevel: ['15%', '18%', '21%', '24%', '27%', '30%', '33%', '36%', '42%'], skillType: ['배틀 스킬', '궁극기'] },
-      { type: ['불균형 목표에 주는 피해'], valByLevel: ['50%', '60%', '70%', '80%', '90%', '100%', '110%', '120%', '140%'], triggerTarget: '불균형', desc: '<span style="color:var(--accent)">• </span>배틀 스킬과 궁극기가 주는 물리 피해 +15%~42%<br><span style="color:var(--accent)">• </span>불균형 상태의 적에게 주는 피해 +50%~140% ' }
+      { type: ['불균형 목표에 주는 피해'], valByLevel: ['35%', '42%', '49%', '56%', '63%', '70%', '77%', '84%', '98%'], triggerTarget: '불균형', desc: '<span style="color:var(--accent)">• </span>배틀 스킬과 궁극기가 주는 물리 피해 +15%~42%<br><span style="color:var(--accent)">• </span>불균형 상태의 적에게 주는 피해 +35%~98% ' }
     ]
   },
 
