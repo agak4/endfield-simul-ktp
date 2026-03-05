@@ -532,19 +532,19 @@
 .gear-sidebar-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
+    gap: 5px;
 }
 
 .sidebar-item {
     background: rgba(0, 0, 0, 0.3);
     border: 1px solid var(--border);
     border-radius: 8px;
-    padding: 8px;
+    padding: 3px;
     cursor: pointer;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
+    gap: 5px;
     transition: all 0.2s;
 }
 
@@ -581,12 +581,33 @@
     object-fit: contain;
 }
 
+.sidebar-item-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    width: 100%;
+}
+
 .sidebar-item-name {
     font-size: 0.7rem;
     text-align: center;
     line-height: 1.2;
     word-break: keep-all;
     height: 2.4em;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.sidebar-item-trait {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    text-align: center;
+    line-height: 1.2;
+    word-break: keep-all;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     line-clamp: 2;

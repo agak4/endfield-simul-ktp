@@ -92,10 +92,28 @@ function renderGearSidebar(filterPart) {
             if (!isMatch) item.classList.add('disabled');
             if (document.getElementById(currentGearInputId)?.value === gear.id) item.classList.add('selected');
 
+            let traitHtml = '';
+            if (gear.trait && gear.trait.length > 0) {
+                const traitTypes = gear.trait.flatMap(t => {
+                    const types = Array.isArray(t.type) ? t.type : [t.type];
+                    return types.map(typeStr => {
+                        if (typeStr === '스탯') return window.getStatName ? getStatName(t.stat) : t.stat;
+                        return typeStr;
+                    });
+                });
+                const traitText = [...new Set(traitTypes)].join(', ');
+                if (traitText) {
+                    traitHtml = `<div class="sidebar-item-trait">${traitText}</div>`;
+                }
+            }
+
             const v = APP_VERSION;
             item.innerHTML = `
                 <div class="sidebar-item-img"><img src="images/gears/${gear.name}.webp?v=${v}"></div>
-                <span class="sidebar-item-name">${gear.name}</span>
+                <div class="sidebar-item-info">
+                    <span class="sidebar-item-name">${gear.name}</span>
+                    ${traitHtml}
+                </div>
             `;
             if (isMatch) item.onclick = () => selectGear(gear.id);
             grid.appendChild(item);
