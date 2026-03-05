@@ -12,9 +12,25 @@ function calculateDamageContribution(targetState, cycleRes) {
         return [];
     }
 
-    // Get active effects from baseline run to identify which ones belong to which subOp
-    const baseRes = calculateDamage(targetState, false, false);
-    const activeEffects = baseRes ? baseRes.activeEffects : [];
+    // Get active effects from all sequence items to identify which ones belong to which subOp
+    let activeEffects = [];
+    if (cycleRes && cycleRes.sequence) {
+        cycleRes.sequence.forEach(seq => {
+            if (seq.activeEffects) {
+                seq.activeEffects.forEach(eff => {
+                    if (!activeEffects.some(a => a.uid === eff.uid)) {
+                        activeEffects.push(eff);
+                    }
+                });
+            }
+        });
+    }
+
+    // fallback to baseRes if sequence is empty but total > 0 (should not happen normally)
+    if (activeEffects.length === 0) {
+        const baseRes = calculateDamage(targetState, false, false);
+        activeEffects = baseRes ? baseRes.activeEffects : [];
+    }
 
     const getSubOpEffects = (subOpId) => {
         return activeEffects.filter(eff => {
