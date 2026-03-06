@@ -264,18 +264,9 @@ function updateState() {
     state.enemyDefense = defenseEl ? (parseInt(defenseEl.value || defenseEl.innerText) || 0) : 100;
 
     // 서브 오퍼레이터 설정 해시 생성하여 캐시 유지 여부 결정
-    // [Fix] 메인 오퍼레이터 설정 혹은 비활성화 효과가 변경되어도 서브 오퍼레이터 시너지 계산이 갱신되도록 해시에 포함
-    const newSubHash = JSON.stringify({
-        subOps: state.subOps.map(sub => ({
+    const newSubHash = JSON.stringify(state.subOps.map(sub => ({
             id: sub.id, pot: sub.pot, wepId: sub.wepId, wepPot: sub.wepPot, wepState: sub.wepState, gears: sub.gears, gearForged: sub.gearForged, skillLevels: sub.skillLevels
-        })),
-        mainOp: {
-            id: state.mainOp.id, pot: state.mainOp.pot, wepId: state.mainOp.wepId, wepPot: state.mainOp.wepPot, wepState: state.mainOp.wepState,
-            gearForge: state.mainOp.gearForge, gears: state.mainOp.gears, gearForged: state.mainOp.gearForged, skillLevels: state.mainOp.skillLevels
-        },
-        disabledEffects: state.disabledEffects,
-        effectStacks: state.effectStacks
-    });
+    })));
     if (state._subHash !== newSubHash) {
         state._subStatsCache = null;
         state._subHash = newSubHash;
