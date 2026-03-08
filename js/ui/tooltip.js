@@ -629,6 +629,44 @@ const AppTooltip = {
 
         const attrLines = [];
 
+        // 1. 스킬 효과 (type)
+        if (skillData.type) {
+            const effectTags = [];
+            const additionalTextArr = [];
+
+            this.normalizeTypeArr(skillData.type).forEach(t => {
+                if (typeof t === 'object' && t !== null && t.type) {
+                    if (t.skillType) return;
+                    const typeNames = Array.isArray(t.type) ? t.type : [t.type];
+
+                    const displayVal = (t.val && t.val !== '0%') ? String(t.val).replace('+', '').trim() : '';
+
+                    typeNames.forEach(tn => {
+                        const customClass = this.TRIGGER_CLASS_MAP[tn] || 'tag-synergy';
+                        const label = displayVal ? `${tn}:${displayVal}` : tn;
+                        effectTags.push(`<span class="trigger-tag ${customClass}">${label}</span>`);
+                    });
+
+                    const scalingSuffix = t.scaling ? ` (<span class="tooltip-muted">+${getStatName(t.scaling.stat)} 비례</span>)` : '';
+                    const stackSuffix = t.stack ? ` (최대 ${t.stack}중첩)` : '';
+
+                    if (scalingSuffix || stackSuffix) {
+                        additionalTextArr.push(`${typeNames.join('/')}${scalingSuffix}${stackSuffix}`);
+                    }
+                } else if (typeof t === 'string') {
+                    const customClass = this.TRIGGER_CLASS_MAP[t] || 'tag-synergy';
+                    effectTags.push(`<span class="trigger-tag ${customClass}">${t}</span>`);
+                }
+            });
+
+            if (effectTags.length > 0) {
+                const tagHtml = `<div class="trigger-tag-container">${effectTags.join('')}</div>`;
+                const addTextHtml = additionalTextArr.length > 0 ? ` <span class="tooltip-muted" style="font-size:0.75rem;">${additionalTextArr.join(' / ')}</span>` : '';
+                attrLines.push(`<div class="tooltip-bullet-point">${tagHtml}${addTextHtml}</div>`);
+            }
+        }
+
+        // 2. 공격 속성 및 코스트
         const element = this.getElementName(skillData.element ? skillData : opData);
         if (element) attrLines.push(this.makeBulletLine(`공격 속성: ${element}`, 'var(--accent)'));
         if (skillType === '궁극기' && skillData.cost !== undefined) attrLines.push(this.makeBulletLine(`궁극기 게이지: ${skillData.cost}`));
@@ -662,42 +700,9 @@ const AppTooltip = {
             attrLines.push(this.makeBulletLine(dmgStr));
         }
 
-        // 4. 스킬 효과 (type)
-        if (skillData.type) {
-            const effectTags = [];
-            const additionalTextArr = [];
-
-            this.normalizeTypeArr(skillData.type).forEach(t => {
-                if (typeof t === 'object' && t !== null && t.type) {
-                    if (t.skillType) return;
-                    const typeNames = Array.isArray(t.type) ? t.type : [t.type];
-                    typeNames.forEach(tn => {
-                        const customClass = this.TRIGGER_CLASS_MAP[tn] || 'tag-synergy';
-                        effectTags.push(`<span class="trigger-tag ${customClass}">${tn}</span>`);
-                    });
-
-                    const scalingSuffix = t.scaling ? ` (<span class="tooltip-muted">+${getStatName(t.scaling.stat)} 비례</span>)` : '';
-                    const stackSuffix = t.stack ? ` (최대 ${t.stack}중첩)` : '';
-                    const valStr = t.val && t.val !== '0%' ? ` +${t.val}` : '';
-                    if (scalingSuffix || stackSuffix || valStr) {
-                        additionalTextArr.push(`${typeNames.join('/')}${valStr}${scalingSuffix}${stackSuffix}`);
-                    }
-                } else if (typeof t === 'string') {
-                    const customClass = this.TRIGGER_CLASS_MAP[t] || 'tag-synergy';
-                    effectTags.push(`<span class="trigger-tag ${customClass}">${t}</span>`);
-                }
-            });
-
-            if (effectTags.length > 0) {
-                const tagHtml = `<div class="trigger-tag-container">${effectTags.join('')}</div>`;
-                const addTextHtml = additionalTextArr.length > 0 ? ` <span class="tooltip-muted" style="font-size:0.75rem;">${additionalTextArr.join(' / ')}</span>` : '';
-                attrLines.push(this.makeBulletLine(`스킬 효과: ${tagHtml}${addTextHtml}`));
-            }
-        }
-
-        // 5. 추가 효과 조건
+        // 4. 추가 효과 조건
         if (triggerTags) {
-            attrLines.push(this.makeBulletLine(`추가 효과 조건: ${triggerTags}`, 'var(--accent)'));
+            attrLines.push(`<div class="tooltip-bullet-point">추가 효과 조건: ${triggerTags}</div>`);
         }
 
         const synergyHtml = this.renderSynergySection(activeEffects, st, opData, skillType);

@@ -883,6 +883,74 @@
     pointer-events: none;
 }
 
+/* ============ 툴팁 트리거 태그 ============ */
+.trigger-tag-container {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    vertical-align: middle;
+}
+
+.trigger-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(0, 0, 0, 0.3);
+    color: var(--text-primary);
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+/* 트리거 값 기준 색상 */
+.tag-phys {
+    border-color: var(--skill-element-phys);
+    color: var(--skill-element-phys);
+}
+
+.tag-heat {
+    border-color: var(--skill-element-heat);
+    color: var(--skill-element-heat);
+}
+
+.tag-elec {
+    border-color: var(--skill-element-elec);
+    color: var(--skill-element-elec);
+}
+
+.tag-cryo {
+    border-color: var(--skill-element-cryo);
+    color: var(--skill-element-cryo);
+}
+
+.tag-nature {
+    border-color: var(--skill-element-nature);
+    color: var(--skill-element-nature);
+}
+
+.tag-special {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.tag-synergy {
+    border-color: #FFFA00;
+    color: #FFFA00;
+}
+
+.tag-target {
+    border-color: #ff4d4d;
+    color: #ff4d4d;
+}
+
+.tag-trigger-type {
+    border-color: rgba(255, 255, 255, 0.4);
+    color: rgba(255, 255, 255, 0.8);
+}
+
 /* ============ 반응형 (오버레이) ============ */
 @media (max-width: 1024px) {
     .sidebar {

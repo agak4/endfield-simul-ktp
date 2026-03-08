@@ -27,7 +27,18 @@
     <script src="js/ui/interactive-guide.js" defer></script>
 </head>
 
-<body>
+<body class="fonts-loading">
+    <script>
+        (function () {
+            const reveal = () => document.body.classList.remove('fonts-loading');
+            if ("fonts" in document) {
+                document.fonts.ready.then(reveal).catch(reveal);
+                setTimeout(reveal, 1500);
+            } else {
+                reveal();
+            }
+        })();
+    </script>
     <!-- 상단 헤더 -->
     <header class="app-header">
         <div class="header-content">
