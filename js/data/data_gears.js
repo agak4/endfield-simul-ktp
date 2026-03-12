@@ -44,26 +44,33 @@ const DATA_GEAR = [
   { id: 'gear_9', name: '낙조 경갑', part: 'armor', set: 'set_joryu', stat1: 'int', val1: 87, val1_f: 113, stat2: 'str', val2: 58, val2_f: 75, trait: [{ type: ['궁극기 충전 효율'], val: '12.3%', val_f: '16%' }] },
 
   // 응룡 50식
+  { id: 'gear_9.1', name: '응룡 50식 탐지기 · II', part: 'kit', set: 'set_eungryong', stat1: 'agi', val1: 32, val1_f: 41, stat2: 'int', val2: 21, val2_f: 27, trait: [{ type: ['연계 스킬 피해'], val: '41.4%', val_f: '53.8%' }] },
+  { id: 'gear_9.2', name: '응룡 50식 탐지기 · I', part: 'kit', set: 'set_eungryong', stat1: 'agi', val1: 32, val1_f: 41, stat2: 'str', val2: 21, val2_f: 27, trait: [{ type: ['궁극기 피해'], val: '51.8%', val_f: '67.3%' }] },
   { id: 'gear_10', name: '응룡 50식 탐지기', part: 'kit', set: 'set_eungryong', stat1: 'str', val1: 32, val1_f: 41, stat2: 'wil', val2: 21, val2_f: 27, trait: [{ type: ['물리 피해'], val: '23%', val_f: '29.9%' }] },
   { id: 'gear_11', name: '응룡 50식 단검 · I', part: 'kit', set: 'set_eungryong', stat1: 'int', val1: 32, val1_f: 41, stat2: 'str', val2: 21, val2_f: 27, trait: [{ type: ['모든 스킬 피해'], val: '27.6%', val_f: '35.9%' }] },
   { id: 'gear_12', name: '응룡 50식 단검', part: 'kit', set: 'set_eungryong', stat1: 'wil', val1: 32, val1_f: 41, stat2: 'agi', val2: 21, val2_f: 27, trait: [{ type: ['연계 스킬 피해'], val: '41.4%', val_f: '53.8%' }] },
   { id: 'gear_13', name: '응룡 50식 글러브 · I', part: 'gloves', set: 'set_eungryong', stat1: 'wil', val1: 65, val1_f: 84, stat2: 'agi', val2: 43, val2_f: 55, trait: [{ type: ['연계 스킬 피해'], val: '34.5%', val_f: '44.9%' }] },
   { id: 'gear_14', name: '응룡 50식 글러브', part: 'gloves', set: 'set_eungryong', stat1: 'agi', val1: 65, val1_f: 84, stat2: 'int', val2: 43, val2_f: 55, trait: [{ type: ['연계 스킬 피해'], val: '34.5%', val_f: '44.9%' }] },
   { id: 'gear_15', name: '응룡 50식 경갑', part: 'armor', set: 'set_eungryong', stat1: 'wil', val1: 87, val1_f: 113, stat2: 'str', val2: 58, val2_f: 75, trait: [{ type: ['모든 스킬 피해'], val: '13.8%', val_f: '17.9%' }] },
+  { id: 'gear_15.1', name: '응룡 50식 중갑 · II', part: 'armor', set: 'set_eungryong', stat1: 'agi', val1: 87, val1_f: 113, stat2: 'int', val2: 58, val2_f: 75, trait: [{ type: ['연계 스킬 피해'], val: '20.7%', val_f: '26.9%' }] },
+  { id: 'gear_15.2', name: '응룡 50식 중갑 · I', part: 'armor', set: 'set_eungryong', stat1: 'agi', val1: 87, val1_f: 113, stat2: 'str', val2: 58, val2_f: 75, trait: [{ type: ['궁극기 충전 효율'], val: '12.3%', val_f: '16%' }] },
   { id: 'gear_16', name: '응룡 50식 중갑', part: 'armor', set: 'set_eungryong', stat1: 'str', val1: 87, val1_f: 113, stat2: 'wil', val2: 58, val2_f: 75, trait: [{ type: ['물리 피해'], val: '11.5%', val_f: '14.9%' }] },
 
   // M.I. 경찰용
   { id: 'gear_17', name: 'M. I. 경찰용 단검 · I', part: 'kit', set: 'set_mi_police', stat1: 'wil', val1: 32, val1_f: 41, stat2: 'agi', val2: 21, val2_f: 27, trait: [{ type: ['배틀 스킬 피해'], val: '41.4%', val_f: '53.8%' }] },
   { id: 'gear_18', name: 'M. I. 경찰용 단검', part: 'kit', set: 'set_mi_police', stat1: 'wil', val1: 32, val1_f: 41, stat2: 'int', val2: 21, val2_f: 27, trait: [{ type: ['열기 피해'], val: '23%', val_f: '29.9%' }, { type: ['자연 피해'], val: '23%', val_f: '29.9%' }] },
   { id: 'gear_19', name: 'M. I. 경찰용 도구 세트', part: 'kit', set: 'set_mi_police', stat1: 'int', val1: 32, val1_f: 41, stat2: 'agi', val2: 21, val2_f: 27, trait: [{ type: ['치명타 확률'], val: '10.4%', val_f: '13.5%' }] },
+  { id: 'gear_19.1', name: 'M. I. 경찰용 조준기 · I', part: 'kit', set: 'set_mi_police', stat1: 'agi', val1: 32, val1_f: 41, stat2: 'int', val2: 21, val2_f: 27, trait: [{ type: ['치명타 확률'], val: '10.4%', val_f: '13.5%' }] },
   { id: 'gear_20', name: 'M. I. 경찰용 조준기', part: 'kit', set: 'set_mi_police', stat1: 'agi', val1: 32, val1_f: 41, stat2: 'str', val2: 21, val2_f: 27, trait: [{ type: ['배틀 스킬 피해'], val: '41.4%', val_f: '53.8%' }] },
-  { id: 'gear_21', name: 'M. I. 경찰용 수갑', part: 'kit', set: 'set_mi_police', stat1: 'str', val1: 32, val1_f: 41, stat2: 'wil', val2: 21, val2_f: 27, trait: [{ type: ['냉기 피해'], val: '23.0%', val_f: '29.9%' }, { type: ['전기 피해'], val: '23.0%', val_f: '29.9%' }] },
-  { id: 'gear_22', name: 'M. I. 경찰용 팔찌 · I', part: 'gloves', set: 'set_mi_police', stat1: 'int', val1: 65, val1_f: 84, stat2: 'wil', val2: 43, val2_f: 55, trait: [{ type: ['치명타 확률'], val: '8.6%', val_f: '11.2%' }] },
-  { id: 'gear_23', name: 'M. I. 경찰용 팔찌', part: 'gloves', set: 'set_mi_police', stat1: 'int', val1: 65, val1_f: 84, stat2: 'agi', val2: 43, val2_f: 55, trait: [{ type: ['일반 공격 피해'], val: '23%', val_f: '29.9%' }] },
+  { id: 'gear_21', name: 'M. I. 경찰용 암밴드', part: 'kit', set: 'set_mi_police', stat1: 'str', val1: 32, val1_f: 41, stat2: 'wil', val2: 21, val2_f: 27, trait: [{ type: ['냉기 피해'], val: '23.0%', val_f: '29.9%' }, { type: ['전기 피해'], val: '23.0%', val_f: '29.9%' }] },
+  { id: 'gear_22', name: 'M. I. 경찰용 장갑(팔찌) · I', part: 'gloves', set: 'set_mi_police', stat1: 'int', val1: 65, val1_f: 84, stat2: 'wil', val2: 43, val2_f: 55, trait: [{ type: ['치명타 확률'], val: '8.6%', val_f: '11.2%' }] },
+  { id: 'gear_23', name: 'M. I. 경찰용 장갑(팔찌)', part: 'gloves', set: 'set_mi_police', stat1: 'int', val1: 65, val1_f: 84, stat2: 'agi', val2: 43, val2_f: 55, trait: [{ type: ['일반 공격 피해'], val: '23%', val_f: '29.9%' }] },
+  { id: 'gear_23.1', name: 'M. I. 경찰용 장갑 · I', part: 'gloves', set: 'set_mi_police', stat1: 'agi', val1: 65, val1_f: 84, stat2: 'int', val2: 43, val2_f: 55, trait: [{ type: ['궁극기 피해'], val: '43.1%', val_f: '55.9%' }] },
   { id: 'gear_24', name: 'M. I. 경찰용 장갑', part: 'gloves', set: 'set_mi_police', stat1: 'agi', val1: 65, val1_f: 84, stat2: 'str', val2: 43, val2_f: 55, trait: [{ type: ['배틀 스킬 피해'], val: '34.5%', val_f: '44.9%' }] },
   { id: 'gear_25', name: 'M. I. 경찰용 망토 · II', part: 'armor', set: 'set_mi_police', stat1: 'wil', val1: 87, val1_f: 113, stat2: 'agi', val2: 58, val2_f: 75, trait: [{ type: ['배틀 스킬 피해'], val: '20.7%', val_f: '26.9%' }] },
   { id: 'gear_26', name: 'M. I. 경찰용 망토 · I', part: 'armor', set: 'set_mi_police', stat1: 'int', val1: 87, val1_f: 113, stat2: 'wil', val2: 58, val2_f: 75, trait: [{ type: ['치명타 확률'], val: '5.2%', val_f: '6.7%' }] },
   { id: 'gear_27', name: 'M. I. 경찰용 망토', part: 'armor', set: 'set_mi_police', stat1: 'int', val1: 87, val1_f: 113, stat2: 'agi', val2: 58, val2_f: 75, trait: [{ type: ['일반 공격 피해'], val: '13.8%', val_f: '17.9%' }] },
+  { id: 'gear_27.1', name: 'M. I. 경찰용 방어구 · I', part: 'armor', set: 'set_mi_police', stat1: 'agi', val1: 87, val1_f: 113, stat2: 'int', val2: 58, val2_f: 75, trait: [{ type: ['궁극기 충전 효율'], val: '12.3%', val_f: '16%' }] },
   { id: 'gear_28', name: 'M. I. 경찰용 방어구', part: 'armor', set: 'set_mi_police', stat1: 'agi', val1: 87, val1_f: 113, stat2: 'str', val2: 58, val2_f: 75, trait: [{ type: ['오리지늄 아츠 강도'], val: 20, val_f: 27 }] },
 
   // 열 작업용
@@ -77,10 +84,14 @@ const DATA_GEAR = [
   { id: 'gear_34', name: '열 작업용 강화 골격', part: 'armor', set: 'set_heat_work', stat1: 'str', val1: 87, val1_f: 113, stat2: 'agi', val2: 58, val2_f: 75, trait: [{ type: ['열기 피해'], val: '11.5%', val_f: '14.9%' }, { type: ['자연 피해'], val: '11.5%', val_f: '14.9%' }] },
 
   // 개척
+  { id: 'gear_34.1', name: '개척자 산소 공급 장치', part: 'kit', set: 'set_pioneer', stat1: 'wil', val1: 41, val1_f: 53, stat2: null, val2: 0, trait: [{ type: ['물리 피해'], val: '23.0%', val_f: '29.9%' }] },
   { id: 'gear_35', name: '개척자 증량 산소 공급 장치', part: 'kit', set: 'set_pioneer', stat1: 'agi', val1: 32, val1_f: 41, stat2: 'int', val2: 21, val2_f: 27, trait: [{ type: ['스탯'], stat: '부스탯', val: '20.7%', val_f: '26.9%' }] },
+  { id: 'gear_35.1', name: '개척자 분석 장치', part: 'kit', set: 'set_pioneer', stat1: 'str', val1: 41, val1_f: 53, stat2: null, val2: 0, trait: [{ type: ['궁극기 피해'], val: '51.8%', val_f: '67.3%' }] },
   { id: 'gear_36', name: '개척자 통신기 · I', part: 'kit', set: 'set_pioneer', stat1: 'str', val1: 32, val1_f: 41, stat2: 'int', val2: 21, val2_f: 27, trait: [{ type: ['냉기 피해'], val: '23%', val_f: '29.9%' }, { type: ['전기 피해'], val: '23%', val_f: '29.9%' }] },
   { id: 'gear_37', name: '개척자 통신기', part: 'kit', set: 'set_pioneer', stat1: 'str', val1: 32, val1_f: 41, stat2: 'agi', val2: 21, val2_f: 27, trait: [{ type: ['연계 스킬 피해'], val: '41.4%', val_f: '53.8%' }] },
-  { id: 'gear_38', name: '개척자 내부식성 장갑', part: 'gloves', set: 'set_pioneer', stat1: 'agi', val1: 65, val1_f: 84, stat2: 'int', val2: 43, val2_f: 55, trait: [{ type: ['배틀 스킬 피해'], val: '34.5%', val_f: '44.9%' }] },
+  { id: 'gear_37.1', name: '개척자 섬유 장갑', part: 'gloves', set: 'set_pioneer', stat1: 'wil', val1: 65, val1_f: 84, stat2: 'int', val2: 43, val2_f: 55, trait: [{ type: ['모든 스킬 피해'], val: '23.0%', val_f: '29.9%' }] },
+  { id: 'gear_38', name: '개척자 내부식성 장갑', part: 'gloves', set: 'set_pioneer', stat1: 'agi', val1: 65, val1_f: 84, stat2: 'str', val2: 43, val2_f: 55, trait: [{ type: ['배틀 스킬 피해'], val: '34.5%', val_f: '44.9%' }] },
+  { id: 'gear_38.1', name: '개척자 방호복', part: 'armor', set: 'set_pioneer', stat1: 'int', val1: 87, val1_f: 113, stat2: 'agi', val2: 58, val2_f: 75, trait: [{ type: ['궁극기 충전 효율'], val: '12.3%', val_f: '16%' }] },
   { id: 'gear_39', name: '개척자 방어구 · III', part: 'armor', set: 'set_pioneer', stat1: 'agi', val1: 87, val1_f: 113, stat2: 'int', val2: 58, val2_f: 75, trait: [{ type: ['스탯'], stat: '부스탯', val: '10.4%', val_f: '13.5%' }] },
   { id: 'gear_40', name: '개척자 방어구 · II', part: 'armor', set: 'set_pioneer', stat1: 'agi', val1: 87, val1_f: 113, stat2: 'int', val2: 58, val2_f: 75, trait: [{ type: ['배틀 스킬 피해'], val: '20.7%', val_f: '26.9%' }] },
   { id: 'gear_41', name: '개척자 방어구 · I', part: 'armor', set: 'set_pioneer', stat1: 'str', val1: 87, val1_f: 113, stat2: 'agi', val2: 58, val2_f: 75, trait: [{ type: ['배틀 스킬 피해'], val: '20.7%', val_f: '26.9%' }] },
@@ -96,10 +107,14 @@ const DATA_GEAR = [
   // 본 크러셔
   { id: 'gear_46', name: '본 크러셔 조각상 · I', part: 'kit', set: 'set_bone_crusher', stat1: 'wil', val1: 32, val1_f: 41, stat2: 'int', val2: 21, val2_f: 27, trait: [{ type: ['연계 스킬 피해'], val: '41.4%', val_f: '53.8%' }] },
   { id: 'gear_47', name: '본 크러셔 조각상', part: 'kit', set: 'set_bone_crusher', stat1: 'wil', val1: 32, val1_f: 41, stat2: 'agi', val2: 21, val2_f: 27, trait: [{ type: ['배틀 스킬 피해'], val: '41.4%', val_f: '53.8%' }] },
+  { id: 'gear_47.1', name: '본 크러셔 마스크 · II', part: 'kit', set: 'set_bone_crusher', stat1: 'agi', val1: 32, val1_f: 41, stat2: 'str', val2: 21, val2_f: 27, trait: [{ type: ['배틀 스킬 피해'], val: '41.4%', val_f: '53.8%' }] },
   { id: 'gear_48', name: '본 크러셔 마스크 · I', part: 'kit', set: 'set_bone_crusher', stat1: 'agi', val1: 32, val1_f: 41, stat2: 'str', val2: 21, val2_f: 27, trait: [{ type: ['치명타 확률'], val: '10.4%', val_f: '13.5%' }] },
   { id: 'gear_49', name: '본 크러셔 마스크', part: 'kit', set: 'set_bone_crusher', stat1: 'agi', val1: 32, val1_f: 41, stat2: 'str', val2: 21, val2_f: 27, trait: [{ type: ['불균형 목표에 주는 피해'], triggerTarget: '불균형', val: '41.4%', val_f: '53.8%' }] },
+  { id: 'gear_49.1', name: '본 크러셔 장갑(손목) · I', part: 'gloves', set: 'set_bone_crusher', stat1: 'agi', val1: 65, val1_f: 84, stat2: 'str', val2: 43, val2_f: 55, trait: [{ type: ['냉기 피해'], val: '19.2%', val_f: '24.9%' }, { type: ['전기 피해'], val: '19.2%', val_f: '24.9%' }] },
+  { id: 'gear_49.2', name: '본 크러셔 장갑(손목)', part: 'gloves', set: 'set_bone_crusher', stat1: 'str', val1: 65, val1_f: 84, stat2: 'agi', val2: 43, val2_f: 55, trait: [{ type: ['열기 피해'], val: '19.2%', val_f: '24.9%' }, { type: ['자연 피해'], val: '19.2%', val_f: '24.9%' }] },
   { id: 'gear_50', name: '본 크러셔 머플러 · I', part: 'armor', set: 'set_bone_crusher', stat1: 'wil', val1: 87, val1_f: 113, stat2: 'agi', val2: 58, val2_f: 75, trait: [{ type: ['궁극기 충전 효율'], val: '12.3%', val_f: '16%' }] },
   { id: 'gear_51', name: '본 크러셔 머플러', part: 'armor', set: 'set_bone_crusher', stat1: 'wil', val1: 87, val1_f: 113, stat2: 'str', val2: 58, val2_f: 75, trait: [{ type: ['연계 스킬 피해'], val: '20.7%', val_f: '26.9%' }] },
+  { id: 'gear_52', name: '본 크러셔 중갑 방어구 · II', part: 'armor', set: 'set_bone_crusher', stat1: 'agi', val1: 87, val1_f: 113, stat2: 'str', val2: 58, val2_f: 75, trait: [{ type: ['냉기 피해'], val: '11.5%', val_f: '15%' }, { type: ['전기 피해'], val: '11.5%', val_f: '15%' }] },
   { id: 'gear_52', name: '본 크러셔 중갑 방어구 · I', part: 'armor', set: 'set_bone_crusher', stat1: 'agi', val1: 87, val1_f: 113, stat2: 'str', val2: 58, val2_f: 75, trait: [{ type: ['연계 스킬 피해'], val: '20.7%', val_f: '26.9%' }] },
   { id: 'gear_53', name: '본 크러셔 중갑 방어구', part: 'armor', set: 'set_bone_crusher', stat1: 'agi', val1: 87, val1_f: 113, stat2: 'int', val2: 58, val2_f: 75, trait: [{ type: ['궁극기 충전 효율'], val: '12.3%', val_f: '16%' }] },
 
