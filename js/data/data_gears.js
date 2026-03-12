@@ -70,8 +70,10 @@ const DATA_GEAR = [
   { id: 'gear_29', name: '열 작업용 전력 상자', part: 'kit', set: 'set_heat_work', stat1: 'wil', val1: 32, val1_f: 41, stat2: 'int', val2: 21, val2_f: 27, trait: [{ type: ['오리지늄 아츠 강도'], val: 41, val_f: 53 }] },
   { id: 'gear_30', name: '열 작업용 에너지 저장함', part: 'kit', set: 'set_heat_work', stat1: 'str', val1: 32, val1_f: 41, stat2: 'agi', val2: 21, val2_f: 27, trait: [{ type: ['오리지늄 아츠 강도'], val: 41, val_f: 53 }] },
   { id: 'gear_31', name: '열 작업용 온도 측정기', part: 'kit', set: 'set_heat_work', stat1: 'int', val1: 41, val1_f: 53, stat2: null, val2: 0, trait: [{ type: ['배틀 스킬 피해'], val: '41.4%', val_f: '53.8%' }] },
+  { id: 'gear_31.1', name: '열 작업용 장갑', part: 'gloves', set: 'set_heat_work', stat1: 'str', val1: 65, val1_f: 84, stat2: 'wil', val2: 43, val2_f: 55, trait: [{ type: ['오리지늄 아츠 강도'], val: 34, val_f: 44 }] },
   { id: 'gear_32', name: '열 작업용 건틀릿 · I', part: 'gloves', set: 'set_heat_work', stat1: 'wil', val1: 65, val1_f: 84, stat2: 'int', val2: 43, val2_f: 55, trait: [{ type: ['열기 피해'], val: '19.2%', val_f: '24.9%' }, { type: ['자연 피해'], val: '19.2%', val_f: '24.9%' }] },
   { id: 'gear_33', name: '열 작업용 건틀릿', part: 'gloves', set: 'set_heat_work', stat1: 'int', val1: 65, val1_f: 84, stat2: 'str', val2: 43, val2_f: 55, trait: [{ type: ['열기 피해'], val: '19.2%', val_f: '24.9%' }, { type: ['자연 피해'], val: '19.2%', val_f: '24.9%' }] },
+  { id: 'gear_33.1', name: '열 작업용 보조 골격', part: 'armor', set: 'set_heat_work', stat1: 'int', val1: 87, val1_f: 113, stat2: 'wil', val2: 58, val2_f: 75, trait: [{ type: ['열기 피해'], val: '11.5%', val_f: '14.9%' }, { type: ['자연 피해'], val: '11.5%', val_f: '14.9%' }] },
   { id: 'gear_34', name: '열 작업용 강화 골격', part: 'armor', set: 'set_heat_work', stat1: 'str', val1: 87, val1_f: 113, stat2: 'agi', val2: 58, val2_f: 75, trait: [{ type: ['열기 피해'], val: '11.5%', val_f: '14.9%' }, { type: ['자연 피해'], val: '11.5%', val_f: '14.9%' }] },
 
   // 개척
@@ -85,6 +87,8 @@ const DATA_GEAR = [
   { id: 'gear_42', name: '개척자 방어구', part: 'armor', set: 'set_pioneer', stat1: 'str', val1: 87, val1_f: 113, stat2: 'int', val2: 58, val2_f: 75, trait: [{ type: ['궁극기 피해'], val: '25.9%', val_f: '33.6%' }] },
 
   // 펄스식
+  { id: 'gear_42.1', name: '펄스식 침입 코어', part: 'kit', set: 'set_pulse', stat1: 'wil', val1: 41, val1_f: 53, stat2: null, val2: 0, trait: [{ type: ['궁극기 피해'], val: '51.8%', val_f: '67.3%' }] },
+  { id: 'gear_42.2', name: '펄스식 시험침', part: 'kit', set: 'set_pulse', stat1: 'int', val1: 32, val1_f: 41, stat2: 'agi', val2: 21, val2_f: 27, trait: [{ type: ['오리지늄 아츠 강도'], val: 41, val_f: 53 }] },
   { id: 'gear_43', name: '펄스식 교정기', part: 'kit', set: 'set_pulse', stat1: 'int', val1: 41, val1_f: 53, stat2: null, val2: 0, trait: [{ type: ['오리지늄 아츠 강도'], val: 41, val_f: 53 }] },
   { id: 'gear_44', name: '펄스식 장갑', part: 'gloves', set: 'set_pulse', stat1: 'wil', val1: 65, val1_f: 84, stat2: 'int', val2: 43, val2_f: 55, trait: [{ type: ['냉기 피해'], val: '19.2%', val_f: '24.9%' }, { type: ['전기 피해'], val: '19.2%', val_f: '24.9%' }] },
   { id: 'gear_45', name: '펄스식 방해 슈트', part: 'armor', set: 'set_pulse', stat1: 'int', val1: 87, val1_f: 113, stat2: 'wil', val2: 58, val2_f: 75, trait: [{ type: ['오리지늄 아츠 강도'], val: 20, val_f: 27 }] },
@@ -100,34 +104,45 @@ const DATA_GEAR = [
   { id: 'gear_53', name: '본 크러셔 중갑 방어구', part: 'armor', set: 'set_bone_crusher', stat1: 'agi', val1: 87, val1_f: 113, stat2: 'int', val2: 58, val2_f: 75, trait: [{ type: ['궁극기 충전 효율'], val: '12.3%', val_f: '16%' }] },
 
   // 경량 초자연
+  { id: 'gear_53.1', name: '경량 초자연 손목시계', part: 'kit', set: 'set_light_super', stat1: 'str', val1: 32, val1_f: 41, stat2: 'agi', val2: 21, val2_f: 27, trait: [{ type: ['배틀 스킬 피해'], val: '41.4%', val_f: '53.8%' }] },
+  { id: 'gear_53.2', name: '경량 초자연 안정판 · I', part: 'kit', set: 'set_light_super', stat1: 'agi', val1: 32, val1_f: 41, stat2: 'str', val2: 21, val2_f: 27, trait: [{ type: ['물리 피해'], val: '23.0%', val_f: '29.9%' }] },
   { id: 'gear_54', name: '경량 초자연 안정판', part: 'kit', set: 'set_light_super', stat1: 'agi', val1: 32, val1_f: 41, stat2: 'str', val2: 21, val2_f: 27, trait: [{ type: ['오리지늄 아츠 강도'], val: 41, val_f: 53 }] },
   { id: 'gear_55', name: '경량 초자연 분석 반지', part: 'kit', set: 'set_light_super', stat1: 'str', val1: 32, val1_f: 41, stat2: 'wil', val2: 21, val2_f: 27, trait: [{ type: ['물리 피해'], val: '23%', val_f: '29.9%' }] },
+  { id: 'gear_55.1', name: '경량 초자연 경량 보호 장갑', part: 'gloves', set: 'set_light_super', stat1: 'wil', val1: 65, val1_f: 84, stat2: 'agi', val2: 43, val2_f: 55, trait: [{ type: ['모든 스킬 피해'], val: '23.0%', val_f: '29.9%' }] },
   { id: 'gear_56', name: '경량 초자연 글러브', part: 'gloves', set: 'set_light_super', stat1: 'agi', val1: 65, val1_f: 84, stat2: 'str', val2: 43, val2_f: 55, trait: [{ type: ['오리지늄 아츠 강도'], val: 34, val_f: 45 }] },
   { id: 'gear_57', name: '경량 초자연 보호판', part: 'armor', set: 'set_light_super', stat1: 'str', val1: 87, val1_f: 113, stat2: 'wil', val2: 58, val2_f: 75, trait: [{ type: ['불균형 목표에 주는 피해'], triggerTarget: '불균형', val: '20.7%', val_f: '26.9%' }] },
 
   // 생체 보조
   { id: 'gear_58', name: '생체 보조 보호 주사기', part: 'kit', set: 'set_bio_support', stat1: 'wil', val1: 41, val1_f: 53, stat2: null, val2: 0, trait: [{ type: ['치유 효율'], val: '20.7%', val_f: '26.9%' }] },
   { id: 'gear_59', name: '생체 보조 보호판', part: 'kit', set: 'set_bio_support', stat1: 'wil', val1: 32, val1_f: 41, stat2: 'int', val2: 21, val2_f: 27, trait: [{ type: ['스탯'], stat: '주스탯', val: '20.7%', val_f: '26.9%' }] },
+  { id: 'gear_59.1', name: '생체 보조 접속기 · II', part: 'kit', set: 'set_bio_support', stat1: 'str', val1: 41, val1_f: 53, stat2: null, val2: 0, trait: [{ type: ['최대 생명력'], val: '41.4%', val_f: '53.8%' }] },
   { id: 'gear_60', name: '생체 보조 접속기 · I', part: 'kit', set: 'set_bio_support', stat1: 'str', val1: 32, val1_f: 41, stat2: 'wil', val2: 21, val2_f: 27, trait: [{ type: ['최대 생명력'], val: '41.4%', val_f: '53.8%' }] },
   { id: 'gear_61', name: '생체 보조 접속기', part: 'kit', set: 'set_bio_support', stat1: 'str', val1: 32, val1_f: 41, stat2: 'wil', val2: 21, val2_f: 27, trait: [{ type: ['모든 피해 감소'], val: '17.2%', val_f: '21.2%' }] },
-  { id: 'gear_62', name: '생체 보조 건틀릿', part: 'gloves', set: 'set_bio_support', stat1: 'wil', val1: 65, val1_f: 84, stat2: 'str', val2: 43, val2_f: 55, trait: [{ type: ['치유 효율'], val: '17.3%', val_f: '22.3%' }] },
-  { id: 'gear_63', name: '생체 보조 견갑', part: 'gloves', set: 'set_bio_support', stat1: 'str', val1: 65, val1_f: 84, stat2: 'wil', val2: 43, val2_f: 55, trait: [{ type: ['궁극기 충전 효율'], val: '20.5%', val_f: '26.7%' }] },
+  { id: 'gear_62', name: '생체 보조 금속 장갑', part: 'gloves', set: 'set_bio_support', stat1: 'wil', val1: 65, val1_f: 84, stat2: 'str', val2: 43, val2_f: 55, trait: [{ type: ['치유 효율'], val: '17.3%', val_f: '22.3%' }] },
+  { id: 'gear_63', name: '생체 보조 장갑(팔목)', part: 'gloves', set: 'set_bio_support', stat1: 'str', val1: 65, val1_f: 84, stat2: 'wil', val2: 43, val2_f: 55, trait: [{ type: ['궁극기 충전 효율'], val: '20.5%', val_f: '26.7%' }] },
   { id: 'gear_64', name: '생체 보조 흉갑', part: 'armor', set: 'set_bio_support', stat1: 'wil', val1: 87, val1_f: 113, stat2: 'int', val2: 58, val2_f: 75, trait: [{ type: ['치유 효율'], val: '10.4%', val_f: '13.5%' }] },
   { id: 'gear_65', name: '생체 보조 중갑', part: 'armor', set: 'set_bio_support', stat1: 'str', val1: 87, val1_f: 113, stat2: 'wil', val2: 58, val2_f: 75, trait: [{ type: ['치유 효율'], val: '10.4%', val_f: '13.5%' }] },
 
   // 검술사
-  { id: 'gear_66', name: '홍산 부싯돌', part: 'kit', set: 'set_swordsman', stat1: 'agi', val1: 32, val1_f: 41, stat2: 'str', val2: 21, val2_f: 27, trait: [{ type: ['물리 피해'], val: '23%', val_f: '29.9%' }] },
-  { id: 'gear_67', name: '홍산 전술 건틀릿', part: 'gloves', set: 'set_swordsman', stat1: 'agi', val1: 65, val1_f: 84, stat2: 'str', val2: 43, val2_f: 55, trait: [{ type: ['궁극기 피해'], val: '43.1%', val_f: '56.1%' }] },
-  { id: 'gear_68', name: '홍산 전술 장갑', part: 'gloves', set: 'set_swordsman', stat1: 'str', val1: 65, val1_f: 84, stat2: 'wil', val2: 43, val2_f: 55, trait: [{ type: ['물리 피해'], val: '19.2%', val_f: '24.9%' }] },
-  { id: 'gear_69', name: '홍산 중장갑', part: 'armor', set: 'set_swordsman', stat1: 'agi', val1: 87, val1_f: 113, stat2: 'str', val2: 58, val2_f: 75, trait: [{ type: ['오리지늄 아츠 강도'], val: 20, val_f: 27 }] },
+  { id: 'gear_65.1', name: '검술사 초소형 필터', part: 'kit', set: 'set_swordsman', stat1: 'str', val1: 32, val1_f: 41, stat2: 'wil', val2: 21, val2_f: 27, trait: [{ type: ['물리 피해'], val: '23%', val_f: '29.9%' }] },
+  { id: 'gear_65.2', name: '검술사 위치 신호기', part: 'kit', set: 'set_swordsman', stat1: 'str', val1: 41, val1_f: 53, stat2: null, val2: 0, trait: [{ type: ['오리지늄 아츠 강도'], val: 41, val_f: 53 }] },
+  { id: 'gear_66', name: '검술사 부싯돌', part: 'kit', set: 'set_swordsman', stat1: 'agi', val1: 32, val1_f: 41, stat2: 'str', val2: 21, val2_f: 27, trait: [{ type: ['물리 피해'], val: '23%', val_f: '29.9%' }] },
+  { id: 'gear_67', name: '검술사 전술 금속 장갑', part: 'gloves', set: 'set_swordsman', stat1: 'agi', val1: 65, val1_f: 84, stat2: 'str', val2: 43, val2_f: 55, trait: [{ type: ['궁극기 피해'], val: '43.1%', val_f: '56.1%' }] },
+  { id: 'gear_68', name: '검술사 전술 장갑', part: 'gloves', set: 'set_swordsman', stat1: 'str', val1: 65, val1_f: 84, stat2: 'wil', val2: 43, val2_f: 55, trait: [{ type: ['물리 피해'], val: '19.2%', val_f: '24.9%' }] },
+  { id: 'gear_68.1', name: '검술사 경장갑', part: 'armor', set: 'set_swordsman', stat1: 'str', val1: 87, val1_f: 113, stat2: 'wil', val2: 58, val2_f: 75, trait: [{ type: ['궁극기 충전 효율'], val: '12.3%', val_f: '16%' }] },
+  { id: 'gear_69', name: '검술사 중장갑', part: 'armor', set: 'set_swordsman', stat1: 'agi', val1: 87, val1_f: 113, stat2: 'str', val2: 58, val2_f: 75, trait: [{ type: ['오리지늄 아츠 강도'], val: 20, val_f: 27 }] },
 
   // 단일 장비
   { id: 'gear_70', name: '위기 탈출 도장 · I', part: 'kit', set: 'set_crisis', stat1: 'wil', val1: 43, val1_f: 55, stat2: null, val2: 0, trait: [{ type: ['치명타 확률'], val: '10.8%', val_f: '14%' }] },
   { id: 'gear_71', name: '위기 탈출 도장', part: 'kit', set: 'set_crisis', stat1: 'int', val1: 43, val1_f: 55, stat2: null, val2: 0, trait: [{ type: ['궁극기 충전 효율'], val: '25.7%', val_f: '33.4%' }] },
   { id: 'gear_72', name: '위기 탈출 식별 패널 · I', part: 'kit', set: 'set_crisis', stat1: 'agi', val1: 43, val1_f: 55, stat2: null, val2: 0, trait: [{ type: ['연계 스킬 피해'], val: '43.2%', val_f: '56.2%' }] },
   { id: 'gear_73', name: '위기 탈출 식별 패널', part: 'kit', set: 'set_crisis', stat1: 'str', val1: 43, val1_f: 55, stat2: null, val2: 0, trait: [{ type: ['모든 피해 감소'], val: '17.8%', val_f: '21.9%' }] },
+  { id: 'gear_74', name: '위기 탈출 장갑', part: 'gloves', set: 'set_crisis', stat1: 'str', val1: 86, val1_f: 111, stat2: null, val2: 0, trait: [{ type: ['모든 스킬 피해'], val: '24.0%', val_f: '31.2%' }] },
+  { id: 'gear_75', name: '위기 탈출 보호 장갑', part: 'gloves', set: 'set_crisis', stat1: 'agi', val1: 86, val1_f: 111, stat2: null, val2: 0, trait: [{ type: ['궁극기 피해'], val: '45%', val_f: '58.5%' }] },
+  { id: 'gear_76', name: '위기 탈출 방어구', part: 'armor', set: 'set_crisis', stat1: 'int', val1: 115, val1_f: 149, stat2: null, val2: 0, trait: [{ type: ['궁극기 충전 효율'], val: '12.9%', val_f: '16.8%' }] },
+  { id: 'gear_77', name: '위기 탈출 중장갑', part: 'armor', set: 'set_crisis', stat1: 'agi', val1: 115, val1_f: 149, stat2: null, val2: 0, trait: [{ type: ['일반 공격 피해'], val: '14.4%', val_f: '18.7%' }] },
 
-  { id: 'gear_74', name: '침식 방호 장갑 · I', part: 'gloves', set: 'set_50lv', stat1: 'wil', val1: 46, val1_f: 46, stat2: 'agi', val2: 30, val2_f: 30, trait: [{ type: ['공격력 증가'], val: '12.3%', val_f: '12.3%' }] }
+  { id: 'gear_79', name: '침식 방호 장갑 · I', part: 'gloves', set: 'set_50lv', stat1: 'wil', val1: 46, val1_f: 46, stat2: 'agi', val2: 30, val2_f: 30, trait: [{ type: ['공격력 증가'], val: '12.3%', val_f: '12.3%' }] }
 ];
 
 const DATA_SETS = [
