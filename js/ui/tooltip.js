@@ -699,18 +699,24 @@ const AppTooltip = {
             let dmgStr = `기본 데미지: <strong class="tooltip-highlight">${skillData.dmg}</strong>`;
             if (skillData.bonus) {
                 dmgStr += (skillData.bonus || []).map(b => {
+                    if (b.masterySource && b.levels) {
+                        const bonusMasteryLevel = st?.mainOp?.skillLevels?.[b.masterySource] || 'M3';
+                        if (b.levels[bonusMasteryLevel]) {
+                            b = { ...b, ...b.levels[bonusMasteryLevel] };
+                        }
+                    }
+
                     const triggers = [
                         ...(Array.isArray(b.trigger) ? b.trigger : (b.trigger ? [b.trigger] : [])),
                         ...(Array.isArray(b.triggerTarget) ? b.triggerTarget : (b.triggerTarget ? [b.triggerTarget] : []))
                     ];
                     const triggerLines = triggers.join(', ');
-                    const bValStr =
+                    let bValStr =
                         b.val !== undefined && b.val !== '0%' ? '+' + b.val :
                             b.perStack !== undefined && b.perStack !== '0%'
                                 ? (b.base && b.base !== '0%' ? `${b.base} + ${b.perStack}/스택` : `${b.perStack}/스택`)
                                 : (b.base && b.base !== '0%' ? b.base : '');
 
-                    // 스킬 보너스 트리거 태그 생성
                     if (triggerLines) {
                         triggerTags += this.makeTriggerTags(b);
                     }
@@ -729,8 +735,9 @@ const AppTooltip = {
         const synergyHtml = this.renderSynergySection(activeEffects, st, opData, skillType);
         if (synergyHtml) attrLines.push(synergyHtml);
 
+        const title = skillDataOriginal.replaceName || skillType;
         return `
-            <div class="tooltip-title">${skillType}</div>
+            <div class="tooltip-title">${title}</div>
             ${extraHtml ? `<div class="tooltip-group">${extraHtml}</div>` : ''}
             ${attrLines.length > 0 ? `<div class="tooltip-section tooltip-group">${attrLines.join('')}</div>` : ''}
             <div class="tooltip-desc">${this.colorizeText(skillData.desc || '설명 없음')}</div>
@@ -751,22 +758,16 @@ const AppTooltip = {
     renderSequenceTooltip(type, displayDmg, rateHtml, activeEffects, st, opData) {
         const synergyHtml = this.renderSynergySection(activeEffects, st, opData, type);
 
-        // 시퀀스 툴팁을 위한 트리거 태그 추출
-        let triggerTags = '';
-        if (opData && type) {
-            const rawSkill = opData.skill?.find(s => s.skillType?.includes(type));
-            if (rawSkill) {
-                (Array.isArray(rawSkill.bonus) ? rawSkill.bonus : []).forEach(b => {
-                    triggerTags += this.makeTriggerTags(b);
-                });
-            }
+        let displayName = type;
+        if (opData && opData.skill) {
+            const sk = opData.skill.find(s => s.skillType && s.skillType.includes(type));
+            if (sk && sk.replaceName) displayName = sk.replaceName;
         }
 
         return `
-            <div class="tooltip-title tooltip-highlight">${type}</div>
+            <div class="tooltip-title tooltip-highlight">${displayName}</div>
             <div class="tooltip-group">
                 <div class="tooltip-desc">피해량: <strong class="tooltip-highlight">${Math.floor(displayDmg).toLocaleString()}</strong><br>데미지 배율: <strong>${rateHtml}</strong></div>
-                ${triggerTags ? `<div style="margin-top:2px;">${triggerTags}</div>` : ''}
             </div>
             ${synergyHtml ? `<div class="tooltip-section tooltip-group">${synergyHtml}</div>` : ''}
         `;

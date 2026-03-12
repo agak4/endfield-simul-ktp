@@ -114,8 +114,8 @@ const DATA_GEAR = [
   { id: 'gear_49.2', name: '본 크러셔 장갑(손목)', part: 'gloves', set: 'set_bone_crusher', stat1: 'str', val1: 65, val1_f: 84, stat2: 'agi', val2: 43, val2_f: 55, trait: [{ type: ['열기 피해'], val: '19.2%', val_f: '24.9%' }, { type: ['자연 피해'], val: '19.2%', val_f: '24.9%' }] },
   { id: 'gear_50', name: '본 크러셔 머플러 · I', part: 'armor', set: 'set_bone_crusher', stat1: 'wil', val1: 87, val1_f: 113, stat2: 'agi', val2: 58, val2_f: 75, trait: [{ type: ['궁극기 충전 효율'], val: '12.3%', val_f: '16%' }] },
   { id: 'gear_51', name: '본 크러셔 머플러', part: 'armor', set: 'set_bone_crusher', stat1: 'wil', val1: 87, val1_f: 113, stat2: 'str', val2: 58, val2_f: 75, trait: [{ type: ['연계 스킬 피해'], val: '20.7%', val_f: '26.9%' }] },
-  { id: 'gear_52', name: '본 크러셔 중갑 방어구 · II', part: 'armor', set: 'set_bone_crusher', stat1: 'agi', val1: 87, val1_f: 113, stat2: 'str', val2: 58, val2_f: 75, trait: [{ type: ['냉기 피해'], val: '11.5%', val_f: '15%' }, { type: ['전기 피해'], val: '11.5%', val_f: '15%' }] },
-  { id: 'gear_52', name: '본 크러셔 중갑 방어구 · I', part: 'armor', set: 'set_bone_crusher', stat1: 'agi', val1: 87, val1_f: 113, stat2: 'str', val2: 58, val2_f: 75, trait: [{ type: ['연계 스킬 피해'], val: '20.7%', val_f: '26.9%' }] },
+  { id: 'gear_51.1', name: '본 크러셔 중갑 방어구 · II', part: 'armor', set: 'set_bone_crusher', stat1: 'agi', val1: 87, val1_f: 113, stat2: 'str', val2: 58, val2_f: 75, trait: [{ type: ['냉기 피해'], val: '11.5%', val_f: '15%' }, { type: ['전기 피해'], val: '11.5%', val_f: '15%' }] },
+  { id: 'gear_51.2', name: '본 크러셔 중갑 방어구 · I', part: 'armor', set: 'set_bone_crusher', stat1: 'agi', val1: 87, val1_f: 113, stat2: 'str', val2: 58, val2_f: 75, trait: [{ type: ['연계 스킬 피해'], val: '20.7%', val_f: '26.9%' }] },
   { id: 'gear_53', name: '본 크러셔 중갑 방어구', part: 'armor', set: 'set_bone_crusher', stat1: 'agi', val1: 87, val1_f: 113, stat2: 'int', val2: 58, val2_f: 75, trait: [{ type: ['궁극기 충전 효율'], val: '12.3%', val_f: '16%' }] },
 
   // 경량 초자연

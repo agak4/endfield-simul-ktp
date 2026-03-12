@@ -1,4 +1,4 @@
-﻿/**
+/**
  * ui/render.js — 결과 렌더링
  *
  * [역할]
@@ -791,6 +791,14 @@ function renderCyclePerSkill(cycleRes) {
         header.className = 'skill-card-header';
 
         let displayName = name.replace('(이상)', '');
+        if (item.type === 'skill') {
+            const opId = state.mainOp.id;
+            const opDataMap = typeof getOperatorData === 'function' ? getOperatorData(opId) : getOperatorData(opId);
+            if (opDataMap && opDataMap.skill) {
+                const skDef = opDataMap.skill.find(s => s.skillType && s.skillType.includes(name));
+                if (skDef && skDef.replaceName) displayName = skDef.replaceName;
+            }
+        }
         header.innerHTML = `<span class="skill-name">${displayName}</span><span class="skill-dmg">${dmgVal.toLocaleString()}</span>`;
 
         // 툴팁 이벤트
@@ -1285,17 +1293,18 @@ function updateEnhancedSkillButtons(opId) {
 
     enhancedSkills.forEach(es => {
         const skillName = es.skillType[0]; // 0번 인덱스가 기본 스킬명
+        const displayName = es.replaceName || skillName;
         const color = AppTooltip.getSkillElementColor(opData, skillName);
 
         const btn = document.createElement('div');
         btn.className = 'cycle-btn cycle-btn-enhanced';
         btn.dataset.type = skillName;
-        btn.title = skillName;
+        btn.title = displayName;
 
         // 버튼 디자인: 오퍼이미지 + 타이틀
         btn.innerHTML = `
-            ${buildSkillIconHtml(`images/operators/${opData.name}.webp`, color, skillName)}
-            <span>${skillName}</span>
+            ${buildSkillIconHtml(`images/operators/${opData.name}.webp`, color, displayName)}
+            <span>${displayName}</span>
         `;
 
         btn.onclick = () => {

@@ -742,6 +742,7 @@ const LEVEL_COEFF_ARTS = 89 / 196; // ≈ 45.41%
 function computeFinalDamageOutput(state, opData, wepData, stats, allEffects, activeEffects) {
     const baseAtk = opData.baseAtk + wepData.baseAtk;
     let atkInc = 0, fixedAtk = 0, critRate = 5, critDmg = 50, dmgInc = 0, amp = 0, multiHit = 1.0, unbalanceDmg = 0, originiumArts = 0, ultRecharge = 0, ultCostReduction = 0, skillMults = { all: { mult: 0, add: 0 } }, bonusMults = { all: { mult: 0, add: 0 } }, dmgIncMap = { all: 0, skill: 0, normal: 0, battle: 0, combo: 0, ult: 0, phys: 0, heat: 0, elec: 0, cryo: 0, nature: 0 };
+    const bonusHitDmgIncData = {};
     let takenDmgMap = { all: 0, phys: 0, heat: 0, elec: 0, cryo: 0, nature: 0, arts: 0 };
     const vulnMap = { '물리 취약': 0, '아츠 취약': 0, '열기 취약': 0, '전기 취약': 0, '냉기 취약': 0, '자연 취약': 0, '취약': 0 };
     const vulnAmpEffects = [];
@@ -1109,6 +1110,11 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects, act
                 }
             } else {
                 skillTypes.forEach(st => {
+                    // applyToBonusHit 효과: bonus hit 계산 시에만 적용 (dmgIncMap 제외, bonusHitDmgIncData에 수집)
+                    if (eff.applyToBonusHit) {
+                        bonusHitDmgIncData[st] = (bonusHitDmgIncData[st] || 0) + val;
+                        return;
+                    }
                     const cat = { '일반 공격': 'normal', '배틀 스킬': 'battle', '연계 스킬': 'combo', '궁극기': 'ult' }[st];
                     if (cat && !checkDisabled(cat)) dmgIncMap[cat] += val;
                 });
@@ -1303,7 +1309,7 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects, act
             mainStatName: STAT_NAME_MAP[opData.mainStat], mainStatVal: stats[opData.mainStat],
             subStatName: STAT_NAME_MAP[opData.subStat], subStatVal: stats[opData.subStat],
             str: stats.str, agi: stats.agi, int: stats.int, wil: stats.wil,
-            critExp, finalCritRate, critDmg, dmgInc, amp, vuln: opVuln, takenDmg: opTakenDmg, unbalanceDmg: finalUnbal, originiumArts, skillMults, bonusMults, dmgIncData: dmgIncMap,
+            critExp, finalCritRate, critDmg, dmgInc, amp, vuln: opVuln, takenDmg: opTakenDmg, unbalanceDmg: finalUnbal, originiumArts, skillMults, bonusMults, dmgIncData: dmgIncMap, bonusHitDmgIncData,
             skillCritData, resistance: activeResVal, resMult, defMult, enemyDefense: defVal, ultRecharge, finalUltCost, vulnMap, takenDmgMap, vulnAmpEffects,
             allRes: resistance, armorBreakVal: abVal, gamsunVal: gamsunVal, baseTakenDmg: takenDmgMap.all,
             resIgnore: resIgnore, levelCoeffPhys: LEVEL_COEFF_PHYS, levelCoeffArts: LEVEL_COEFF_ARTS, artsSecondary, abnormalMults
@@ -1637,7 +1643,7 @@ function calcSingleSkillDamage(type, state, res) {
         if (lvlData.desc !== undefined) skillDef.desc = lvlData.desc;
     }
 
-    const { finalAtk, atkInc, baseAtk, statBonusPct, skillAtkIncData = { all: 0 }, critExp, finalCritRate, critDmg, amp, vuln, takenDmg, unbalanceDmg, resMult, defMult = 1, originiumArts = 0, skillMults = { all: { mult: 0, add: 0 } }, bonusMults = { all: { mult: 0, add: 0 } }, dmgIncData = { all: 0, skill: 0, normal: 0, battle: 0, combo: 0, ult: 0 }, skillCritData = { rate: { all: 0 }, dmg: { all: 0 } }, vulnMap = {}, takenDmgMap = { all: 0, phys: 0, arts: 0, heat: 0, elec: 0, cryo: 0, nature: 0 }, vulnAmpEffects = [] } = res.stats;
+    const { finalAtk, atkInc, baseAtk, statBonusPct, skillAtkIncData = { all: 0 }, critExp, finalCritRate, critDmg, amp, vuln, takenDmg, unbalanceDmg, resMult, defMult = 1, originiumArts = 0, skillMults = { all: { mult: 0, add: 0 } }, bonusMults = { all: { mult: 0, add: 0 } }, dmgIncData = { all: 0, skill: 0, normal: 0, battle: 0, combo: 0, ult: 0 }, skillCritData = { rate: { all: 0 }, dmg: { all: 0 } }, vulnMap = {}, takenDmgMap = { all: 0, phys: 0, arts: 0, heat: 0, elec: 0, cryo: 0, nature: 0 }, vulnAmpEffects = [], bonusHitDmgIncData = {} } = res.stats;
 
     // dmg 파싱
     const parseDmgPct = (v) => {
@@ -1677,6 +1683,14 @@ function calcSingleSkillDamage(type, state, res) {
 
     if (skillDef.bonus) {
         skillDef.bonus.forEach(b => {
+            // bonus 아이템에 masterySource와 levels가 있으면 해당 스킬 타입의 마스터리 레벨 적용
+            if (b.masterySource && b.levels) {
+                const bonusMasteryLevel = state.mainOp?.skillLevels?.[b.masterySource] || 'M3';
+                if (b.levels[bonusMasteryLevel]) {
+                    b = { ...b, ...b.levels[bonusMasteryLevel] };
+                }
+            }
+
             const opTriggerMet = !b.trigger || evaluateTrigger(b.trigger, state, opData, b.triggerType, 'op', b.target, true);
             const targetTriggerMet = !b.triggerTarget || evaluateTrigger(b.triggerTarget, state, opData, b.triggerType, 'target', b.target, true);
             let triggerMet = opTriggerMet && targetTriggerMet;
@@ -1716,14 +1730,18 @@ function calcSingleSkillDamage(type, state, res) {
 
                     if (bonusVal > 0) {
                         const isStackable = b.perStack !== undefined && parseFloat(b.perStack) !== 0;
-                        if (b.element && b.element !== baseSkillElement) {
+                        const isSeparate = b.isSeparateHit || (b.element && b.element !== baseSkillElement);
+                        
+                        if (isSeparate) {
                             bonusList.push({
                                 name: trName,
                                 val: bonusVal,
                                 stack: isStackable ? stackCount : undefined,
                                 isStackable: isStackable,
                                 isSeparateHit: true,
-                                element: b.element
+                                element: b.element || baseSkillElement,
+                                bonusDmgInc: b.bonusDmgInc,
+                                skillType: b.skillType
                             });
                         } else {
                             dmgMult += bonusVal;
@@ -1746,30 +1764,36 @@ function calcSingleSkillDamage(type, state, res) {
                     if (valAtStack) {
                         const bonusVal = parsePct(valAtStack) * (1 + bMult / 100);
                         if (bonusVal > 0) {
-                            if (b.element && b.element !== baseSkillElement) {
-                                bonusList.push({
-                                    name: trName + ` (${stackCount}스택)`,
-                                    val: bonusVal,
-                                    isSeparateHit: true,
-                                    element: b.element
-                                });
-                            } else {
-                                dmgMult += bonusVal;
-                                bonusList.push({
-                                    name: trName + ` (${stackCount}스택)`,
-                                    val: bonusVal
-                                });
-                            }
+                        const isSeparate = b.isSeparateHit || (b.element && b.element !== baseSkillElement);
+                        if (isSeparate) {
+                            bonusList.push({
+                                name: trName + ` (${stackCount}스택)`,
+                                val: bonusVal,
+                                isSeparateHit: true,
+                                element: b.element || baseSkillElement,
+                                bonusDmgInc: b.bonusDmgInc,
+                                skillType: b.skillType
+                            });
+                        } else {
+                            dmgMult += bonusVal;
+                            bonusList.push({
+                                name: trName + ` (${stackCount}스택)`,
+                                val: bonusVal
+                            });
+                        }
                         }
                     }
                 } else if (b.val) {
                     const bonusVal = parsePct(b.val) * (1 + bMult / 100);
-                    if (b.element && b.element !== baseSkillElement) {
+                    const isSeparate = b.isSeparateHit || (b.element && b.element !== baseSkillElement);
+                    if (isSeparate) {
                         bonusList.push({
                             name: trName,
                             val: bonusVal,
                             isSeparateHit: true,
-                            element: b.element
+                            element: b.element || baseSkillElement,
+                            bonusDmgInc: b.bonusDmgInc,
+                            skillType: b.skillType
                         });
                     } else {
                         dmgMult += bonusVal;
@@ -2159,8 +2183,20 @@ function calcSingleSkillDamage(type, state, res) {
             bInc += (res.stats.dmgIncData[bElem] || 0);
         }
 
-        if (baseType === '일반 공격') bInc += dmgIncData.normal;
-        else bInc += dmgIncData.skill + (dmgIncData[SKILL_TYPE_CAT_MAP[baseType]] || 0);
+        const bSkillType = b.skillType || baseType;
+        const bCat = SKILL_TYPE_CAT_MAP[bSkillType] || 'common';
+
+        if (bSkillType === '일반 공격') bInc += dmgIncData.normal;
+        else bInc += dmgIncData.skill + (dmgIncData[bCat] || 0);
+
+        if (b.bonusDmgInc) {
+            bInc += parseFloat(String(b.bonusDmgInc).replace('%', ''));
+        }
+
+        // applyToBonusHit 효과: 부모 스킬 타입(skillName)을 키로 bonusHitDmgIncData에서 반영
+        if (bonusHitDmgIncData[skillName]) {
+            bInc += bonusHitDmgIncData[skillName];
+        }
 
         vulnAmpEffects.forEach(eff => {
             const isTypeMatch = !eff.skillType || (eff.skillType && eff.skillType.includes(baseType));

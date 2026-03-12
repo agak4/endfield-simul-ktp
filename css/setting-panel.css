@@ -678,7 +678,7 @@ h4.has-drag-handle {
 .tile-main-stat-row {
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 10px;
 }
 
 .tile-placeholder {
