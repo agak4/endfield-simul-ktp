@@ -1588,10 +1588,10 @@ const DATA_OPERATORS = [
             {
                 skillType: ['배틀 스킬'], element: 'cryo', desc: '물속에서 뛰어올라 적에게 근접하여 사격하며 냉기 피해를 주고, 용오름을 생성합니다. 동시에 근처의 모든 와류를 소모하여 추가로 용오름을 생성하고, 생성된 개수에 따라 일정량의 스킬 게이지를 반환합니다.<br>용오름: 범위 내의 적에게 냉기 부착 1스택을 부여하고, 지속적으로 냉기 피해를 줍니다. 만약 여러 개의 용오름이 생성됐다면 적에게 추가로 아츠 취약을 부여하지만, 냉기 부착이 중복으로 부여되진 않습니다.<br><span style="color: #727272">용오름이 주는 피해는 배틀 스킬의 피해로 간주됩니다.</span>',
                 levels: {
-                    M0: { dmg: '384%', type: ['냉기 부착', { type: ['아츠 취약'], perStack: '4%', base: '0%', trigger: ['와류'], target: '적' }], bonus: [{ triggerTarget: ['와류'], base: '0%', perStack: '240%' }] },
-                    M1: { dmg: '411%', type: ['냉기 부착', { type: ['아츠 취약'], perStack: '4.5%', base: '0%', trigger: ['와류'], target: '적' }], bonus: [{ triggerTarget: ['와류'], base: '0%', perStack: '257%' }] },
-                    M2: { dmg: '443%', type: ['냉기 부착', { type: ['아츠 취약'], perStack: '4.5%', base: '0%', trigger: ['와류'], target: '적' }], bonus: [{ triggerTarget: ['와류'], base: '0%', perStack: '277%' }] },
-                    M3: { dmg: '480%', type: ['냉기 부착', { type: ['아츠 취약'], perStack: '5%', base: '0%', trigger: ['와류'], target: '적' }], bonus: [{ triggerTarget: ['와류'], base: '0%', perStack: '300%' }] }
+                    M0: { dmg: '384%', type: ['냉기 부착', { type: ['아츠 취약'], val: '4%', target: '적', stack: 2 }], bonus: [{ triggerTarget: ['와류'], base: '0%', perStack: '240%' }] },
+                    M1: { dmg: '411%', type: ['냉기 부착', { type: ['아츠 취약'], val: '4.5%', target: '적', stack: 2 }], bonus: [{ triggerTarget: ['와류'], base: '0%', perStack: '257%' }] },
+                    M2: { dmg: '443%', type: ['냉기 부착', { type: ['아츠 취약'], val: '4.5%', target: '적', stack: 2 }], bonus: [{ triggerTarget: ['와류'], base: '0%', perStack: '277%' }] },
+                    M3: { dmg: '480%', type: ['냉기 부착', { type: ['아츠 취약'], val: '5%', target: '적', stack: 2 }], bonus: [{ triggerTarget: ['와류'], base: '0%', perStack: '300%' }] }
                 }
             },
             {

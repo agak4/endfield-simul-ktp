@@ -372,30 +372,32 @@ function collectAllEffects(state, opData, wepData, stats, allEffects, forceMaxSt
                     }
 
                     // stack 처리
+                    const maxStack = typeItem.stack || eff.stack;
                     const effUid = `${uidPrefix || name}_${typeItem.type}_v${i}_${j}`;
                     const targetEffectStacks = state.effectStacks;
                     let stackCount = targetEffectStacks?.[effUid];
                     if (stackCount === undefined) {
-                        stackCount = eff.stack ? 1 : 1; // 기본은 1 (비활성은 0)
+                        stackCount = maxStack ? 1 : 1; // 기본은 1 (비활성은 0)
                     }
-                    if (forceMaxStack && eff.stack) {
-                        stackCount = eff.stack;
+                    if (forceMaxStack && maxStack) {
+                        stackCount = maxStack;
                     }
 
-                    if (eff.stack) {
+                    if (maxStack) {
                         // 수치에 중첩수 곱하기 (0이면 0이 됨)
                         const n = parseFloat(currentVal) || 0;
                         const multiplied = parseFloat((n * stackCount).toPrecision(12));
                         currentVal = (typeof currentVal === 'string' && currentVal.includes('%')) ? multiplied + '%' : multiplied;
                         typeItem._stackCount = stackCount; // UI 표시용
                         typeItem._uid = effUid;
+                        typeItem.stack = maxStack; // UI 렌더링을 위해 명시적으로 설정
                     }
 
                     activeBonuses.forEach(b => {
                         if (b.type === typeItem.type || (!b.type && typeArr.length === 1)) {
                             if (b.val !== undefined) {
                                 let bVal = b.val;
-                                if (eff.stack) {
+                                if (maxStack) {
                                     const bn = parseFloat(bVal) || 0;
                                     const bMultiplied = parseFloat((bn * stackCount).toPrecision(12));
                                     bVal = (typeof bVal === 'string' && bVal.includes('%')) ? bMultiplied + '%' : bMultiplied;
