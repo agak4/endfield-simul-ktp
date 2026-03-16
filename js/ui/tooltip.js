@@ -28,7 +28,7 @@ const AppTooltip = {
         '물리 취약': 'kw-special', '아츠 취약': 'kw-special', '열기 취약': 'kw-heat', '전기 취약': 'kw-elec', '냉기 취약': 'kw-cryo', '자연 취약': 'kw-nature',
         '열기 부착': 'kw-heat', '전기 부착': 'kw-elec', '냉기 부착': 'kw-cryo', '자연 부착': 'kw-nature',
         '연소': 'kw-heat', '감전': 'kw-elec', '동결': 'kw-cryo', '부식': 'kw-nature',
-        '방어 불능': 'kw-phys', '강타': 'kw-phys', '띄우기': 'kw-phys', '넘어뜨리기': 'kw-phys', '강제 띄우기': 'kw-phys', '강제 넘어뜨리기': 'kw-phys', '갑옷 파괴': 'kw-phys', '오리지늄 결정': 'kw-phys',
+        '방어 불능': 'kw-phys', '물리 이상': 'kw-phys', '강타': 'kw-phys', '띄우기': 'kw-phys', '넘어뜨리기': 'kw-phys', '강제 띄우기': 'kw-phys', '강제 넘어뜨리기': 'kw-phys', '갑옷 파괴': 'kw-phys', '오리지늄 결정': 'kw-phys',
         '쇄빙': 'kw-phys',
         '일반 공격': 'kw-special', '배틀 스킬': 'kw-special', '연계 스킬': 'kw-special', '궁극기': 'kw-special',
         '불균형': 'kw-special', '치유': 'kw-nature', '보호': 'kw-nature', '비호': 'kw-nature', '연타': 'kw-special', '스킬 게이지': 'kw-special', '소모': 'kw-special', '궁극기 에너지': 'kw-special', '궁극기 충전 효율': 'kw-special', '치명타 확률': 'kw-special', '치명타 피해': 'kw-special',

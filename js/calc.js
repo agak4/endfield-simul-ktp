@@ -158,6 +158,7 @@ function calculateDamage(currentState, forceMaxStack = false, isStatCalcOnly = f
 }
 
 // ---- 스탯 키 정규화 ----
+const PHYS_ANOMALY_TAGS = ['강타', '띄우기', '넘어뜨리기', '강제 띄우기', '강제 넘어뜨리기', '갑옷 파괴'];
 const REVERSE_STAT_NAME_MAP = { '힘': 'str', '민첩': 'agi', '지능': 'int', '의지': 'wil' };
 function resolveStatKey(target, container) {
     if (container[target] !== undefined) return target;
@@ -172,6 +173,9 @@ function resolveStatKey(target, container) {
 // 스택 수치 계산 보정 (방어 불능 보정 등 반영)
 function getAdjustedStackCount(triggerName, state, opData, skillTypes) {
     let count = 0;
+    if (triggerName === '물리 이상') {
+        return Math.max(...PHYS_ANOMALY_TAGS.map(t => getAdjustedStackCount(t, state, opData, skillTypes)));
+    }
     if (triggerName === '방어 불능') {
         count = state.debuffState?.physDebuff?.defenseless || 0;
         const mainOp = state.mainOp;
@@ -743,7 +747,7 @@ const LEVEL_COEFF_ARTS = 89 / 196; // ≈ 45.41%
 
 function computeFinalDamageOutput(state, opData, wepData, stats, allEffects, activeEffects) {
     const baseAtk = opData.baseAtk + wepData.baseAtk;
-    let atkInc = 0, fixedAtk = 0, critRate = 5, critDmg = 50, dmgInc = 0, amp = 0, multiHit = 1.0, unbalanceDmg = 0, originiumArts = 0, ultRecharge = 0, ultCostReduction = 0, skillMults = { all: { mult: 0, add: 0 } }, bonusMults = { all: { mult: 0, add: 0 } }, dmgIncMap = { all: 0, skill: 0, normal: 0, battle: 0, combo: 0, ult: 0, phys: 0, heat: 0, elec: 0, cryo: 0, nature: 0 };
+    let atkInc = 0, fixedAtk = 0, statBonusBase = 0, critRate = 5, critDmg = 50, dmgInc = 0, amp = 0, multiHit = 1.0, unbalanceDmg = 0, originiumArts = 0, ultRecharge = 0, ultCostReduction = 0, skillMults = { all: { mult: 0, add: 0 } }, bonusMults = { all: { mult: 0, add: 0 } }, dmgIncMap = { all: 0, skill: 0, normal: 0, battle: 0, combo: 0, ult: 0, phys: 0, heat: 0, elec: 0, cryo: 0, nature: 0 };
     const bonusHitDmgIncData = {};
     let takenDmgMap = { all: 0, phys: 0, heat: 0, elec: 0, cryo: 0, nature: 0, arts: 0 };
     const vulnMap = { '물리 취약': 0, '아츠 취약': 0, '열기 취약': 0, '전기 취약': 0, '냉기 취약': 0, '자연 취약': 0, '취약': 0 };
@@ -751,7 +755,7 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects, act
     const skillCritData = { rate: { all: 0 }, dmg: { all: 0 } };
     const skillAtkIncData = { all: 0 };
     const logs = {
-        atk: [], atkBuffs: [], fixedAtk: [], dmgInc: [], amp: [], vuln: [],
+        atk: [], atkBuffs: [], statAtkBuffs: [], fixedAtk: [], dmgInc: [], amp: [], vuln: [],
         taken: [], unbal: [], multihit: [], crit: [], arts: [], res: [], ultRecharge: []
     };
     let resIgnore = 0;
@@ -874,7 +878,7 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects, act
         const t = (eff.type || '').toString();
 
         valDisplay = (val > 0 ? '+' : '') + val.toFixed(val % 1 === 0 ? 0 : 1);
-        if (t.includes('증폭') || t.includes('피해') || t.includes('확률') || t.includes('효율') || t.includes('감소') || t.includes('취약') || t === '공격력 증가') {
+        if (t.includes('증폭') || t.includes('피해') || t.includes('확률') || t.includes('효율') || t.includes('감소') || t.includes('취약') || t === '공격력 증가' || t === '스탯 공격 보너스') {
             if (!valDisplay.endsWith('%')) valDisplay += '%';
         }
 
@@ -928,6 +932,10 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects, act
                 if (!checkDisabled('common')) atkInc += val;
             }
             applySkillTypedEffect(null, logs.atkBuffs, t, { tag: eff.skillType ? 'skillAtkInc' : undefined });
+        } else if (t === '스탯 공격 보너스') {
+            if (!checkDisabled('common')) statBonusBase += val;
+            const stackSuffix = eff.stack ? ` <span class="tooltip-highlight">(${eff._stackCount}중첩)</span>` : '';
+            logs.statAtkBuffs.push({ txt: `[${displayName}] ${t} ${valDisplay}${stackSuffix}`, uid: eff.uid, stack: eff.stack, stackCount: eff._stackCount, _triggerFailed: eff._triggerFailed });
         } else if (t === '오리지늄 아츠 강도') {
             if (!checkDisabled('common')) originiumArts += val;
             const stackSuffix = eff.stack ? ` <span class="tooltip-highlight">(${eff._stackCount}중첩)</span>` : '';
@@ -1237,7 +1245,7 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects, act
         });
     }
 
-    const statBonusPct = (stats[opData.mainStat] * 0.005) + (stats[opData.subStat] * 0.002);
+    const statBonusPct = (stats[opData.mainStat] * 0.005) + (stats[opData.subStat] * 0.002) + (statBonusBase / 100);
     const finalAtk = (baseAtk * (1 + atkInc / 100) + fixedAtk) * (1 + statBonusPct);
 
     logs.atk = [
@@ -1246,7 +1254,8 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects, act
         ...logs.atkBuffs,
         ...logs.fixedAtk,
         ...statLogs,
-        { txt: `스탯 공격보너스: +${(statBonusPct * 100).toFixed(2)}%`, uid: 'stat_bonus_atk' }
+        { txt: `스탯 공격보너스: +${(statBonusPct * 100).toFixed(2)}%`, uid: 'stat_bonus_atk' },
+        ...logs.statAtkBuffs
     ];
 
     const finalCritRate = Math.min(Math.max(critRate, 0), 100);
@@ -1377,7 +1386,7 @@ const ALWAYS_ON_EFFECTS = new Set([
     '공격력 증가', '치명타 확률', '치명타 피해', '최대 생명력', '궁극기 충전 효율', '궁극기 에너지 감소', '치유 효율', '연타',
     '주는 피해', '스탯', '스탯%', '스킬 피해', '궁극기 피해', '연계 스킬 피해', '배틀 스킬 피해',
     '일반 공격 피해', '오리지늄 아츠', '오리지늄 아츠 강도', '모든 스킬 피해', '스킬 배율 증가',
-    '스킬 치명타 확률', '스킬 치명타 피해', '상태 이상 배율', '추가 공격 피해 배율 증가'
+    '스킬 치명타 확률', '스킬 치명타 피해', '상태 이상 배율', '추가 공격 피해 배율 증가', '스탯 공격 보너스'
 ]);
 
 function isApplicableEffect(opData, effectType, effectName) {
@@ -1497,6 +1506,11 @@ function evaluateTrigger(trigger, state, opData, triggerType, evalMode = 'both',
 
     const triggers = Array.isArray(trigger) ? trigger : [trigger];
     return triggers.some(t => {
+        // '물리 이상' 그룹 처리
+        if (t === '물리 이상') {
+            return PHYS_ANOMALY_TAGS.some(tag => evaluateTrigger(tag, state, opData, triggerType, evalMode, effectTarget, strictMode));
+        }
+
         // 1. 타겟 상태 확인 (TargetTrigger - TRIGGER_MAP 우선)
         if (evalMode === 'both' || evalMode === 'target') {
             const specialStackVal = state.getSpecialStack ? state.getSpecialStack() : (state.mainOp?.specialStack || 0);
@@ -1861,7 +1875,7 @@ function calcSingleSkillDamage(type, state, res) {
 
         // --- 쇄빙 (Shatter) 구현 ---
         const freezeStacks = state.debuffState?.artsAbnormal?.['동결'] || 0;
-        const isPhysAnomaly = ['강타', '띄우기', '넘어뜨리기', '강제 띄우기', '강제 넘어뜨리기', '갑옷 파괴', '방어 불능 부여', '방어 불능'].includes(typeName);
+        const isPhysAnomaly = PHYS_ANOMALY_TAGS.includes(typeName) || ['방어 불능 부여', '방어 불능'].includes(typeName);
 
         if (freezeStacks > 0 && isPhysAnomaly) {
             const shatterMult = 1.2 + (freezeStacks * 1.2);

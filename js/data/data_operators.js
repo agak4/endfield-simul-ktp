@@ -1,25 +1,106 @@
 /**
- * [오퍼레이터 객체 기본 구조]
+ * [오퍼레이터 객체 기본 구조 및 모든 속성 사용법]
  * {
  *   id: string,               // 고유 ID (예: 'Endministrator')
  *   name: string,             // 이름 (예: '관리자')
- *   class: string,            // 클래스 (guard, vanguard, defender, supporter, caster, striker)
+ *   class: string,            // 클래스 (guard, vanguard, defender, supporter, caster, striker, 가드, 캐스터 등)
  *   rarity: number,           // 희귀도 (4, 5, 6)
  *   baseAtk: number,          // 기본 공격력 (캐릭터창 기준)
- *   mainStat: string,         // 주능력치 키 (agi, str, int, wil)
- *   subStat: string,          // 부능력치 키 (str, agi, wil, int)
+ *   mainStat: string,         // 주능력치 키 (agi, str, int, wil, '')
+ *   subStat: string,          // 부능력치 키 (str, agi, wil, int, '')
  *   type: string,             // 공격 타입 ('phys': 물리, 'arts': 아츠)
  *   element: string|null,     // 속성 (null, 'heat', 'cryo', 'elec', 'nature')
- *   stats: { str, agi, int, wil }, // 기본 능력치 수치
- *   usableWeapons: string[{ desc: '' }],  // 장착 가능 무기 유형 (예: ['sword'])
- *   skill: [                  // 스킬 리스트 (일반 공격, 배틀 스킬, 연계 스킬, 궁극기 순)
- *     { skillType: string[{ desc: '' }], element, dmg, cost?, type?, target?, bonus?, desc }, ...
+ *   stats: { str, agi, int, wil }, // 기본 능력치 수치 (0인 경우도 존재)
+ *   usableWeapons: string[],  // 장착 가능 무기 유형 배열 (예: ['sword', 'polearm', 'great_sword', 'arts_unit', 'handcannon'])
+ *   specialStack: object | array, // 특정 기믹의 스택 정보, 단일 객체나 배열 형태 (선택적) 
+ *                             // 예: [{ name: '오리지늄 결정', id: 'originiumSeal', max: 1, triggers: ['오리지늄 결정'] }]
+ * 
+ *   // 스킬 리스트 (일반 공격, 배틀 스킬, 연계 스킬, 궁극기, 강화 일반/배틀/연계/궁극기 등)
+ *   skill: [
+ *     {
+ *       skillType: string[],  // 스킬 분류 태그 배열 (예: ['일반 공격'], ['강화 배틀 스킬'])
+ *       element: string,      // 스킬 자체의 속성 ('phys', 'heat', 'cryo', 'elec', 'nature')
+ *       desc: string,         // 스킬 툴팁 텍스트
+ *       cost: number,         // 필요 궁극기 에너지 수치 (선택, 예: 80, 100)
+ *       target: string,       // 기본 스킬 타겟 세팅 (선택, 예: '적', '팀')
+ *       type: string[],       // 스킬 내부 태그나 효과 지정 (선택, 예: ['썬더랜스'])
+ *       replaceName: string,  // UI 상에서 표시될 이름 치환용 (선택, 예: '궁극기 낙하공격')
+ *       masterySource: string,// 다른 특정 스킬의 영향을 받음을 표기 (선택, 예: '궁극기')
+ *       bonus: [...],         // 레벨 무관 공통 보너스 효과 배열 (선택, 하단 bonus 구조 참조)
+ *       levels: {             // 스킬 레벨별 세부 데이터 (M0 ~ M3)
+ *         M0: {
+ *           dmg: string,      // 가하는 피해 퍼센테이지 (예: '278%', '0%')
+ *           type: string | object | array, // 발동 효과나 부여하는 상태이상 정의 (예: '강타', ['띄우기', '냉기 부착'], { type: '물리 취약', val: '10%', target: '적' })
+ *           target: string,   // 해당 레벨의 타겟 오버라이드 (선택, 예: '팀')
+ *           excludeTarget: string[], // 해당 타겟 제외 상태이상 (선택, 예: ['연소', '감전'])
+ *           abnormalMult: number,    // 상태이상 배율 지정 (선택, 예: 120)
+ *           potOverrides: object,    // 특정 돌파(잠재)에 따른 대체 효과 부여 (선택, 예: { 3: { abnormalMult: 252 } })
+ *           bonus: [          // 조건 만족 시 터지는 추가 효과 객체 배열 (선택)
+ *             {
+ *               triggerTarget: string[], // 대상의 특정 부착된 상태 조건 (예: ['방어 불능', '연소'])
+ *               val: string,             // 해당 효과의 세기 및 데미지 (예: '320%')
+ *               type: string | string[], // 추가 상태이상 부여나 타입 지정
+ *               element: string,         // 공격 보너스의 경우 그 속성 (예: 'heat', 'elec')
+ *               base: string,            // 스택마다 보너스 증가 시 기본 수치
+ *               perStack: string,        // 1스택당 증가율
+ *               stackValues: object,     // 스택 개수별 각각의 지정 수치 객체 (예: { 1: '76%', 2: '97%' })
+ *               masterySource: string,   // 이 보너스가 스케일링 받는 원천 (예: '배틀 스킬')
+ *               isSeparateHit: boolean,  // 개별 히트 여부 (예: true)
+ *               bonusDmgInc: string,     // 보너스 가하는 피해 증가 배율
+ *               skillType: string,       // 타겟 스킬 트리거 타입
+ *               levels: object           // 레벨별 보너스 데이터 오버라이드 M0~M3
+ *             }, ...
+ *           ]
+ *         },
+ *         M1: { ... }, M2: { ... }, M3: { ... }
+ *       }
+ *     }, ...
  *   ],
- *   talents: [                // 특성 (배열 내 배열 구조)
- *     [{ type: string[{ desc: '' }], val, target?, trigger? }, ...], ...
+ * 
+ *   // 오퍼레이터 특성 (배열 내의 배열 구조, 인덱스가 제N재능. 효과가 여러개면 배열 내 객체 추가)
+ *   talents: [
+ *     [ // 1재능
+ *       {
+ *         desc: string,       // 특성에 대한 상세 설명
+ *         type: string[],     // 어떤 효과인지 타겟팅하는 태그 배열 (예: ['공격력 증가'], ['치유'])
+ *         val: string | number, // 올라가는 수치 (예: '30%', 15, 0.5)
+ *         target: string,     // 효과가 적용되는 방향 (예: '자신', '팀', '적')
+ *         targetClass: string[],// 대상 클래스 체급 지정 필터 (예: ['guard', 'caster'])
+ *         trigger: string[],  // 해당 특성 발동의 액션 트리거 (예: ['넘어뜨리기', '방어 불능'])
+ *         triggerTarget: string | string[], // 피격자나 대상의 상태 의존 조건 (예: '불균형', ['냉기 부착'])
+ *         stack: number,      // 해당 특성이 최고 몇 스택까지 쌓이는가 (예: 5)
+ *         scaling: {          // 특정 스탯에 비례해서 늘어나는 계수 맵핑
+ *           stat: string | string[], // 베이스 스탯명 (예: 'int', ['int', 'wil'])
+ *           ratio: string,           // 단위 스탯당 증가 비율 (예: '0.15%')
+ *           max: string | null       // 스케일링으로 늘어나는 상한선
+ *         },
+ *         targetEffect: string[], // 특정 상태이상 증폭 (예: ['아츠 취약'])
+ *         skillType: string[],    // 이 특성이 어떤 스킬 트리거시에만 켜지는가 (예: ['궁극기'])
+ *         bonus: [...]            // 특성 내의 또 다른 조건부 파생 효과 배열 구조
+ *       }, ...
+ *     ], ...
  *   ],
- *   potential: [              // 잠재 (1~5단계, 총 5개 슬롯)
- *     [{ type: string[{ desc: '' }], val, ... }, ...], ...
+ * 
+ *   // 잠재 성능 구조 (1~5단계 돌파. 특성과 동일한 배열 속 배열 구조 사용)
+ *   potential: [
+ *     [ // 잠재 1단계
+ *       {
+ *         desc: string,       // 잠재 발동 설명 문장
+ *         type: string[],     // 잠재의 종류/효과 타입 종류 (예: ['스탯'], ['궁극기 에너지 감소'], ['상태 이상 배율'])
+ *         stats: string,      // 오르는 스탯의 종류 텍스트 ('모든 능력치', '민첩' 등. type: ['스탯'] 일 경우 사용)
+ *         val: string | number, // 잠재로 적용할 증가수치 계수 (예: 15, '10%', '1.5')
+ *         skillType: string[], // 어떤 스킬이 수혜를 받는지 태그 필터 (예: ['궁극기'], ['강화 배틀 스킬'])
+ *         target: string,     // 효과 타겟 (예: '팀', '적')
+ *         targetFilter: string, // 특정 팀원 예외 처리 (예: '자신 제외')
+ *         trigger: string[],  // 이 잠재력이 작동하게 하는 선결조건 트리거
+ *         targetAbnormal: string, // 타겟이 가지는 상태 이상 조건 (예: '감전')
+ *         masterySource: string,  // 어느 스킬의 레벨업에 영향을 받나 기입
+ *         isSeparateHit: boolean, // 개별 타격 판정 등 적용 여부
+ *         applyToBonusHit: boolean, // 추가 타격에도 데미지 증가 등 여부 반영
+ *         bonusDmgInc: string,    // 잠재로 오르는 보너스 피해 퍼센트 (예: '60%')
+ *         levels: object          // 모든 레벨별 돌파 계수가 유동적일때 오버라이드 맵 (M0~M3)
+ *       }, ...
+ *     ], ...
  *   ]
  * }
  */
@@ -142,13 +223,13 @@ const DATA_OPERATORS = [
             }
         ],
         talents: [
-            [{ type: ['공격력 증가'], val: '0%', scaling: { stat: ['int', 'wil'], ratio: '0.15%', max: null }, desc: '지능, 의지 1포인트당 공격력 증가 +0.15%' }],
+            [{ type: ['스탯 공격 보너스'], val: '0%', scaling: { stat: ['int', 'wil'], ratio: '0.15%', max: null }, desc: '지능, 의지 1포인트당 공격력 증가 +0.15%' }],
             [{ type: ['물리 데미지'], element: 'phys', dmg: '100%', trigger: ['넘어뜨리기'], desc: '적에게 넘어뜨리기 피해를 줄 때마다, 추가로 자신의 공격력 100%의 물리 피해를 줍니다.' }]
         ],
         potential: [
             [{ type: ['물리 취약'], val: '5%', target: '적', desc: '배틀 스킬 신체 정화가 부여하는 물리 취약 효과 +5%, 방어 불능 스택 수치가 2스택을 초과하지 않은 적에게도 이 추가 효과가 발동합니다.' }],
             [{ type: ['스탯'], stats: '모든 능력치', val: 15, desc: '모든 능력치 +15' }],
-            [{ type: ['공격력 증가'], val: '0%', scaling: { stat: ['int', 'wil'], ratio: '0.05%', max: null }, desc: '재능 "돈오" 효과 강화: 지능, 의지 1포인트당 공격력 증가 +0.05%' }],
+            [{ type: ['스탯 공격 보너스'], val: '0%', scaling: { stat: ['int', 'wil'], ratio: '0.05%', max: null }, desc: '재능 "돈오" 효과 강화: 지능, 의지 1포인트당 공격력 증가 +0.05%' }],
             [{ type: ['궁극기 에너지 감소'], val: '15%', desc: '궁극기 움직이지 않는 마음의 사용에 필요한 궁극기 에너지 -15%' }],
             [{ type: ['물리 데미지'], element: 'phys', dmg: '150%', trigger: ['넘어뜨리기'], desc: '재능 "복마" 효과 강화: 15초마다, 다음 효과 발동 시 공격력 250%만큼 추가 물리 피해를 주고, 5포인트의 불균형 피해를 줍니다.' }]
         ]

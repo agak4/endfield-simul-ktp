@@ -89,7 +89,7 @@ const DATA_GEAR = [
   { id: 'gear_35.1', name: '개척자 분석 장치', part: 'kit', set: 'set_pioneer', stat1: 'str', val1: 41, val1_f: 53, stat2: null, val2: 0, trait: [{ type: ['궁극기 피해'], val: '51.8%', val_f: '67.3%' }] },
   { id: 'gear_36', name: '개척자 통신기 · I', part: 'kit', set: 'set_pioneer', stat1: 'str', val1: 32, val1_f: 41, stat2: 'int', val2: 21, val2_f: 27, trait: [{ type: ['냉기 피해'], val: '23%', val_f: '29.9%' }, { type: ['전기 피해'], val: '23%', val_f: '29.9%' }] },
   { id: 'gear_37', name: '개척자 통신기', part: 'kit', set: 'set_pioneer', stat1: 'str', val1: 32, val1_f: 41, stat2: 'agi', val2: 21, val2_f: 27, trait: [{ type: ['연계 스킬 피해'], val: '41.4%', val_f: '53.8%' }] },
-  { id: 'gear_37.1', name: '개척자 섬유 장갑', part: 'gloves', set: 'set_pioneer', stat1: 'wil', val1: 65, val1_f: 84, stat2: 'int', val2: 43, val2_f: 55, trait: [{ type: ['모든 스킬 피해'], val: '23.0%', val_f: '29.9%' }] },
+  { id: 'gear_37.1', name: '개척자 섬유 장갑', part: 'gloves', set: 'set_pioneer', stat1: 'wil', val1: 65, val1_f: 84, stat2: 'str', val2: 43, val2_f: 55, trait: [{ type: ['모든 스킬 피해'], val: '23.0%', val_f: '29.9%' }] },
   { id: 'gear_38', name: '개척자 내부식성 장갑', part: 'gloves', set: 'set_pioneer', stat1: 'agi', val1: 65, val1_f: 84, stat2: 'str', val2: 43, val2_f: 55, trait: [{ type: ['배틀 스킬 피해'], val: '34.5%', val_f: '44.9%' }] },
   { id: 'gear_38.1', name: '개척자 방호복', part: 'armor', set: 'set_pioneer', stat1: 'int', val1: 87, val1_f: 113, stat2: 'agi', val2: 58, val2_f: 75, trait: [{ type: ['궁극기 충전 효율'], val: '12.3%', val_f: '16%' }] },
   { id: 'gear_39', name: '개척자 방어구 · III', part: 'armor', set: 'set_pioneer', stat1: 'agi', val1: 87, val1_f: 113, stat2: 'int', val2: 58, val2_f: 75, trait: [{ type: ['스탯'], stat: '부스탯', val: '10.4%', val_f: '13.5%' }] },
@@ -244,7 +244,7 @@ const DATA_SETS = [
     desc: '장착자의 공격력 +8%<br>장착자가 적에게 방어 불능을 부여한 후, 물리 피해 +8%, 15초 동안 지속, 최대 중첩 4스택. 목표의 방어 불능 스택이 4스택에 도달할 경우, 추가 물리 피해 +16%, 10초 동안 지속<br><span style="color: #727272">해당 효과는 중첩되지 않습니다.</span>',
     effects: [
       { type: ['공격력 증가'], val: '8%' },
-      { type: ['물리 피해'], val: '8%', stack: 4, trigger: ['강타', '띄우기', '넘어뜨리기', '강제 띄우기', '강제 넘어뜨리기', '방어 불능 부여'] },
+      { type: ['물리 피해'], val: '8%', stack: 4, trigger: ['방어 불능 부여', '물리 이상'] },
       { type: ['물리 피해'], val: '16%' }
     ]
   },
@@ -261,7 +261,7 @@ const DATA_SETS = [
     name: '검술사',
     desc: '장착자의 불균형 효율 보너스 +20%<br>장착자가 물리 이상 효과를 부여한 후, 공격력 250%만큼의 추가 물리 피해[10포인트 불균형치]. 해당 효과는 15초마다 최대 1회만 발동합니다.',
     effects: [
-      { type: ['물리 데미지'], dmg: ['250%'], trigger: ['강타', '띄우기', '넘어뜨리기', '강제 띄우기', '강제 넘어뜨리기', '갑옷 파괴'], element: 'phys' }
+      { type: ['물리 데미지'], dmg: ['250%'], trigger: ['물리 이상'], element: 'phys' }
     ]
   },
   { id: 'set_crisis', name: '위기 탈출', effects: [] },
