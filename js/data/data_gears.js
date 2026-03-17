@@ -29,20 +29,6 @@
  * ]
  */
 const DATA_GEAR = [
-  // 식양의 숨결
-  { id: 'gear_0', name: '식양의 숨결 보조 견갑', part: 'kit', set: 'set_shikyang', stat1: 'wil', val1: 32, val1_f: 41, stat2: 'int', val2: 21, val2_f: 27, trait: [{ type: ['궁극기 충전 효율'], val: '24.6%', val_f: '32%' }] },
-  { id: 'gear_1', name: '식양의 숨결 충전 코어 · I', part: 'kit', set: 'set_shikyang', stat1: 'int', val1: 32, val1_f: 41, stat2: 'wil', val2: 21, val2_f: 27, trait: [{ type: ['치유 효율'], val: '20.7%', val_f: '26.9%' }] },
-  { id: 'gear_2', name: '식양의 숨결 충전 코어', part: 'kit', set: 'set_shikyang', stat1: 'int', val1: 32, val1_f: 41, stat2: 'str', val2: 21, val2_f: 27, trait: [{ type: ['궁극기 충전 효율'], val: '24.6%', val_f: '32%' }] },
-  { id: 'gear_3', name: '식양의 숨결 글러브 · I', part: 'gloves', set: 'set_shikyang', stat1: 'int', val1: 65, val1_f: 84, stat2: 'wil', val2: 43, val2_f: 55, trait: [{ type: ['궁극기 충전 효율'], val: '20.5%', val_f: '26.7%' }] },
-  { id: 'gear_4', name: '식양의 숨결 글러브', part: 'gloves', set: 'set_shikyang', stat1: 'int', val1: 65, val1_f: 84, stat2: 'str', val2: 43, val2_f: 55, trait: [{ type: ['궁극기 충전 효율'], val: '20.5%', val_f: '26.7%' }] },
-  { id: 'gear_5', name: '식양의 숨결 장갑', part: 'armor', set: 'set_shikyang', stat1: 'wil', val1: 87, val1_f: 113, stat2: 'int', val2: 58, val2_f: 75, trait: [{ type: ['오리지늄 아츠 강도'], val: 20, val_f: 27 }] },
-
-  // 조류의 물결
-  { id: 'gear_6', name: '탁류 화염 절단기', part: 'kit', set: 'set_joryu', stat1: 'int', val1: 32, val1_f: 41, stat2: 'str', val2: 21, val2_f: 27, trait: [{ type: ['일반 공격 피해'], val: '27.6%', val_f: '35.9%' }] },
-  { id: 'gear_7', name: '현하 산소 공급 장치', part: 'kit', set: 'set_joryu', stat1: 'str', val1: 32, val1_f: 41, stat2: 'wil', val2: 21, val2_f: 27, trait: [{ type: ['냉기 피해'], val: '23%', val_f: '29.9%' }, { type: ['전기 피해'], val: '23%', val_f: '29.9%' }] },
-  { id: 'gear_8', name: '조류의 물결 건틀릿', part: 'gloves', set: 'set_joryu', stat1: 'str', val1: 65, val1_f: 84, stat2: 'wil', val2: 43, val2_f: 55, trait: [{ type: ['냉기 피해'], val: '19.2%', val_f: '24.9%' }, { type: ['전기 피해'], val: '19.2%', val_f: '24.9%' }] },
-  { id: 'gear_9', name: '낙조 경갑', part: 'armor', set: 'set_joryu', stat1: 'int', val1: 87, val1_f: 113, stat2: 'str', val2: 58, val2_f: 75, trait: [{ type: ['궁극기 충전 효율'], val: '12.3%', val_f: '16%' }] },
-
   // 응룡 50식
   { id: 'gear_9.1', name: '응룡 50식 탐지기 · II', part: 'kit', set: 'set_eungryong', stat1: 'agi', val1: 32, val1_f: 41, stat2: 'int', val2: 21, val2_f: 27, trait: [{ type: ['연계 스킬 피해'], val: '41.4%', val_f: '53.8%' }] },
   { id: 'gear_9.2', name: '응룡 50식 탐지기 · I', part: 'kit', set: 'set_eungryong', stat1: 'agi', val1: 32, val1_f: 41, stat2: 'str', val2: 21, val2_f: 27, trait: [{ type: ['궁극기 피해'], val: '51.8%', val_f: '67.3%' }] },
@@ -146,6 +132,20 @@ const DATA_GEAR = [
   { id: 'gear_68', name: '검술사 전술 장갑', part: 'gloves', set: 'set_swordsman', stat1: 'str', val1: 65, val1_f: 84, stat2: 'wil', val2: 43, val2_f: 55, trait: [{ type: ['물리 피해'], val: '19.2%', val_f: '24.9%' }] },
   { id: 'gear_68.1', name: '검술사 경장갑', part: 'armor', set: 'set_swordsman', stat1: 'str', val1: 87, val1_f: 113, stat2: 'wil', val2: 58, val2_f: 75, trait: [{ type: ['궁극기 충전 효율'], val: '12.3%', val_f: '16%' }] },
   { id: 'gear_69', name: '검술사 중장갑', part: 'armor', set: 'set_swordsman', stat1: 'agi', val1: 87, val1_f: 113, stat2: 'str', val2: 58, val2_f: 75, trait: [{ type: ['오리지늄 아츠 강도'], val: 20, val_f: 27 }] },
+
+  // 식양의 숨결
+  { id: 'gear_0', name: '식양의 숨결 보조 견갑', part: 'kit', set: 'set_shikyang', stat1: 'wil', val1: 32, val1_f: 41, stat2: 'int', val2: 21, val2_f: 27, trait: [{ type: ['궁극기 충전 효율'], val: '24.6%', val_f: '32%' }] },
+  { id: 'gear_1', name: '식양의 숨결 충전 코어 · I', part: 'kit', set: 'set_shikyang', stat1: 'int', val1: 32, val1_f: 41, stat2: 'wil', val2: 21, val2_f: 27, trait: [{ type: ['치유 효율'], val: '20.7%', val_f: '26.9%' }] },
+  { id: 'gear_2', name: '식양의 숨결 충전 코어', part: 'kit', set: 'set_shikyang', stat1: 'int', val1: 32, val1_f: 41, stat2: 'str', val2: 21, val2_f: 27, trait: [{ type: ['궁극기 충전 효율'], val: '24.6%', val_f: '32%' }] },
+  { id: 'gear_3', name: '식양의 숨결 글러브 · I', part: 'gloves', set: 'set_shikyang', stat1: 'int', val1: 65, val1_f: 84, stat2: 'wil', val2: 43, val2_f: 55, trait: [{ type: ['궁극기 충전 효율'], val: '20.5%', val_f: '26.7%' }] },
+  { id: 'gear_4', name: '식양의 숨결 글러브', part: 'gloves', set: 'set_shikyang', stat1: 'int', val1: 65, val1_f: 84, stat2: 'str', val2: 43, val2_f: 55, trait: [{ type: ['궁극기 충전 효율'], val: '20.5%', val_f: '26.7%' }] },
+  { id: 'gear_5', name: '식양의 숨결 장갑', part: 'armor', set: 'set_shikyang', stat1: 'wil', val1: 87, val1_f: 113, stat2: 'int', val2: 58, val2_f: 75, trait: [{ type: ['오리지늄 아츠 강도'], val: 20, val_f: 27 }] },
+
+  // 조류의 물결
+  { id: 'gear_6', name: '탁류 화염 절단기', part: 'kit', set: 'set_joryu', stat1: 'int', val1: 32, val1_f: 41, stat2: 'str', val2: 21, val2_f: 27, trait: [{ type: ['일반 공격 피해'], val: '27.6%', val_f: '35.9%' }] },
+  { id: 'gear_7', name: '현하 산소 공급 장치', part: 'kit', set: 'set_joryu', stat1: 'str', val1: 32, val1_f: 41, stat2: 'wil', val2: 21, val2_f: 27, trait: [{ type: ['냉기 피해'], val: '23%', val_f: '29.9%' }, { type: ['전기 피해'], val: '23%', val_f: '29.9%' }] },
+  { id: 'gear_8', name: '조류의 물결 건틀릿', part: 'gloves', set: 'set_joryu', stat1: 'str', val1: 65, val1_f: 84, stat2: 'wil', val2: 43, val2_f: 55, trait: [{ type: ['냉기 피해'], val: '19.2%', val_f: '24.9%' }, { type: ['전기 피해'], val: '19.2%', val_f: '24.9%' }] },
+  { id: 'gear_9', name: '낙조 경갑', part: 'armor', set: 'set_joryu', stat1: 'int', val1: 87, val1_f: 113, stat2: 'str', val2: 58, val2_f: 75, trait: [{ type: ['궁극기 충전 효율'], val: '12.3%', val_f: '16%' }] },
 
   // 단일 장비
   { id: 'gear_70', name: '위기 탈출 도장 · I', part: 'kit', set: 'set_crisis', stat1: 'wil', val1: 43, val1_f: 55, stat2: null, val2: 0, trait: [{ type: ['치명타 확률'], val: '10.8%', val_f: '14%' }] },

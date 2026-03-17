@@ -215,10 +215,10 @@ const DATA_OPERATORS = [
             {
                 skillType: ['궁극기'], element: 'phys', cost: 90, target: '적', desc: '화신을 내세워 부동저로 지면을 힘껏 내리칩니다. 넓은 범위 내의 모든 적에게 물리 피해를 주고 넘어뜨리기 상태로 만들며, 모든 적을 중심으로 향해 끌어당깁니다. 일정 시간 후, 여전히 타격 범위 내에 남아 있는 모든 적에게는 다시 대량의 물리 피해를 주고 넘어뜨리기 상태로 만듭니다. 해당 스킬이 연타를 소모했다면, 대량의 추가 물리 피해를 줍니다.',
                 levels: {
-                    M0: { dmg: '640%', type: ['넘어뜨리기'], bonus: [{ triggerTarget: ['연타'], val: '480%' }] },
-                    M1: { dmg: '684%', type: ['넘어뜨리기'], bonus: [{ triggerTarget: ['연타'], val: '514%' }] },
-                    M2: { dmg: '738%', type: ['넘어뜨리기'], bonus: [{ triggerTarget: ['연타'], val: '554%' }] },
-                    M3: { dmg: '800%', type: ['넘어뜨리기'], bonus: [{ triggerTarget: ['연타'], val: '600%' }] }
+                    M0: { dmg: '640%', type: ['넘어뜨리기', '넘어뜨리기'], bonus: [{ triggerTarget: ['연타'], val: '480%' }] },
+                    M1: { dmg: '684%', type: ['넘어뜨리기', '넘어뜨리기'], bonus: [{ triggerTarget: ['연타'], val: '514%' }] },
+                    M2: { dmg: '738%', type: ['넘어뜨리기', '넘어뜨리기'], bonus: [{ triggerTarget: ['연타'], val: '554%' }] },
+                    M3: { dmg: '800%', type: ['넘어뜨리기', '넘어뜨리기'], bonus: [{ triggerTarget: ['연타'], val: '600%' }] }
                 }
             }
         ],
@@ -231,7 +231,7 @@ const DATA_OPERATORS = [
             [{ type: ['스탯'], stats: '모든 능력치', val: 15, desc: '모든 능력치 +15' }],
             [{ type: ['스탯 공격 보너스'], val: '0%', scaling: { stat: ['int', 'wil'], ratio: '0.05%', max: null }, desc: '재능 "돈오" 효과 강화: 지능, 의지 1포인트당 공격력 증가 +0.05%' }],
             [{ type: ['궁극기 에너지 감소'], val: '15%', desc: '궁극기 움직이지 않는 마음의 사용에 필요한 궁극기 에너지 -15%' }],
-            [{ type: ['물리 데미지'], element: 'phys', dmg: '150%', trigger: ['넘어뜨리기'], desc: '재능 "복마" 효과 강화: 15초마다, 다음 효과 발동 시 공격력 250%만큼 추가 물리 피해를 주고, 5포인트의 불균형 피해를 줍니다.' }]
+            [{ type: ['물리 데미지'], element: 'phys', dmg: '250%', trigger: ['넘어뜨리기'], desc: '재능 "복마" 효과 강화: 15초마다, 다음 효과 발동 시 공격력 250%만큼 추가 물리 피해를 주고, 5포인트의 불균형 피해를 줍니다.' }]
         ]
     },
     {
@@ -714,7 +714,7 @@ const DATA_OPERATORS = [
                 }
             },
             {
-                skillType: ['궁극기'], element: 'cryo', cost: 80, desc: '팀 전체에게 12초 동안 냉기 증폭과 자연 증폭 상태를 부여합니다. 지능은 해당 증폭 효과를 추가로 강화시킵니다. (지능 1포인트당 추가 증폭, 최대 1200)',
+                skillType: ['궁극기'], element: 'cryo', cost: 80, desc: '팀 전체에게 12초 동안 냉기 증폭과 자연 증폭 상태를 부여합니다. 지능은 해당 증폭 효과를 추가로 강화시킵니다. (지능 1포인트당 추가 증폭, 최대 30~36%)',
                 levels: {
                     M0: {
                         dmg: '0%',
@@ -1695,15 +1695,26 @@ const DATA_OPERATORS = [
             },
             {
                 skillType: ['강화 궁극기'], replaceName: '궁극기 낙하공격', masterySource: '궁극기', element: 'cryo', desc: '메인 컨트롤 오퍼레이터가 고대의 진 내에서 낙하 공격을 사용하면, 변화하던 고대의 진이 그 변화를 중단합니다. 이어서 용오름 1개를 생성하며, 주변에 와류가 존재할 경우 이를 소모하여 추가로 용오름을 생성합니다.<br>이때 생성한 용오름은 배틀 스킬 우당탕탕 파도!와 동일한 효과를 가지고 있으며, 주는 피해 +60%',
-                bonus: [{
-                    triggerTarget: ['와류'], masterySource: '배틀 스킬', isSeparateHit: true, bonusDmgInc: '60%', skillType: '배틀 스킬',
-                    levels: {
-                        M0: { base: '240%', perStack: '240%' },
-                        M1: { base: '257%', perStack: '257%' },
-                        M2: { base: '277%', perStack: '277%' },
-                        M3: { base: '300%', perStack: '300%' }
+                bonus: [
+                    {
+                        masterySource: '배틀 스킬', isSeparateHit: true, bonusDmgInc: '60%', skillType: '배틀 스킬',
+                        levels: {
+                            M0: { val: '240%' },
+                            M1: { val: '257%' },
+                            M2: { val: '277%' },
+                            M3: { val: '300%' }
+                        }
+                    },
+                    {
+                        triggerTarget: ['와류'], masterySource: '배틀 스킬', isSeparateHit: true, bonusDmgInc: '60%', skillType: '배틀 스킬',
+                        levels: {
+                            M0: { base: '0%', perStack: '240%' },
+                            M1: { base: '0%', perStack: '257%' },
+                            M2: { base: '0%', perStack: '277%' },
+                            M3: { base: '0%', perStack: '300%' }
+                        }
                     }
-                }],
+                ],
                 levels: {
                     M0: { dmg: '240%' },
                     M1: { dmg: '257%' },

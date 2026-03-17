@@ -657,7 +657,13 @@ const AppTooltip = {
                     if (t.skillType) return;
                     const typeNames = Array.isArray(t.type) ? t.type : [t.type];
 
-                    const displayVal = (t.val && t.val !== '0%') ? String(t.val).replace('+', '').trim() : '';
+                    let valForDisplay = t.val;
+                    if (t.stack && typeof t.val === 'string' && t.val.endsWith('%')) {
+                        const num = parseFloat(t.val);
+                        if (!isNaN(num)) valForDisplay = (num * t.stack).toFixed(1).replace(/\.0$/, '') + '%';
+                    }
+
+                    const displayVal = (valForDisplay && valForDisplay !== '0%') ? String(valForDisplay).replace('+', '').trim() : '';
                     const scalingLabel = t.scaling ? `+${getStatName(t.scaling.stat)} 비례` : '';
 
                     typeNames.forEach(tn => {
@@ -668,12 +674,6 @@ const AppTooltip = {
                         }
                         effectTags.push(`<span class="trigger-tag ${customClass}">${label}</span>`);
                     });
-
-                    const stackSuffix = t.stack ? ` (최대 ${t.stack}중첩)` : '';
-
-                    if (stackSuffix) {
-                        additionalTextArr.push(`${typeNames.join('/')}${stackSuffix}`);
-                    }
                 } else if (typeof t === 'string') {
                     const customClass = this.TRIGGER_CLASS_MAP[t] || 'tag-synergy';
                     effectTags.push(`<span class="trigger-tag ${customClass}">${t}</span>`);
@@ -682,8 +682,7 @@ const AppTooltip = {
 
             if (effectTags.length > 0) {
                 const tagHtml = `<div class="trigger-tag-container">${effectTags.join('')}</div>`;
-                const addTextHtml = additionalTextArr.length > 0 ? ` <span class="tooltip-muted" style="font-size:0.75rem;">${additionalTextArr.join(' / ')}</span>` : '';
-                attrLines.push(`<div class="tooltip-bullet-point">${tagHtml}${addTextHtml}</div>`);
+                attrLines.push(`<div class="tooltip-bullet-point">${tagHtml}</div>`);
             }
         }
 
@@ -712,7 +711,7 @@ const AppTooltip = {
                     ];
                     const triggerLines = triggers.join(', ');
                     let bValStr =
-                        b.val !== undefined && b.val !== '0%' ? '+' + b.val :
+                        b.val !== undefined && b.val !== '0%' ? b.val :
                             b.perStack !== undefined && b.perStack !== '0%'
                                 ? (b.base && b.base !== '0%' ? `${b.base} + ${b.perStack}/스택` : `${b.perStack}/스택`)
                                 : (b.base && b.base !== '0%' ? b.base : '');
