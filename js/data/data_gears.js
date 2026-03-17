@@ -76,7 +76,7 @@ const DATA_GEAR = [
   { id: 'gear_36', name: '개척자 통신기 · I', part: 'kit', set: 'set_pioneer', stat1: 'str', val1: 32, val1_f: 41, stat2: 'int', val2: 21, val2_f: 27, trait: [{ type: ['냉기 피해'], val: '23%', val_f: '29.9%' }, { type: ['전기 피해'], val: '23%', val_f: '29.9%' }] },
   { id: 'gear_37', name: '개척자 통신기', part: 'kit', set: 'set_pioneer', stat1: 'str', val1: 32, val1_f: 41, stat2: 'agi', val2: 21, val2_f: 27, trait: [{ type: ['연계 스킬 피해'], val: '41.4%', val_f: '53.8%' }] },
   { id: 'gear_37.1', name: '개척자 섬유 장갑', part: 'gloves', set: 'set_pioneer', stat1: 'wil', val1: 65, val1_f: 84, stat2: 'str', val2: 43, val2_f: 55, trait: [{ type: ['모든 스킬 피해'], val: '23.0%', val_f: '29.9%' }] },
-  { id: 'gear_38', name: '개척자 내부식성 장갑', part: 'gloves', set: 'set_pioneer', stat1: 'agi', val1: 65, val1_f: 84, stat2: 'str', val2: 43, val2_f: 55, trait: [{ type: ['배틀 스킬 피해'], val: '34.5%', val_f: '44.9%' }] },
+  { id: 'gear_38', name: '개척자 내부식성 장갑', part: 'gloves', set: 'set_pioneer', stat1: 'agi', val1: 65, val1_f: 84, stat2: 'agi', val2: 43, val2_f: 55, trait: [{ type: ['배틀 스킬 피해'], val: '34.5%', val_f: '44.9%' }] },
   { id: 'gear_38.1', name: '개척자 방호복', part: 'armor', set: 'set_pioneer', stat1: 'int', val1: 87, val1_f: 113, stat2: 'agi', val2: 58, val2_f: 75, trait: [{ type: ['궁극기 충전 효율'], val: '12.3%', val_f: '16%' }] },
   { id: 'gear_39', name: '개척자 방어구 · III', part: 'armor', set: 'set_pioneer', stat1: 'agi', val1: 87, val1_f: 113, stat2: 'int', val2: 58, val2_f: 75, trait: [{ type: ['스탯'], stat: '부스탯', val: '10.4%', val_f: '13.5%' }] },
   { id: 'gear_40', name: '개척자 방어구 · II', part: 'armor', set: 'set_pioneer', stat1: 'agi', val1: 87, val1_f: 113, stat2: 'int', val2: 58, val2_f: 75, trait: [{ type: ['배틀 스킬 피해'], val: '20.7%', val_f: '26.9%' }] },
