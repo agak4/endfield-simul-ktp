@@ -1264,7 +1264,7 @@ const DATA_OPERATORS = [
         subStat: 'agi',
         type: 'arts',
         element: 'elec',
-        stats: { str: 107, agi: 106, int: 110, wil: 228 },
+        stats: { str: 107, agi: 106, int: 110, wil: 208 },
         usableWeapons: ['polearm'],
         specialStack: [
             { name: '썬더랜스', id: 'thunderlance', max: null, triggers: ['썬더랜스'] },
@@ -1802,4 +1802,4 @@ const DATA_OPERATORS = [
 // ============ 테스트 환경용 내보내기 ============
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { DATA_OPERATORS };
-}
+}

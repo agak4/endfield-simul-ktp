@@ -1,4 +1,4 @@
-﻿/**
+/**
  * ui/party_contribution.js — 파티 내 오퍼레이터별 개별 데미지 합산 표시
  *
  * [역할]
@@ -97,8 +97,8 @@ function renderPartyContribution() {
             // 3. 오퍼레이터별 개별 전역 설정 적용 (디버프, 소모품 등)
             virtualState.debuffState = settings.debuffState ? migrateDebuffState(settings.debuffState) : DEFAULT_DEBUFF_STATE();
             virtualState.usables = settings.usables ? { ...settings.usables } : DEFAULT_USABLES();
-            virtualState.disabledEffects = [];
-            virtualState.effectStacks = {};
+            virtualState.disabledEffects = settings.disabledEffects ? [...settings.disabledEffects] : [];
+            virtualState.effectStacks = settings.effectStacks ? deepClone(settings.effectStacks) : {};
         }
 
         virtualState.selectedSeqIds = [];

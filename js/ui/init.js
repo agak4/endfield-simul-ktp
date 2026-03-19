@@ -933,8 +933,7 @@ function applyOpSettingsToUI(opId, type, subIdx) {
  * @param {string} wepId - 무기 ID
  */
 function applyWepSettingsToUI(wepId) {
-    if (!wepId) return;
-    const s = typeof loadWepSettings === 'function' ? loadWepSettings(wepId) : null;
+    const s = wepId ? (typeof loadWepSettings === 'function' ? loadWepSettings(wepId) : null) : null;
 
     document.getElementById('main-wep-pot').value = s?.pot ?? 0;
     setupPotencyButtons('main-wep-pot', 'main-wep-pot-group');
