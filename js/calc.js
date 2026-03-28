@@ -528,8 +528,15 @@ function getAdjustedStackCount(triggerName, state, opData, skillTypes) {
     }
 
     if (triggerName === '갑옷 파괴') return state.debuffState?.physDebuff?.armorBreak || 0;
-    if (['열기 부착', '전기 부착', '냉기 부착', '자연 부착'].includes(triggerName)) {
-        if (state.debuffState?.artsAttach?.type === triggerName) return state.debuffState.artsAttach.stacks || 0;
+    if (['아츠 부착', '열기 부착', '전기 부착', '냉기 부착', '자연 부착'].includes(triggerName)) {
+        const currentAttach = state.debuffState?.artsAttach;
+        if (triggerName === '아츠 부착') {
+            if (['열기 부착', '전기 부착', '냉기 부착', '자연 부착'].includes(currentAttach?.type)) {
+                return currentAttach.stacks || 0;
+            }
+        } else if (currentAttach?.type === triggerName) {
+            return currentAttach.stacks || 0;
+        }
     }
     if (['연소', '감전', '동결', '부식'].includes(triggerName)) return state.debuffState?.artsAbnormal?.[triggerName] || 0;
 
@@ -1105,7 +1112,18 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects, act
                 const elMap = { '물리': 'phys', '열기': 'heat', '전기': 'elec', '냉기': 'cryo', '자연': 'nature', '아츠': null };
                 let foundEl = null;
                 for (const [ek, ev] of Object.entries(elMap)) {
-                    if (t.includes(ek)) { foundEl = (ek === '아츠') ? (opData.element || null) : ev; break; }
+                    if (t.includes(ek)) { 
+                        if (ek === '아츠') {
+                            foundEl = opData.element;
+                            if (!foundEl && opData.skill) {
+                                const skillElements = opData.skill.map(s => s.element).filter(Boolean);
+                                foundEl = skillElements.find(el => el !== 'phys') || null;
+                            }
+                        } else {
+                            foundEl = ev;
+                        }
+                        break; 
+                    }
                 }
                 if (foundEl && dmgIncMap[foundEl] !== undefined) {
                     if (!checkDisabled('common')) {
@@ -1445,14 +1463,18 @@ function isApplicableEffect(opData, effectType, effectName) {
     const checkElement = (prefix) => {
         const p = prefix ? prefix.trim() : '';
         if (!p || p === '피해' || p === '모든' || p === '취약') return true;
-        if (p === '아츠' && opData.type === 'arts') return true;
-        if (p === '물리' && opData.type === 'phys') return true;
+        
+        const skillElements = opData.skill ? opData.skill.map(s => s.element).filter(Boolean) : [];
+        
+        if (p === '아츠' && (opData.type === 'arts' || skillElements.some(el => el !== 'phys'))) return true;
+        if (p === '물리' && (opData.type === 'phys' || skillElements.includes('phys'))) return true;
+        
         if (p === '열기' && opData.element === 'heat') return true;
         if (p === '냉기' && opData.element === 'cryo') return true;
         if (p === '전기' && opData.element === 'elec') return true;
         if (p === '자연' && opData.element === 'nature') return true;
-        const skillElements = opData.skill ? opData.skill.map(s => s.element).filter(Boolean) : [];
-        const elPrefixMap = { '물리': 'phys', '열기': 'heat', '전기': 'elec', '냉기': 'cryo', '자연': 'nature' };
+        
+        const elPrefixMap = { '열기': 'heat', '전기': 'elec', '냉기': 'cryo', '자연': 'nature' };
         const mappedEl = elPrefixMap[p];
         if (mappedEl && skillElements.includes(mappedEl)) return true;
         return false;
@@ -1546,6 +1568,7 @@ function evaluateTrigger(trigger, state, opData, triggerType, evalMode = 'both',
             switch (t) {
                 case '방어 불능': isTriggerMet = getAdjustedStackCount('방어 불능', state, opData, triggerType) > 0; break;
                 case '갑옷 파괴': isTriggerMet = getAdjustedStackCount('갑옷 파괴', state, opData, triggerType) > 0; break;
+                case '아츠 부착': isTriggerMet = ['열기 부착', '전기 부착', '냉기 부착', '자연 부착'].includes(state.debuffState?.artsAttach?.type); break;
                 case '열기 부착': isTriggerMet = state.debuffState?.artsAttach?.type === '열기 부착'; break;
                 case '냉기 부착': isTriggerMet = state.debuffState?.artsAttach?.type === '냉기 부착'; break;
                 case '전기 부착': isTriggerMet = state.debuffState?.artsAttach?.type === '전기 부착'; break;

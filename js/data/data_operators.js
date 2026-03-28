@@ -1741,11 +1741,11 @@ const DATA_OPERATORS = [
         class: '가드',
         rarity: 6,
         baseAtk: 300,
-        mainStat: '',
-        subStat: '',
+        mainStat: 'agi',
+        subStat: 'wil',
         type: 'phys',
         element: null,
-        stats: { str: 0, agi: 0, int: 0, wil: 0 },
+        stats: { str: 100, agi: 100, int: 100, wil: 100 },
         usableWeapons: ['sword'],
         skill: [
             {
@@ -1769,14 +1769,14 @@ const DATA_OPERATORS = [
             {
                 skillType: ['연계 스킬'], element: 'phys', desc: '적이 동시에 방어 불능과 아츠 부착 상태일 때 발동할 수 있습니다. 로시의 연계 스킬은 연속으로 2회 발동할 수 있으며, 첫 공격은 목표에 물리 피해를 주고, 두 번째 공격은 목표의 아츠 부착을 모두 소모한 뒤, 물리 피해 및 띄우기 피해를 줍니다. 연계 스킬의 두 번째 공격이 정확하게 연계되면 추가로 방어 불능 1스택을 쌓습니다.',
                 levels: {
-                    M0: { dmg: '100%', type: ['띄우기', '아츠 부착 소모'] },
-                    M1: { dmg: '100%', type: ['띄우기', '아츠 부착 소모'] },
-                    M2: { dmg: '100%', type: ['띄우기', '아츠 부착 소모'] },
-                    M3: { dmg: '100%', type: ['띄우기', '아츠 부착 소모'] }
+                    M0: { dmg: '100%', type: ['띄우기', '아츠 부착 소모', '방어 불능 부여'], bonus: [{ triggerTarget: ['아츠 부착'], perStack: '100%' }] },
+                    M1: { dmg: '100%', type: ['띄우기', '아츠 부착 소모', '방어 불능 부여'], bonus: [{ triggerTarget: ['아츠 부착'], perStack: '100%' }] },
+                    M2: { dmg: '100%', type: ['띄우기', '아츠 부착 소모', '방어 불능 부여'], bonus: [{ triggerTarget: ['아츠 부착'], perStack: '100%' }] },
+                    M3: { dmg: '100%', type: ['띄우기', '아츠 부착 소모', '방어 불능 부여'], bonus: [{ triggerTarget: ['아츠 부착'], perStack: '100%' }] }
                 }
             },
             {
-                skillType: ['궁극기'], element: 'heat', cost: 0, desc: '망토를 휘두르며 재빠른 찌르기로 짧은 시간 동안 여러 차례 피해를 줍니다. 마지막에 목표에게 돌진해 단검으로 베기를 사용하여 대량의 피해를 주고 열기 부착을 부여합니다.',
+                skillType: ['궁극기'], element: 'heat', cost: 90, desc: '망토를 휘두르며 재빠른 찌르기로 짧은 시간 동안 여러 차례 피해를 줍니다. 마지막에 목표에게 돌진해 단검으로 베기를 사용하여 대량의 피해를 주고 열기 부착을 부여합니다.',
                 levels: {
                     M0: { dmg: '100%', type: ['열기 부착'] },
                     M1: { dmg: '100%', type: ['열기 부착'] },

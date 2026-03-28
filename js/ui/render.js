@@ -630,7 +630,9 @@ function renderCycleSequence(cycleRes) {
                 // 물리/아츠 이상 항목
                 if (item.abnormalList && item.abnormalList.length > 0) {
                     item.abnormalList.forEach(a => {
-                        if (a.uiHidden) return; // [Fix] 숨김 처리된 이상 정보는 출력하지 않음
+                        if (a.uiHidden) return;
+
+                        if (a.mult === 0 && (a.name === '띄우기' || a.name === '넘어뜨리기')) return;
 
                         let suffix = '';
                         if (state.mainOp.id === 'Da Pan' && a.name === '강타') {
