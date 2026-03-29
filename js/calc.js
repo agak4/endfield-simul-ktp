@@ -1112,7 +1112,7 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects, act
                 const elMap = { '물리': 'phys', '열기': 'heat', '전기': 'elec', '냉기': 'cryo', '자연': 'nature', '아츠': null };
                 let foundEl = null;
                 for (const [ek, ev] of Object.entries(elMap)) {
-                    if (t.includes(ek)) { 
+                    if (t.includes(ek)) {
                         if (ek === '아츠') {
                             foundEl = opData.element;
                             if (!foundEl && opData.skill) {
@@ -1122,7 +1122,7 @@ function computeFinalDamageOutput(state, opData, wepData, stats, allEffects, act
                         } else {
                             foundEl = ev;
                         }
-                        break; 
+                        break;
                     }
                 }
                 if (foundEl && dmgIncMap[foundEl] !== undefined) {
@@ -1463,17 +1463,17 @@ function isApplicableEffect(opData, effectType, effectName) {
     const checkElement = (prefix) => {
         const p = prefix ? prefix.trim() : '';
         if (!p || p === '피해' || p === '모든' || p === '취약') return true;
-        
+
         const skillElements = opData.skill ? opData.skill.map(s => s.element).filter(Boolean) : [];
-        
+
         if (p === '아츠' && (opData.type === 'arts' || skillElements.some(el => el !== 'phys'))) return true;
         if (p === '물리' && (opData.type === 'phys' || skillElements.includes('phys'))) return true;
-        
+
         if (p === '열기' && opData.element === 'heat') return true;
         if (p === '냉기' && opData.element === 'cryo') return true;
         if (p === '전기' && opData.element === 'elec') return true;
         if (p === '자연' && opData.element === 'nature') return true;
-        
+
         const elPrefixMap = { '열기': 'heat', '전기': 'elec', '냉기': 'cryo', '자연': 'nature' };
         const mappedEl = elPrefixMap[p];
         if (mappedEl && skillElements.includes(mappedEl)) return true;

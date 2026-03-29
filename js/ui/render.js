@@ -90,6 +90,8 @@ function buildSkillIconHtml(imgSrc, color, altText) {
 
 // 클릭으로 효과를 비활성화할 수 있는 <li> 요소를 생성한다.
 // options: { isProtected, log, uid, uiUid }
+let ignoreNextClick = false;
+
 function createEffectListItem(log, options = {}) {
     const PROTECTED_UIDS = ['base_op_atk', 'base_wep_atk', 'stat_bonus_atk', 'unbalance_base', 'level_coeff_phys', 'level_coeff_arts'];
     const uid = options.uid || log.uid;
@@ -114,14 +116,21 @@ function createEffectListItem(log, options = {}) {
     const ts = getTargetState();
     if (log.stack) {
         if ((ts.effectStacks?.[uid] ?? 1) === 0) li.classList.add('disabled-effect');
+        li.style.touchAction = 'none';
     } else {
         if (ts.disabledEffects?.includes(uiUid)) li.classList.add('disabled-effect');
     }
 
-    li.onclick = (e) => {
-        if (e) e.stopPropagation();
-        ensureCustomState();
+    const handleToggle = (e, isRightClick = false) => {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        if (ignoreNextClick && !isRightClick) {
+            return;
+        }
 
+        ensureCustomState();
         const tsFirst = getTargetState();
         let nextCur;
         let uidsToToggle = [];
@@ -129,10 +138,13 @@ function createEffectListItem(log, options = {}) {
 
         if (log.stack) {
             let cur = tsFirst.effectStacks?.[uid] !== undefined ? tsFirst.effectStacks[uid] : 1;
-            nextCur = (cur >= log.stack) ? 0 : cur + 1;
+            if (isRightClick) {
+                nextCur = (cur <= 0) ? log.stack : cur - 1;
+            } else {
+                nextCur = (cur >= log.stack) ? 0 : cur + 1;
+            }
         } else {
             uidsToToggle = [uiUid];
-            // [New] skillType이 여러 개인 경우(잠재 등), 모든 카테고리 태그(#cat)를 함께 토글
             if (log.skillType && log.uid && uiUid.includes('#')) {
                 log.skillType.forEach(st => {
                     const cat = SKILL_CAT_MAP[st];
@@ -167,6 +179,92 @@ function createEffectListItem(log, options = {}) {
         else releaseCustomStateIfMatchesGlobal();
         updateState();
     };
+
+    li.onclick = (e) => handleToggle(e, false);
+    li.oncontextmenu = (e) => handleToggle(e, true);
+
+    if (log.stack) {
+        let isDragging = false;
+        let startX = 0;
+        let startStack = 0;
+        const DRAG_SENSITIVITY = 15;
+
+        li.addEventListener('pointerdown', (e) => {
+            if (e.button !== 0) return;
+            isDragging = false;
+            startX = e.clientX;
+            const tsFirst = getTargetState();
+            startStack = tsFirst.effectStacks?.[uid] !== undefined ? tsFirst.effectStacks[uid] : 1;
+            li.setPointerCapture(e.pointerId);
+        });
+
+        li.addEventListener('pointermove', (e) => {
+            if (!li.hasPointerCapture(e.pointerId)) return;
+            const deltaX = e.clientX - startX;
+            if (Math.abs(deltaX) > 5) {
+                isDragging = true;
+                window._isDraggingEffect = true;
+            }
+            if (isDragging) {
+                let stackDiff = Math.floor(deltaX / DRAG_SENSITIVITY);
+                if (deltaX < 0) stackDiff = Math.ceil(deltaX / DRAG_SENSITIVITY);
+                
+                let nextCur = startStack + stackDiff;
+                if (nextCur < 0) nextCur = 0;
+                if (nextCur > log.stack) nextCur = log.stack;
+                
+                const tsFirst = getTargetState();
+                let cur = tsFirst.effectStacks?.[uid] !== undefined ? tsFirst.effectStacks[uid] : 1;
+                
+                if (nextCur !== cur) {
+                    ensureCustomState();
+                    getActiveCustomStates().forEach(ts2 => {
+                        if (!ts2.effectStacks) ts2.effectStacks = {};
+                        ts2.effectStacks[uid] = nextCur;
+                    });
+                    if (!state.selectedSeqIds || state.selectedSeqIds.length === 0) propagateGlobalStateToCustom('effects');
+                    else releaseCustomStateIfMatchesGlobal();
+                    
+                    updateState();
+
+                    if (window.lastCalcResult) {
+                        const allLogs = [
+                            ...(window.lastCalcResult.logs.atk || []),
+                            ...(window.lastCalcResult.logs.crit || []),
+                            ...(window.lastCalcResult.logs.unbal || []),
+                            ...(window.lastCalcResult.logs.ultRecharge || []),
+                            ...(window.lastCalcResult.logs.arts || []),
+                            ...(window.lastCalcResult.logs.res || []),
+                            ...(window.lastCalcResult.logs.amp || []),
+                            ...(window.lastCalcResult.logs.taken || []),
+                            ...(window.lastCalcResult.logs.vuln || []),
+                            ...(window.lastCalcResult.logs.dmgInc || [])
+                        ];
+                        const updatedLog = allLogs.find(l => l.uid === uid);
+                        if (updatedLog) {
+                            li.innerHTML = updatedLog.txt;
+                            if (nextCur === 0) li.classList.add('disabled-effect');
+                            else li.classList.remove('disabled-effect');
+                        }
+                    }
+                }
+            }
+        });
+
+        li.addEventListener('pointerup', (e) => {
+            if (li.hasPointerCapture(e.pointerId)) {
+                li.releasePointerCapture(e.pointerId);
+                if (isDragging) {
+                    ignoreNextClick = true;
+                    setTimeout(() => { ignoreNextClick = false; }, 50);
+                }
+                if (window._isDraggingEffect) {
+                    window._isDraggingEffect = false;
+                    updateState();
+                }
+            }
+        });
+    }
 
     return li;
 }
@@ -320,6 +418,7 @@ function renderResult(res) {
  * @param {string} label       - 전체 카테고리 표시명 (예: '증폭')
  */
 function renderElemSplit(containerId, logs, label) {
+    if (window._isDraggingEffect) return;
     const container = document.getElementById(containerId);
     if (!container) return;
     container.innerHTML = '';
@@ -466,6 +565,7 @@ function updateActiveSetUI() {
  * @param {Array}    list - { txt, uid } 또는 문자열 배열
  */
 function renderLog(id, list) {
+    if (window._isDraggingEffect) return;
     const ul = document.getElementById(id);
     if (!ul) return;
     ul.innerHTML = '';
@@ -1007,6 +1107,7 @@ function renderWeaponComparison(res, cycleRes, skipAnimation = false) {
  * @param {object} cycleRes - calculateCycleDamage 결과 (지분율 계산용)
  */
 function renderDmgInc(res, cycleRes) {
+    if (window._isDraggingEffect) return;
     const statsTopEl = document.getElementById('dmg-inc-stats-top');
     const listTopEl = document.getElementById('dmg-inc-list-top');
     const statsBotEl = document.getElementById('dmg-inc-stats-bottom');
@@ -1215,6 +1316,7 @@ function renderDmgInc(res, cycleRes) {
  * @param {object} res - calculateDamage 반환값
  */
 function renderLevelCoeff(res) {
+    if (window._isDraggingEffect) return;
     const container = document.getElementById('lv-coeff-container');
     if (!container) return;
     container.innerHTML = '';

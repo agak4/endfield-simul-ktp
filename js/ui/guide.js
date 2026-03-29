@@ -42,7 +42,7 @@ function openGuideModal() {
                     <h3>주의사항</h3>
                     <ul>
                         <li>오류가 있을 수 있으니 계산 정보는 반드시 맹신하지 마시고 참고용으로만 사용하여 주시기 바랍니다.</li>
-                        <li>오류는 아래 엔드필드 갤러리 게시글에 제보 부탁드립니다.<br><a style="color: var(--accent);" href="https://gall.dcinside.com/mgallery/board/view/?id=endfield&no=423498" target="_blank" rel="noopener noreferrer">엔드필드 갤러리</a></li>
+                        <li>(26.03.29) 현생이슈로 추가 업데이트가 힘들 것 같습니다. 죄송합니다.</li>
                     </ul>
                 </div>
             </div>
